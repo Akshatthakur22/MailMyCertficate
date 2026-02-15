@@ -88,6 +88,31 @@ export default function LandingView() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background font-sans overflow-x-hidden">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "WebApplication",
+                        "name": "MailMyCertificate",
+                        "url": "https://mailmycertificate.com",
+                        "description": "Free, privacy-first bulk certificate generator. Generate 1000+ localized PDFs in minutes entirely in your browser.",
+                        "applicationCategory": "BusinessApplication",
+                        "operatingSystem": "Web",
+                        "offers": {
+                            "@type": "Offer",
+                            "price": "0",
+                            "priceCurrency": "USD"
+                        },
+                        "author": {
+                            "@type": "Organization",
+                            "name": "MailMyCertificate",
+                            "url": "https://github.com/akshatthakur22/MailMyCertficate"
+                        }
+                    })
+                }}
+            />
+
             {/* ======================================
                 NAVIGATION
                ====================================== */}
@@ -100,22 +125,29 @@ export default function LandingView() {
                         <span>Mail</span><span>My</span><span>Certificate</span>
                     </Link>
 
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href="https://github.com/akshatthakur22/MailMyCertficate"
-                            target="_blank"
-                            className="flex items-center gap-2 text-sm font-medium text-secondary hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted"
-                        >
-                            <Github size={16} />
-                            <span className="hidden sm:inline">GitHub</span>
-                        </Link>
-                        <Link
-                            href="/tool"
-                            className={buttonVariants({ variant: 'primary', size: 'sm', className: 'shadow-sm' })}
-                        >
-                            Open Tool
-                        </Link>
+                    <div className="flex items-center gap-6">
+                        <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
+                            <Link href="/about" className="hover:text-accent transition-colors">About</Link>
+                            <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="https://github.com/akshatthakur22/MailMyCertficate"
+                                target="_blank"
+                                className="flex items-center gap-2 text-sm font-medium text-secondary hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted"
+                            >
+                                <Github size={16} />
+                                <span className="hidden sm:inline">GitHub</span>
+                            </Link>
+                            <Link
+                                href="/tool"
+                                className={buttonVariants({ variant: 'primary', size: 'sm', className: 'shadow-sm' })}
+                            >
+                                Open Tool
+                            </Link>
+                        </div>
                     </div>
+
                 </div>
             </nav>
 
@@ -139,15 +171,17 @@ export default function LandingView() {
                         </div>
 
                         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[84px] font-bold tracking-tight text-foreground leading-[0.95] max-w-5xl mx-auto mb-8 animate-fade-in-up-delay-1 text-gradient">
-                            Bulk certificates
+                            Automate certificates locally
                             <br className="hidden md:block" />
-                            shouldn&apos;t be a <span className="marker-underline italic font-serif">chore.</span>
+                            with <span className="marker-underline italic font-serif">fast, offline PDF generation.</span>
                         </h1>
 
                         <p className="text-lg md:text-2xl text-secondary max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up-delay-2">
-                            Upload your design, drop your CSV, and let us handle the rest.
-                            Personalized PDFs generated in seconds — straight from your browser.
+                            The ultimate certificate generation software for secure, high-speed delivery.
+                            Create professional certificates in bulk without your data ever leaving your browser.
                         </p>
+
+
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-12 animate-fade-in-up-delay-3">
                             <Link
@@ -559,28 +593,51 @@ export default function LandingView() {
                 </section>
             </main>
 
-            <footer className="border-t border-border py-10 bg-background">
-                <div className="container-width">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-                        <div className="flex flex-col items-center md:items-start gap-2">
-                            <div className="brand-text">
+            <footer className="border-t border-border py-16 bg-background relative overflow-hidden">
+                <div className="absolute inset-0 hero-grid opacity-[0.2] pointer-events-none" />
+                <div className="container-width relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                        <div className="col-span-1 md:col-span-2 space-y-6">
+                            <Link href="/" className="brand-text block">
                                 <span>Mail</span><span>My</span><span>Certificate</span>
-                            </div>
-                            <p className="text-xs text-secondary italic">
-                                Built with coffee by <Link href="https://github.com/akshatthakur22" className="hover:text-accent underline underline-offset-4">Akshat</Link>
+                            </Link>
+                            <p className="text-sm text-secondary max-w-sm leading-relaxed font-medium">
+                                The world&apos;s most private bulk certificate generator. Engineered for performance, privacy, and organizers who value their time.
                             </p>
                         </div>
-                        <div className="text-xs font-medium text-secondary opacity-60">
-                            © {new Date().getFullYear()} · MIT License
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Product</h4>
+                            <ul className="space-y-4 text-sm font-bold text-secondary">
+                                <li><Link href="/tool" className="hover:text-accent transition-colors">Start Generating</Link></li>
+                                <li><Link href="/about" className="hover:text-accent transition-colors">About Project</Link></li>
+                                <li><Link href="https://github.com/akshatthakur22/MailMyCertficate" target="_blank" className="hover:text-accent transition-colors">Source Code</Link></li>
+                            </ul>
                         </div>
-                        <div className="flex items-center gap-8 text-sm font-bold text-secondary">
-                            <Link href="https://github.com/akshatthakur22/MailMyCertficate" target="_blank" className="hover:text-accent transition-all flex items-center gap-2">
-                                <Github size={16} /> GitHub
-                            </Link>
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Legal & Support</h4>
+                            <ul className="space-y-4 text-sm font-bold text-secondary">
+                                <li><Link href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link></li>
+                                <li><Link href="/terms-of-service" className="hover:text-accent transition-colors">Terms of Service</Link></li>
+                                <li><Link href="/cookies" className="hover:text-accent transition-colors">Cookie Policy</Link></li>
+                                <li><Link href="/disclaimer" className="hover:text-accent transition-colors">Disclaimer</Link></li>
+                                <li><Link href="/contact" className="hover:text-accent transition-colors">Contact Us</Link></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="pt-8 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex flex-col items-center md:items-start gap-1">
+                            <p className="text-xs text-secondary font-medium">
+                                Built with 💙 by <Link href="https://www.linkedin.com/in/akshatthakur22/" className="hover:text-accent underline underline-offset-4 decoration-accent/30 font-bold">Akshat Thakur</Link>
+                            </p>
+                        </div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40">
+                            © {new Date().getFullYear()} · MIT License · Production v1.0
                         </div>
                     </div>
                 </div>
             </footer>
+
         </div>
     );
 }
