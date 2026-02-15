@@ -1,0 +1,357 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --accent: #1F4ED8;
+  --accent-light: #EEF2FF;
+  --secondary: #6B7280;
+  --border: #E5E7EB;
+  --muted: #F9FAFB;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-secondary: var(--secondary);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ————————————————————————————————
+   Layout Utilities
+   ———————————————————————————————— */
+
+.container-width {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.input-field {
+  @apply bg-background transition-colors focus:ring-2 focus:ring-accent focus:border-transparent outline-hidden;
+}
+
+/* ————————————————————————————————
+   Hero Grid Background
+   ———————————————————————————————— */
+
+.hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1.5px, transparent 1.5px);
+  background-size: 50px 50px;
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 20%, transparent 100%);
+}
+
+.hero-gradient {
+  background: radial-gradient(ellipse 80% 70% at 50% 40%,
+      rgba(31, 78, 216, 0.08) 0%,
+      rgba(31, 78, 216, 0.03) 50%,
+      transparent 100%);
+}
+
+.subtle-grid {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+/* ————————————————————————————————
+   Scroll Animations
+   ———————————————————————————————— */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+
+.reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+
+.reveal-delay-4 {
+  transition-delay: 0.4s;
+}
+
+/* ————————————————————————————————
+   Keyframe Animations
+   ———————————————————————————————— */
+
+@keyframes draw-arrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtle-pulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-3 {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-4 {
+  animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+  opacity: 0;
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+.bg-grain {
+  position: relative;
+}
+
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  filter: contrast(150%) brightness(100%);
+  z-index: 10;
+}
+
+.glass-morphism {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70;
+}
+
+.blob-background {
+  filter: blur(80px);
+  z-index: -1;
+}
+
+.marker-underline {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  isolation: isolate;
+  color: var(--foreground) !important;
+}
+
+.marker-underline::after {
+  content: "";
+  position: absolute;
+  left: -0.1em;
+  right: -0.1em;
+  bottom: 0.1em;
+  height: 0.4em;
+  background: var(--accent);
+  opacity: 0.35;
+  /* Slightly more visible for a handwritten look */
+  z-index: -1;
+  transform: rotate(-1deg);
+  border-radius: 2px;
+}
+
+.glow-on-hover {
+  transition: all 0.5s ease;
+}
+
+.glow-on-hover:hover {
+  box-shadow: 0 0 30px 10px rgba(31, 78, 216, 0.15);
+}
+
+.glass-card {
+  @apply bg-white/40 backdrop-blur-md border border-white/40 shadow-xl hover:bg-white/60 transition-all duration-500;
+}
+
+.section-divider {
+  @apply w-px h-24 bg-gradient-to-b from-border to-transparent mx-auto my-12;
+}
+
+.brand-text {
+  @apply font-bold tracking-tight text-foreground flex items-center;
+  font-size: 1.25rem;
+}
+
+.brand-text span:first-child {
+  @apply text-accent font-extrabold;
+}
+
+.brand-text span:nth-child(2) {
+  @apply text-foreground font-bold;
+}
+
+.brand-text span:last-child {
+  @apply text-secondary font-medium;
+}
+
+.handwritten-arrow {
+  @apply absolute hidden lg:block text-accent opacity-40;
+}
+
+.sticky-note {
+  @apply p-4 shadow-xl rounded-lg text-sm font-serif transform transition-all duration-500 hover:scale-110 hover:-rotate-2;
+}
+
+.sticky-yellow {
+  @apply bg-yellow-50 border border-yellow-200 text-yellow-800 -rotate-3;
+}
+
+.sticky-blue {
+  @apply bg-blue-50 border border-blue-200 text-blue-800 rotate-2;
+}
+
+.sticky-pink {
+  @apply bg-pink-50 border border-pink-200 text-pink-800 rotate-1;
+}
+
+.animate-draw {
+  animation: draw-arrow 2s ease-out forwards;
+}
+
+.animate-float-subtle {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
+/* Custom Range Slider */
+input[type='range'].custom-slider {
+  @apply w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer;
+}
+
+input[type='range'].custom-slider::-webkit-slider-thumb {
+  @apply appearance-none w-5 h-5 bg-accent rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform;
+}
+
+/* ————————————————————————————————
+   Step Connector Line
+   ———————————————————————————————— */
+
+.step-connector {
+  position: relative;
+}
+
+.step-connector::after {
+  content: '';
+  position: absolute;
+  top: 28px;
+  right: -50%;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, var(--border), var(--accent), var(--border));
+  opacity: 0.4;
+}
+
+.step-connector:last-child::after {
+  display: none;
+}
+
+/* ————————————————————————————————
+   Custom Scrollbar (WebKit)
+   ———————————————————————————————— */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
