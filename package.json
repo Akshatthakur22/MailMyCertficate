@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "axios": "^1.13.5",
     "clsx": "^2.1.1",
     "dexie": "^4.3.0",
     "dexie-react-hooks": "^4.2.0",

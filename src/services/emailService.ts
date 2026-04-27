@@ -1,40 +1,124 @@
-import type { Field } from '@/types/field';
-import type { CSVRow } from '@/types/csv';
-
-export interface EmailPayload {
-    recipients: string[]; // List of emails to send to
-    subject: string;
-    body: string; // HTML allowed?
-    template: string; // Base64
-    fields: Field[]; // Position data
-    csvData: CSVRow[]; // Full data to prevent regeneration on backend if needed
+export interface EmailRequest {
+  recipient: string;
+  subject: string;
+  body: string;
 }
 
-export const sendEmails = async (payload: EmailPayload): Promise<{ success: boolean; message: string }> => {
+export interface EmailResponse {
+  success: boolean;
+  message_id?: string;
+  recipient?: string;
+  error?: string;
+}
+
+export interface AuthStatusResponse {
+  authenticated: boolean;
+  email: string | null;
+}
+
+export interface AuthLoginResponse {
+  authorization_url: string;
+  state: string;
+  error?: string;
+}
+
+export const emailService = {
+  // Authentication endpoints
+  async login(): Promise<AuthLoginResponse> {
     try {
-        // In a real app with backend:
-        /*
-        const response = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-    
-        if (!response.ok) {
-            throw new Error(`Failed to send emails: ${response.statusText}`);
-        }
-    
-        return await response.json();
-        */
-
-        // Simulate logging
-        console.log("Simulating Email Send:", payload);
-        return Promise.resolve({ success: true, message: "Emails queued successfully (Simulated)" });
-
+      const response = await fetch('/api/auth/login');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+      
+      return data;
     } catch (error) {
-        console.error("Email Service Error:", error);
-        throw error;
+      throw new Error(error instanceof Error ? error.message : 'Login failed');
     }
+  },
+
+  async getStatus(): Promise<AuthStatusResponse> {
+    try {
+      const response = await fetch('/api/auth/status');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Status check failed');
+      }
+      
+      return data;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Status check failed');
+    }
+  },
+
+  async logout(): Promise<{ success: boolean }> {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Logout failed');
+      }
+      
+      return data;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Logout failed');
+    }
+  },
+
+  // Email sending endpoint
+  async sendEmail(emailRequest: EmailRequest): Promise<EmailResponse> {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailRequest),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Email sending failed');
+      }
+      
+      return data;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Email sending failed');
+    }
+  },
+
+  // Batch email sending for multiple recipients
+  async sendBatchEmails(emailRequests: EmailRequest[]): Promise<EmailResponse[]> {
+    const results: EmailResponse[] = [];
+    
+    // Send emails sequentially to avoid rate limiting
+    for (const request of emailRequests) {
+      try {
+        const result = await this.sendEmail(request);
+        results.push(result);
+        
+        // Add small delay between emails to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        results.push({
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          recipient: request.recipient,
+        });
+      }
+    }
+    
+    return results;
+  },
 };

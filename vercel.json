@@ -1,4 +1,33 @@
 {
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/index.py",
+            "use": "@vercel/python"
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/next"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/index.py"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
+    ],
+    "env": {
+        "PYTHON_VERSION": "3.11"
+    },
+    "functions": {
+        "api/index.py": {
+            "runtime": "python3.11"
+        }
+    },
     "cleanUrls": true,
     "trailingSlash": false,
     "headers": [
