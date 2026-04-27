@@ -1,6 +1,6 @@
 {
   "version": 2,
-  
+
   "routes": [
     {
       "src": "/api/(.*)",
@@ -13,9 +13,7 @@
   ],
 
   "functions": {
-    "api/index.py": {
-      "runtime": "python3.9"
-    }
+    "api/index.py": {}
   },
 
   "cleanUrls": true,
