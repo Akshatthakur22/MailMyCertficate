@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "_comment": "Fixed runtime format - should deploy latest commit now",
-
+  
   "routes": [
     {
       "src": "/api/(.*)",
