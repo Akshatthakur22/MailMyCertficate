@@ -14,12 +14,12 @@
 
   "functions": {
     "api/index.py": {
-      "runtime": "python@3.11"
+      "runtime": "python@3.9"
     }
   },
 
   "env": {
-    "PYTHON_VERSION": "3.11"
+    "PYTHON_VERSION": "3.9"
   },
 
   "cleanUrls": true,
