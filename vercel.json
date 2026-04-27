@@ -1,53 +1,48 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "api/index.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "package.json",
-            "use": "@vercel/next"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/api/index.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/$1"
-        }
-    ],
-    "env": {
-        "PYTHON_VERSION": "3.11"
+  "version": 2,
+
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
     },
-    "functions": {
-        "api/index.py": {
-            "runtime": "python3.11"
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.11"
+    }
+  },
+
+  "env": {
+    "PYTHON_VERSION": "3.11"
+  },
+
+  "cleanUrls": true,
+  "trailingSlash": false,
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
         }
+      ]
     },
-    "cleanUrls": true,
-    "trailingSlash": false,
-    "headers": [
+    {
+      "source": "/icon-(.*).png",
+      "headers": [
         {
-            "source": "/(.*)",
-            "headers": [
-                {
-                    "key": "Strict-Transport-Security",
-                    "value": "max-age=63072000; includeSubDomains; preload"
-                }
-            ]
-        },
-        {
-            "source": "/icon-(.*).png",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "public, max-age=31536000, immutable"
-                }
-            ]
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
-    ]
+      ]
+    }
+  ]
 }
