@@ -3,8 +3,28 @@
 
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/api/auth/login",
       "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/auth/status",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/auth/callback",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/auth/logout",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/send-email",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/test",
+      "dest": "/api/test.py"
     },
     {
       "src": "/(.*)",
@@ -15,7 +35,7 @@
   "functions": {
     "api/index.py": {
       "runtime": "python3.9",
-      "maxDuration": 10
+      "maxDuration": 30
     }
   },
 

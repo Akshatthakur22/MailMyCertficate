@@ -36,8 +36,12 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 
 # Configure CORS for Next.js frontend
-CORS(app, origins=['http://localhost:3000', 'https://your-domain.vercel.app'], 
-     supports_credentials=True)
+allowed_origins = [
+    'http://localhost:3000',
+    'https://mailcertficate.vercel.app',
+    'https://mailcertficate-fe4oojaus-akshatthakur22s-projects.vercel.app'
+]
+CORS(app, origins=allowed_origins, supports_credentials=True)
 
 # Google OAuth Configuration
 GOOGLE_CREDENTIALS_JSON = os.environ.get('GOOGLE_CREDENTIALS_JSON')
@@ -48,7 +52,13 @@ if not GOOGLE_CREDENTIALS_JSON:
 CLIENT_SECRETS = json.loads(GOOGLE_CREDENTIALS_JSON)
 CLIENT_ID = CLIENT_SECRETS['web']['client_id']
 CLIENT_SECRET = CLIENT_SECRETS['web']['client_secret']
-REDIRECT_URI = CLIENT_SECRETS['web'].get('redirect_uris', [])[0] if CLIENT_SECRETS['web'].get('redirect_uris') else 'http://localhost:3000/api/auth/callback'
+# Use the first redirect URI or fallback to production callback
+redirect_uris = CLIENT_SECRETS['web'].get('redirect_uris', [])
+if redirect_uris:
+    REDIRECT_URI = redirect_uris[0]
+else:
+    # Fallback to production callback URL
+    REDIRECT_URI = 'https://mailcertficate.vercel.app/api/auth/callback'
 
 # Session configuration for serverless
 app.config['SESSION_COOKIE_SECURE'] = True
@@ -115,6 +125,10 @@ def auth_logout_alias():
 def auth_login():
     """Initiate OAuth login flow"""
     try:
+        # Debug: Check if credentials are properly loaded
+        if not GOOGLE_CREDENTIALS_JSON:
+            return jsonify({"error": "GOOGLE_CREDENTIALS_JSON environment variable not set"}), 500
+        
         flow = get_flow()
         authorization_url, state = flow.authorization_url(
             access_type='offline',
@@ -135,7 +149,10 @@ def auth_login():
         })
     
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Login error: {error_details}")
+        return jsonify({"error": str(e), "details": error_details}), 500
 
 @app.route('/api/auth/callback')
 def auth_callback():
@@ -143,20 +160,24 @@ def auth_callback():
     try:
         error = request.args.get('error')
         if error:
-            return redirect(f'http://localhost:3000?error={error}')
+            # Determine the frontend URL based on the request origin
+            frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+            return redirect(f'{frontend_url}?error={error}')
         
         state = request.args.get('state')
         code = request.args.get('code')
         
         if not state or not code:
-            return redirect('http://localhost:3000?error=missing_parameters')
+            frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+            return redirect(f'{frontend_url}?error=missing_parameters')
         
         # Verify state
         session_id = get_session_id()
         stored_session = session_store.get(session_id)
         
         if not stored_session or stored_session.get('state') != state:
-            return redirect('http://localhost:3000?error=invalid_state')
+            frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+            return redirect(f'{frontend_url}?error=invalid_state')
         
         # Exchange code for tokens
         flow = get_flow()
@@ -183,10 +204,12 @@ def auth_callback():
         except Exception as e:
             print(f"Could not fetch email: {e}")
             
-        return redirect('http://localhost:3000/email?auth_success=true')
+        frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+        return redirect(f'{frontend_url}/email?auth_success=true')
     
     except Exception as e:
-        return redirect(f'http://localhost:3000?error={str(e)}')
+        frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+        return redirect(f'{frontend_url}?error={str(e)}')
 
 @app.route('/api/auth/status')
 def auth_status():
@@ -372,7 +395,15 @@ def auth_logout():
 
 # Vercel serverless function handler
 def handler(environ, start_response):
-    return app(environ, start_response)
+    """Vercel serverless function entry point"""
+    try:
+        return app(environ, start_response)
+    except Exception as e:
+        # Log error for debugging
+        print(f"Serverless function error: {e}")
+        start_response('500 Internal Server Error', [('Content-Type', 'text/plain')])
+        return [b'Internal Server Error']
 
+# For local testing
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
