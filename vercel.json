@@ -1,21 +1,4 @@
 {
-"version": 2,
-
-"routes": [
-{
-"src": "/api/test",
-"dest": "/api/test.py"
-},
-{
-"src": "/api/(.*)",
-"dest": "/api/index.py"
-},
-{
-"src": "/(.*)",
-"dest": "/$1"
-}
-],
-
 "cleanUrls": true,
 "trailingSlash": false,
 
@@ -38,15 +21,6 @@
 {
 "key": "Referrer-Policy",
 "value": "strict-origin-when-cross-origin"
-}
-]
-},
-{
-"source": "/icon-(.*).png",
-"headers": [
-{
-"key": "Cache-Control",
-"value": "public, max-age=31536000, immutable"
 }
 ]
 }
