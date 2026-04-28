@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { db } from '@/core/db/schema';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/Button';
-import { emailService } from '@/services/emailService';
+import { emailService, updateCsrfToken } from '@/services/emailService';
 import { clearAllSiteData } from '../../utils/clearSiteData';
 
 // Helper function to send email with attachment
@@ -200,6 +200,14 @@ export default function EmailView() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('auth_success') === 'true') {
+      // Capture new CSRF token from OAuth callback
+      const newCsrfToken = urlParams.get('csrf_token');
+      if (newCsrfToken && typeof window !== 'undefined') {
+        localStorage.setItem('csrf_token', newCsrfToken);
+        // Update the email service's in-memory token
+        updateCsrfToken(newCsrfToken);
+      }
+      
       // Clear the URL parameter
       window.history.replaceState({}, document.title, window.location.pathname);
       // Check auth status after callback

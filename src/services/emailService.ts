@@ -29,6 +29,11 @@ let csrfToken: string | null =
     ? localStorage.getItem('csrf_token')
     : null;
 
+// Update CSRF token (for OAuth callback refresh)
+export const updateCsrfToken = (newToken: string) => {
+  csrfToken = newToken;
+};
+
 export const emailService = {
   // Authentication endpoints
   async login(): Promise<AuthLoginResponse> {

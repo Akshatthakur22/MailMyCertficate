@@ -256,11 +256,14 @@ def auth_callback():
             print(f"Could not fetch email: {e}")
             session['email'] = None
         
-        # Clear state from session
+        # Clear state from session and regenerate CSRF token
         session.pop('state', None)
+        session['csrf_token'] = secrets.token_urlsafe(16)
+        session.permanent = True
             
         frontend_url = get_frontend_url()
-        return redirect(f'{frontend_url}/email?auth_success=true')
+        # Include new CSRF token in redirect for frontend to capture
+        return redirect(f'{frontend_url}/email?auth_success=true&csrf_token={session["csrf_token"]}')
     
     except Exception as e:
         print(f"OAuth callback error: {e}")
