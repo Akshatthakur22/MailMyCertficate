@@ -23,8 +23,11 @@ export interface AuthLoginResponse {
   error?: string;
 }
 
-// Simple CSRF token storage for the session
-let csrfToken: string | null = null;
+// Persist CSRF token across refreshes
+let csrfToken: string | null =
+  typeof window !== 'undefined'
+    ? localStorage.getItem('csrf_token')
+    : null;
 
 export const emailService = {
   // Authentication endpoints
@@ -32,17 +35,23 @@ export const emailService = {
     try {
       const response = await fetch('/api/auth/login');
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
-      
-      // Store CSRF token for subsequent requests
+
+      // Store CSRF token
       csrfToken = data.csrf_token;
-      
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('csrf_token', data.csrf_token);
+      }
+
       return data;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Login failed');
+      throw new Error(
+        error instanceof Error ? error.message : 'Login failed'
+      );
     }
   },
 
@@ -50,14 +59,16 @@ export const emailService = {
     try {
       const response = await fetch('/api/auth/status');
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Status check failed');
       }
-      
+
       return data;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Status check failed');
+      throw new Error(
+        error instanceof Error ? error.message : 'Status check failed'
+      );
     }
   },
 
@@ -66,29 +77,35 @@ export const emailService = {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
-      // Add CSRF token if available
+
+      // Attach CSRF token
       if (csrfToken) {
         headers['X-CSRF-Token'] = csrfToken;
       }
-      
+
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         headers,
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Logout failed');
       }
-      
-      // Clear CSRF token on successful logout
+
+      // Clear token after logout
       csrfToken = null;
-      
+
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('csrf_token');
+      }
+
       return data;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Logout failed');
+      throw new Error(
+        error instanceof Error ? error.message : 'Logout failed'
+      );
     }
   },
 
@@ -98,51 +115,61 @@ export const emailService = {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
-      // Add CSRF token if available
+
+      // Attach CSRF token
       if (csrfToken) {
         headers['X-CSRF-Token'] = csrfToken;
       }
-      
+
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers,
         body: JSON.stringify(emailRequest),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Email sending failed');
       }
-      
+
       return data;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Email sending failed');
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Email sending failed'
+      );
     }
   },
 
-  // Batch email sending for multiple recipients
-  async sendBatchEmails(emailRequests: EmailRequest[]): Promise<EmailResponse[]> {
+  // Batch email sending
+  async sendBatchEmails(
+    emailRequests: EmailRequest[]
+  ): Promise<EmailResponse[]> {
     const results: EmailResponse[] = [];
-    
-    // Send emails sequentially to avoid rate limiting
+
+    // Sequential sending to reduce Gmail rate-limit risk
     for (const request of emailRequests) {
       try {
         const result = await this.sendEmail(request);
+
         results.push(result);
-        
-        // Add small delay between emails to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Small delay between sends
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         results.push({
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error',
           recipient: request.recipient,
         });
       }
     }
-    
+
     return results;
   },
 };
