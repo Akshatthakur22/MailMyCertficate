@@ -1,69 +1,67 @@
 {
-  "version": 2,
+"version": 2,
 
-  "routes": [
-    {
-      "src": "/api/auth/login",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/api/auth/status",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/api/auth/callback",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/api/auth/logout",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/api/send-email",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/api/test",
-      "dest": "/api/test.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
+"routes": [
+{
+"src": "/api/test",
+"dest": "/api/test.py"
+},
+{
+"src": "/api/(.*)",
+"dest": "/api/index.py"
+},
+{
+"src": "/(.*)",
+"dest": "/$1"
+}
+],
 
-  "functions": {
-    "api/index.py": {
-      "runtime": "@vercel/python@3.9",
-      "maxDuration": 30
-    },
-    "api/test.py": {
-      "runtime": "@vercel/python@3.9",
-      "maxDuration": 10
-    }
-  },
+"functions": {
+"api/index.py": {
+"runtime": "@vercel/python@3.9",
+"memory": 1024,
+"maxDuration": 30
+},
+"api/test.py": {
+"runtime": "@vercel/python@3.9",
+"memory": 512,
+"maxDuration": 10
+}
+},
 
-  "cleanUrls": true,
-  "trailingSlash": false,
+"cleanUrls": true,
+"trailingSlash": false,
 
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=63072000; includeSubDomains; preload"
-        }
-      ]
-    },
-    {
-      "source": "/icon-(.*).png",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ]
+"headers": [
+{
+"source": "/(.*)",
+"headers": [
+{
+"key": "Strict-Transport-Security",
+"value": "max-age=63072000; includeSubDomains; preload"
+},
+{
+"key": "X-Content-Type-Options",
+"value": "nosniff"
+},
+{
+"key": "X-Frame-Options",
+"value": "DENY"
+},
+{
+"key": "Referrer-Policy",
+"value": "strict-origin-when-cross-origin"
+}
+]
+},
+{
+"source": "/icon-(.*).png",
+"headers": [
+{
+"key": "Cache-Control",
+"value": "public, max-age=31536000, immutable"
+}
+]
+}
+]
 }
