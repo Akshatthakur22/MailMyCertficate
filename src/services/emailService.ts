@@ -19,8 +19,12 @@ export interface AuthStatusResponse {
 export interface AuthLoginResponse {
   authorization_url: string;
   state: string;
+  csrf_token: string;
   error?: string;
 }
+
+// Simple CSRF token storage for the session
+let csrfToken: string | null = null;
 
 export const emailService = {
   // Authentication endpoints
@@ -32,6 +36,9 @@ export const emailService = {
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
+      
+      // Store CSRF token for subsequent requests
+      csrfToken = data.csrf_token;
       
       return data;
     } catch (error) {
@@ -56,11 +63,18 @@ export const emailService = {
 
   async logout(): Promise<{ success: boolean }> {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add CSRF token if available
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+      
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
       
       const data = await response.json();
@@ -68,6 +82,9 @@ export const emailService = {
       if (!response.ok) {
         throw new Error(data.error || 'Logout failed');
       }
+      
+      // Clear CSRF token on successful logout
+      csrfToken = null;
       
       return data;
     } catch (error) {
@@ -78,11 +95,18 @@ export const emailService = {
   // Email sending endpoint
   async sendEmail(emailRequest: EmailRequest): Promise<EmailResponse> {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add CSRF token if available
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+      
       const response = await fetch('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(emailRequest),
       });
       

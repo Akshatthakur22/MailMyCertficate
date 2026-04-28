@@ -2,9 +2,7 @@ import os
 import json
 import base64
 import secrets
-import email
-from datetime import datetime, timedelta
-from urllib.parse import urlencode
+from datetime import timedelta
 import google.auth.transport.requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -60,25 +58,86 @@ else:
     # Fallback to production callback URL
     REDIRECT_URI = 'https://mailcertficate.vercel.app/api/auth/callback'
 
-# Session configuration for serverless
-app.config['SESSION_COOKIE_SECURE'] = True
+# Session configuration for serverless - using Flask session cookies
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('VERCEL') == '1'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
+# Production-safe session settings
+app.config['SESSION_COOKIE_DOMAIN'] = None  # Auto-detect
+app.config['SESSION_COOKIE_PATH'] = '/'
+# Flask session will be used instead of in-memory storage
 
-# In-memory session storage for serverless (consider Redis for production)
-session_store = {}
+# Helper functions for production-safe credential management
+def get_frontend_url():
+    """Get appropriate frontend URL based on request host"""
+    return 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
 
-def get_session_id():
-    """Get or create session ID for serverless environment"""
-    session_id = session.get('session_id')
-    if not session_id:
-        session_id = secrets.token_urlsafe(32)
-        session['session_id'] = session_id
-    return session_id
+def reconstruct_credentials(session_data):
+    """Reconstruct Google OAuth credentials from minimal session data"""
+    if not session_data:
+        return None
+    
+    # Get token_uri from CLIENT_SECRETS with fallback
+    token_uri = CLIENT_SECRETS['web'].get('token_uri', 'https://oauth2.googleapis.com/token')
+    
+    return Credentials(
+        token=session_data.get('token'),
+        refresh_token=session_data.get('refresh_token'),
+        token_uri=token_uri,
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        scopes=session_data.get('scopes')
+    )
+
+def store_credentials_in_session(credentials):
+    """Store minimal essential credential data in Flask session"""
+    session['credentials'] = {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'scopes': credentials.scopes
+        # Removed: token_uri, client_id, client_secret (use global config)
+    }
+    session.permanent = True
+
+def refresh_credentials_if_needed(credentials):
+    """Refresh credentials if expired and update session"""
+    if credentials.expired and credentials.refresh_token:
+        try:
+            credentials.refresh(google.auth.transport.requests.Request())
+            store_credentials_in_session(credentials)
+            return True
+        except Exception as e:
+            print(f"Token refresh failed: {e}")
+            session.clear()
+            return False
+    return True
+
+def sanitize_error_response(error_msg, include_details=False):
+    """Sanitize error responses for production"""
+    if include_details:
+        return jsonify({"error": str(error_msg)}), 500
+    
+    # Generic error for production, specific for development
+    if 'vercel.app' in request.host:
+        return jsonify({"error": "Internal server error"}), 500
+    else:
+        return jsonify({"error": str(error_msg)}), 500
+
+def validate_csrf_token():
+    """Lightweight CSRF protection for POST routes"""
+    # Check for custom header or session token
+    csrf_token = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
+    session_token = session.get('csrf_token')
+    
+    # In development, be more lenient
+    if 'vercel.app' not in request.host:
+        return True
+    
+    return csrf_token == session_token
 
 def get_flow():
-    """Create OAuth flow with environment credentials"""
+    """Create OAuth flow with environment credentials - standard confidential flow"""
     flow = Flow.from_client_config(
         CLIENT_SECRETS,
         scopes=[
@@ -86,7 +145,9 @@ def get_flow():
             'openid',
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email'
-        ]
+        ],
+        # Disable PKCE for standard confidential OAuth flow
+        autogenerate_code_verifier=False
     )
     flow.redirect_uri = REDIRECT_URI
     return flow
@@ -123,154 +184,137 @@ def auth_logout_alias():
 
 @app.route('/api/auth/login')
 def auth_login():
-    """Initiate OAuth login flow"""
+    """Initiate standard OAuth login flow (no PKCE)"""
     try:
-        # Debug: Check if credentials are properly loaded
+        # Validate credentials are properly loaded
         if not GOOGLE_CREDENTIALS_JSON:
-            return jsonify({"error": "GOOGLE_CREDENTIALS_JSON environment variable not set"}), 500
+            return sanitize_error_response("GOOGLE_CREDENTIALS_JSON environment variable not set", include_details=True)
         
         flow = get_flow()
+        # Standard OAuth authorization URL without PKCE
         authorization_url, state = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true',
             prompt='consent'
+            # No code_challenge or code_verifier for standard OAuth
         )
         
-        # Store state in session
-        session_id = get_session_id()
-        session_store[session_id] = {
-            'state': state,
-            'created_at': datetime.utcnow()
-        }
+        # Store state and CSRF token directly in Flask session
+        session['state'] = state
+        session['csrf_token'] = secrets.token_urlsafe(16)
+        session.permanent = True
         
         return jsonify({
             "authorization_url": authorization_url,
-            "state": state
+            "state": state,
+            "csrf_token": session['csrf_token']
         })
     
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
         print(f"Login error: {error_details}")
-        return jsonify({"error": str(e), "details": error_details}), 500
+        return sanitize_error_response(e, include_details=True)
 
 @app.route('/api/auth/callback')
 def auth_callback():
-    """Handle OAuth callback"""
+    """Handle standard OAuth callback (no PKCE)"""
     try:
         error = request.args.get('error')
         if error:
-            # Determine the frontend URL based on the request origin
-            frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+            frontend_url = get_frontend_url()
             return redirect(f'{frontend_url}?error={error}')
         
         state = request.args.get('state')
         code = request.args.get('code')
         
         if not state or not code:
-            frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+            frontend_url = get_frontend_url()
             return redirect(f'{frontend_url}?error=missing_parameters')
         
-        # Verify state
-        session_id = get_session_id()
-        stored_session = session_store.get(session_id)
-        
-        if not stored_session or stored_session.get('state') != state:
-            frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+        # Verify state from Flask session
+        stored_state = session.get('state')
+        if stored_state != state:
+            frontend_url = get_frontend_url()
             return redirect(f'{frontend_url}?error=invalid_state')
         
-        # Exchange code for tokens
+        # Exchange code for tokens using standard OAuth flow (no PKCE)
         flow = get_flow()
         flow.fetch_token(code=code)
         
         credentials = flow.credentials
-        session_store[session_id].update({
-            'credentials': {
-                'token': credentials.token,
-                'refresh_token': credentials.refresh_token,
-                'token_uri': credentials.token_uri,
-                'client_id': credentials.client_id,
-                'client_secret': credentials.client_secret,
-                'scopes': credentials.scopes
-            },
-            'email': None  # Will be set after fetching user info
-        })
         
-        # Get user email
+        # Store minimal credential data in Flask session
+        store_credentials_in_session(credentials)
+        
+        # Get user email and store in session
         try:
             oauth2_service = build('oauth2', 'v2', credentials=credentials)
             user_info = oauth2_service.userinfo().get().execute()
-            session_store[session_id]['email'] = user_info.get('email')
+            session['email'] = user_info.get('email')
         except Exception as e:
             print(f"Could not fetch email: {e}")
+            session['email'] = None
+        
+        # Clear state from session
+        session.pop('state', None)
             
-        frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+        frontend_url = get_frontend_url()
         return redirect(f'{frontend_url}/email?auth_success=true')
     
     except Exception as e:
-        frontend_url = 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
-        return redirect(f'{frontend_url}?error={str(e)}')
+        print(f"OAuth callback error: {e}")
+        frontend_url = get_frontend_url()
+        return redirect(f'{frontend_url}?error=authentication_failed')
 
 @app.route('/api/auth/status')
 def auth_status():
     """Check authentication status"""
     try:
-        session_id = get_session_id()
-        stored_session = session_store.get(session_id)
+        credentials_data = session.get('credentials')
         
-        if not stored_session or not stored_session.get('credentials'):
+        if not credentials_data:
             return jsonify({
                 "authenticated": False,
                 "email": None
             })
         
-        # Check if credentials are expired
-        credentials_data = stored_session['credentials']
-        credentials = Credentials(
-            token=credentials_data.get('token'),
-            refresh_token=credentials_data.get('refresh_token'),
-            token_uri=credentials_data.get('token_uri'),
-            client_id=credentials_data.get('client_id'),
-            client_secret=credentials_data.get('client_secret'),
-            scopes=credentials_data.get('scopes')
-        )
+        # Reconstruct credentials from minimal session data
+        credentials = reconstruct_credentials(credentials_data)
+        if not credentials:
+            session.clear()
+            return jsonify({
+                "authenticated": False,
+                "email": None
+            })
         
-        if credentials.expired and credentials.refresh_token:
-            try:
-                credentials.refresh(google.auth.transport.requests.Request())
-                # Update stored credentials
-                session_store[session_id]['credentials'] = {
-                    'token': credentials.token,
-                    'refresh_token': credentials.refresh_token,
-                    'token_uri': credentials.token_uri,
-                    'client_id': credentials.client_id,
-                    'client_secret': credentials.client_secret,
-                    'scopes': credentials.scopes
-                }
-            except Exception:
-                # Refresh failed, clear session
-                del session_store[session_id]
-                return jsonify({
-                    "authenticated": False,
-                    "email": None
-                })
+        # Refresh credentials if needed
+        if not refresh_credentials_if_needed(credentials):
+            return jsonify({
+                "authenticated": False,
+                "email": None
+            })
         
         return jsonify({
             "authenticated": True,
-            "email": stored_session.get('email')
+            "email": session.get('email')
         })
     
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Auth status error: {e}")
+        return sanitize_error_response(e)
 
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
     """Send email using Gmail API"""
     try:
-        session_id = get_session_id()
-        stored_session = session_store.get(session_id)
+        # Lightweight CSRF protection for POST routes
+        if not validate_csrf_token():
+            return jsonify({"error": "Invalid CSRF token"}), 403
         
-        if not stored_session or not stored_session.get('credentials'):
+        credentials_data = session.get('credentials')
+        
+        if not credentials_data:
             return jsonify({"error": "Not authenticated"}), 401
         
         # Handle both JSON and FormData formats
@@ -289,7 +333,7 @@ def send_email():
             try:
                 data = request.get_json(force=True)
             except Exception as e:
-                return jsonify({"error": f"Invalid JSON data: {str(e)}"}), 400
+                return jsonify({"error": "Invalid JSON data"}), 400
             
             if not data:
                 return jsonify({"error": "No data provided"}), 400
@@ -302,29 +346,14 @@ def send_email():
             if not all([recipient, subject, body]):
                 return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
         
-        # Create credentials object
-        credentials_data = stored_session['credentials']
-        credentials = Credentials(
-            token=credentials_data.get('token'),
-            refresh_token=credentials_data.get('refresh_token'),
-            token_uri=credentials_data.get('token_uri'),
-            client_id=credentials_data.get('client_id'),
-            client_secret=credentials_data.get('client_secret'),
-            scopes=credentials_data.get('scopes')
-        )
+        # Reconstruct credentials from minimal session data
+        credentials = reconstruct_credentials(credentials_data)
+        if not credentials:
+            return jsonify({"error": "Invalid credentials"}), 401
         
-        # Refresh if needed
-        if credentials.expired and credentials.refresh_token:
-            credentials.refresh(google.auth.transport.requests.Request())
-            # Update stored credentials
-            session_store[session_id]['credentials'] = {
-                'token': credentials.token,
-                'refresh_token': credentials.refresh_token,
-                'token_uri': credentials.token_uri,
-                'client_id': credentials.client_id,
-                'client_secret': credentials.client_secret,
-                'scopes': credentials.scopes
-            }
+        # Refresh credentials if needed
+        if not refresh_credentials_if_needed(credentials):
+            return jsonify({"error": "Authentication expired"}), 401
         
         # Build Gmail service
         gmail_service = build('gmail', 'v1', credentials=credentials)
@@ -375,23 +404,25 @@ def send_email():
         })
     
     except HttpError as e:
-        return jsonify({"error": f"Gmail API error: {str(e)}"}), 400
+        print(f"Gmail API error: {e}")
+        return jsonify({"error": "Failed to send email"}), 400
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        print(f"Send email error: {e}")
+        return sanitize_error_response(e)
 
 @app.route('/api/auth/logout', methods=['POST'])
 def auth_logout():
     """Logout user"""
     try:
-        session_id = get_session_id()
-        if session_id in session_store:
-            del session_store[session_id]
+        # Lightweight CSRF protection for POST routes
+        if not validate_csrf_token():
+            return jsonify({"error": "Invalid CSRF token"}), 403
+        
         session.clear()
         return jsonify({"success": True})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Logout error: {e}")
+        return sanitize_error_response(e)
 
 # Vercel serverless function handler
 def handler(environ, start_response):
