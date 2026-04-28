@@ -394,7 +394,9 @@ def auth_logout():
         return jsonify({"error": str(e)}), 500
 
 # Vercel serverless function handler
-handler = app
+def handler(environ, start_response):
+    """Vercel Python serverless function handler"""
+    return app(environ, start_response)
 
 # For local testing
 if __name__ == '__main__':
