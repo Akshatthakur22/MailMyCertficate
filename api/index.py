@@ -394,15 +394,7 @@ def auth_logout():
         return jsonify({"error": str(e)}), 500
 
 # Vercel serverless function handler
-def handler(environ, start_response):
-    """Vercel serverless function entry point"""
-    try:
-        return app(environ, start_response)
-    except Exception as e:
-        # Log error for debugging
-        print(f"Serverless function error: {e}")
-        start_response('500 Internal Server Error', [('Content-Type', 'text/plain')])
-        return [b'Internal Server Error']
+handler = app
 
 # For local testing
 if __name__ == '__main__':
