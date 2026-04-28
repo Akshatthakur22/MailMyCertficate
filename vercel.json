@@ -16,19 +16,6 @@
 }
 ],
 
-"functions": {
-"api/index.py": {
-"runtime": "python3.9",
-"memory": 1024,
-"maxDuration": 30
-},
-"api/test.py": {
-"runtime": "python3.9",
-"memory": 512,
-"maxDuration": 10
-}
-},
-
 "cleanUrls": true,
 "trailingSlash": false,
 
