@@ -87,18 +87,26 @@ export const useAppStore = create<AppStore>()(
 
                 setError: (error) => set({ errorState: error }),
 
-                resetAll: () => set({
-                    sessionId: generateSessionId(),
-                    template: null,
-                    templateDimensions: null,
-                    csvHeaders: [],
-                    csvData: [],
-                    fields: [],
-                    currentStep: 1,
-                    isGenerating: false,
-                    generationProgress: 0,
-                    errorState: null,
-                }),
+                resetAll: () => {
+                    // Clean up queue data when starting fresh
+                    import('@/utils/queueCleanup').then(({ prepareForNewCampaign }) => {
+                        const newSessionId = generateSessionId();
+                        prepareForNewCampaign(newSessionId).catch(console.error);
+                    });
+                    
+                    set({
+                        sessionId: generateSessionId(),
+                        template: null,
+                        templateDimensions: null,
+                        csvHeaders: [],
+                        csvData: [],
+                        fields: [],
+                        currentStep: 1,
+                        isGenerating: false,
+                        generationProgress: 0,
+                        errorState: null,
+                    });
+                },
             }),
             {
                 name: 'mailmycertificate-v2-storage',
