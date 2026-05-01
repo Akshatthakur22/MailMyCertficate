@@ -167,6 +167,7 @@ export default function EmailView() {
     getCurrentSendingItems,
     getEstimatedTimeRemaining,
     formatEstimatedTime,
+    loadQueueState,
   } = useEmailQueue();
 
   // Queue-based bulk send handler
@@ -180,26 +181,40 @@ export default function EmailView() {
       return;
     }
 
-    // Clear any existing queue
-    await clearQueue();
+    // Fix #1 — Build a set of rowIds that are already marked 'sent' in the
+    // current queue so we never add them again (prevents double-sending when
+    // the button is clicked after a partial run).
+    const alreadySentRowIds = new Set(
+      (queueState.items as any[])
+        .filter((i: any) => i.status === 'sent')
+        .map((i: any) => i.rowId as number)
+    );
 
-    // Prepare email requests for queue
-    const emailRequests = csvRows.map(row => {
-      const recipient = row.data[recipientColumn];
-      const subject = emailForm.subject.replace(/{{(\w+)}}/g, (_, key) => row.data[key] || '');
-      const body = emailForm.body.replace(/{{(\w+)}}/g, (_, key) => row.data[key] || '');
-      const cert = getCertificateForRow(row.id);
-      
-      return {
-        rowId: row.id,
-        recipient,
-        subject,
-        body,
-        certificateData: cert?.pdf,
-      };
-    });
+    // Fix #4 — Build requests WITHOUT pre-loading the PDF blob. The blob is
+    // fetched lazily from IDB by the queue worker right before it sends, so
+    // we never hold 400 × ~1 MB in memory at once.
+    const emailRequests = csvRows
+      .filter(row => !alreadySentRowIds.has(row.id))
+      .map(row => {
+        const recipient = row.data[recipientColumn];
+        const subject = emailForm.subject.replace(/{{(\w+)}}/g, (_: string, key: string) => row.data[key] || '');
+        const body = emailForm.body.replace(/{{(\w+)}}/g, (_: string, key: string) => row.data[key] || '');
 
-    // Add to queue and start processing
+        return {
+          rowId: row.id,
+          recipient,
+          subject,
+          body,
+          // certificateData intentionally omitted here; loaded lazily per send.
+        };
+      });
+
+    if (emailRequests.length === 0) {
+      setMessage({ type: 'success', text: 'All emails have already been sent for this session.' });
+      return;
+    }
+
+    // Add only the new (not-yet-sent) rows to the queue and start processing.
     await addToQueue(emailRequests);
     await startQueue();
     

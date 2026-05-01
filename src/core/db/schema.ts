@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { CSVRow } from '@/types/csv';
 
 export interface Session {
     id: string;
@@ -17,7 +18,7 @@ export interface FileData {
 export interface CSVRowData {
     id: number;
     sessionId: string;
-    data: Record<string, string>;
+    data: CSVRow;
 }
 
 export interface CertificateResult {

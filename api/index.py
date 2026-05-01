@@ -2,6 +2,11 @@ import os
 import json
 import base64
 import secrets
+import csv
+import io
+import re
+import urllib.request
+import urllib.error
 from datetime import timedelta
 import google.auth.transport.requests
 from email.mime.multipart import MIMEMultipart
@@ -426,6 +431,123 @@ def auth_logout():
     except Exception as e:
         print(f"Logout error: {e}")
         return sanitize_error_response(e)
+
+
+# ————————————————————————————————
+# Google Sheets Import (Phase 2)
+# ————————————————————————————————
+
+def _extract_sheet_id(url):
+    """Extract Google Sheets ID from URL"""
+    match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
+    return match.group(1) if match else None
+
+def _extract_gid(url):
+    """Extract gid (sheet tab) from URL"""
+    match = re.search(r'[#&?]gid=(\d+)', url)
+    return match.group(1) if match else None
+
+# Alias route
+@app.route('/sheets/import', methods=['POST'])
+def sheets_import_alias():
+    return sheets_import()
+
+@app.route('/api/sheets/import', methods=['POST'])
+def sheets_import():
+    """Import data from a public Google Sheet (read-only)"""
+    try:
+        data = request.get_json(force=True)
+        if not data or 'url' not in data:
+            return jsonify({"error": "Sheet URL is required"}), 400
+
+        sheet_url = data['url'].strip()
+
+        # Parse sheet ID from URL
+        sheet_id = _extract_sheet_id(sheet_url)
+        if not sheet_id:
+            return jsonify({"error": "Invalid Google Sheets URL. Expected a link like: docs.google.com/spreadsheets/d/..."}), 400
+
+        # Extract gid if present (specific sheet tab)
+        gid = _extract_gid(sheet_url)
+
+        # Build CSV export URL for public sheets
+        export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+        if gid is not None:
+            export_url += f"&gid={gid}"
+
+        # Fetch CSV data from Google
+        try:
+            req = urllib.request.Request(export_url, headers={
+                'User-Agent': 'MailMyCertificate/1.0'
+            })
+            with urllib.request.urlopen(req, timeout=30) as response:
+                csv_content = response.read().decode('utf-8')
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return jsonify({"error": "Sheet not found. Make sure the URL is correct."}), 404
+            elif e.code == 403:
+                return jsonify({"error": "Sheet is not publicly accessible. Set sharing to 'Anyone with the link can view'."}), 403
+            else:
+                return jsonify({"error": f"Failed to fetch sheet (HTTP {e.code})"}), 502
+        except urllib.error.URLError:
+            return jsonify({"error": "Could not connect to Google Sheets. Please check your connection and try again."}), 502
+        except Exception:
+            return jsonify({"error": "Failed to fetch sheet data."}), 502
+
+        # Detect private sheet redirect (Google returns HTML login page)
+        stripped = csv_content.strip()
+        if stripped.startswith('<!DOCTYPE') or stripped.startswith('<html') or stripped.startswith('<HTML'):
+            return jsonify({"error": "Sheet is not publicly accessible. Set sharing to 'Anyone with the link can view'."}), 403
+
+        # Strip BOM if present
+        if csv_content.startswith('\ufeff'):
+            csv_content = csv_content[1:]
+
+        # Parse CSV
+        reader = csv.DictReader(io.StringIO(csv_content))
+        headers = reader.fieldnames or []
+
+        if not headers:
+            return jsonify({"error": "Sheet appears to be empty or has no headers."}), 400
+
+        rows = []
+        for row in reader:
+            # Skip completely empty rows
+            if any(v.strip() for v in row.values() if v):
+                rows.append(dict(row))
+
+        if len(rows) == 0:
+            return jsonify({"error": "Sheet has headers but no data rows."}), 400
+
+        # Sanitize headers and data keys
+        sanitized_headers = []
+        header_map = {}
+        for h in headers:
+            # Strip problematic chars but keep spaces and alphanumeric
+            clean_h = re.sub(r'[^\w\s-]', '', h).strip()
+            clean_h = re.sub(r'\s+', ' ', clean_h)
+            sanitized_headers.append(clean_h)
+            header_map[h] = clean_h
+
+        sanitized_rows = []
+        for row in rows:
+            clean_row = {header_map[k]: v for k, v in row.items()}
+            sanitized_rows.append(clean_row)
+
+        if len(sanitized_rows) > 400:
+            return jsonify({"error": f"Too many rows ({len(sanitized_rows)}). Maximum 400 rows allowed."}), 400
+
+        return jsonify({
+            "headers": sanitized_headers,
+            "data": sanitized_rows,
+            "totalRows": len(sanitized_rows),
+            "sheetId": sheet_id,
+        })
+
+    except Exception as e:
+        print(f"Sheets import error: {e}")
+        return sanitize_error_response(e)
+
 
 # Vercel serverless function handler
 def handler(environ, start_response):

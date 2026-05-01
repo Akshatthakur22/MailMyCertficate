@@ -14,36 +14,48 @@ export function useEmailQueue() {
   const [isInitialized, setIsInitialized] = useState(false);
   const sessionId = useAppStore((state) => state.sessionId);
 
-  // Persist queue state to IndexedDB
+  // Persist queue state to IndexedDB atomically.
+  // Uses individual `put` per item so a mid-write crash can never leave the
+  // table empty. Each call is an idempotent upsert keyed on item.id.
   const persistQueueState = useCallback(async (state: typeof queueState) => {
     try {
-      // Store queue items in IndexedDB for recovery
-      await db.queueItems.where({ sessionId }).delete();
-      
-      const itemsToStore = state.items.map((item: EmailQueueItem) => ({
-        id: item.id,
-        sessionId: item.sessionId,
-        rowId: item.rowId,
-        recipient: item.recipient,
-        subject: item.subject,
-        body: item.body,
-        status: item.status,
-        attempts: item.attempts,
-        maxAttempts: item.maxAttempts,
-        error: item.error,
-        errorType: item.errorType,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        sentAt: item.sentAt,
-      }));
+      await db.transaction('rw', db.queueItems, async () => {
+        for (const item of state.items as EmailQueueItem[]) {
+          await db.queueItems.put({
+            id: item.id,
+            sessionId: item.sessionId,
+            rowId: item.rowId,
+            recipient: item.recipient,
+            subject: item.subject,
+            body: item.body,
+            status: item.status,
+            attempts: item.attempts,
+            maxAttempts: item.maxAttempts,
+            error: item.error,
+            errorType: item.errorType,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            sentAt: item.sentAt,
+          });
+        }
 
-      await db.queueItems.bulkAdd(itemsToStore);
+        // Remove IDB rows that are no longer in the in-memory queue
+        // (e.g. after a clearQueue call).
+        const liveIds = new Set(state.items.map((i: EmailQueueItem) => i.id));
+        const storedIds = await db.queueItems
+          .where({ sessionId })
+          .primaryKeys() as string[];
+        const staleIds = storedIds.filter(id => !liveIds.has(id));
+        if (staleIds.length > 0) {
+          await db.queueItems.bulkDelete(staleIds);
+        }
+      });
     } catch (error) {
       console.error('Failed to persist queue state:', error);
     }
   }, [sessionId]);
 
-  // Initialize queue
+  // Initialize queue and auto-restore any persisted state (Fix #5).
   useEffect(() => {
     if (!queueRef.current) {
       queueRef.current = new EmailQueue({
@@ -61,8 +73,27 @@ export function useEmailQueue() {
         // Persist queue state to IndexedDB
         persistQueueState(update.queueState);
       });
+
+      // Fix #4 — Inject lazy certificate resolver.
+      // Fetches the PDF from IndexedDB right before sending to keep memory usage low.
+      queueRef.current.setCertificateResolver(async (sid, rid) => {
+        const cert = await db.certificates.get({ sessionId: sid, rowId: rid });
+        return cert?.pdf;
+      });
     }
     setIsInitialized(true);
+
+    // Auto-restore persisted queue state so the user sees their previous
+    // progress after a page refresh without any manual intervention.
+    const restoreFromIDB = async () => {
+      const storedItems = await db.queueItems.where({ sessionId }).toArray();
+      if (storedItems.length > 0 && queueRef.current) {
+        queueRef.current.addItems(storedItems as any);
+        setQueueState(queueRef.current.getState());
+      }
+    };
+    restoreFromIDB();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, persistQueueState]);
 
   // Load queue state from IndexedDB
