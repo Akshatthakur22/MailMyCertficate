@@ -29,11 +29,29 @@ export interface CertificateResult {
     updatedAt: number;
 }
 
+export interface QueueItem {
+    id: string;
+    sessionId: string;
+    rowId: number;
+    recipient: string;
+    subject: string;
+    body: string;
+    status: 'pending' | 'sending' | 'sent' | 'failed' | 'retry';
+    attempts: number;
+    maxAttempts: number;
+    error?: string;
+    errorType?: 'temporary' | 'permanent' | 'network';
+    createdAt: number;
+    updatedAt: number;
+    sentAt?: number;
+}
+
 export class MailMyDB extends Dexie {
     sessions!: Table<Session>;
     files!: Table<FileData>;
     rows!: Table<CSVRowData>;
     certificates!: Table<CertificateResult>;
+    queueItems!: Table<QueueItem>;
 
     constructor() {
         super('MailMyCertificateDB');
@@ -42,6 +60,13 @@ export class MailMyDB extends Dexie {
             files: 'id, sessionId, type',
             rows: '++id, sessionId',
             certificates: '[sessionId+rowId], sessionId, status'
+        });
+        this.version(2).stores({
+            sessions: 'id, createdAt',
+            files: 'id, sessionId, type',
+            rows: '++id, sessionId',
+            certificates: '[sessionId+rowId], sessionId, status',
+            queueItems: 'id, sessionId, status, [sessionId+status]'
         });
     }
 
@@ -54,6 +79,7 @@ export class MailMyDB extends Dexie {
             await this.certificates.where({ sessionId: session.id }).delete();
             await this.rows.where({ sessionId: session.id }).delete();
             await this.files.where({ sessionId: session.id }).delete();
+            await this.queueItems.where({ sessionId: session.id }).delete();
             await this.sessions.delete(session.id);
         }
     }

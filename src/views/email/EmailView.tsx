@@ -6,6 +6,9 @@ import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/Button';
 import { emailService, updateCsrfToken } from '@/services/emailService';
 import { clearAllSiteData } from '../../utils/clearSiteData';
+import { useEmailQueue } from '@/hooks/useEmailQueue';
+import { SendProgressTable } from '@/components/email/SendProgressTable';
+import { FailedRecipientsList } from '@/components/email/FailedRecipientsList';
 
 // Helper function to send email with attachment
 const sendEmailWithAttachment = async ({ recipient, subject, body, certificate }: {
@@ -35,7 +38,7 @@ const sendEmailWithAttachment = async ({ recipient, subject, body, certificate }
   if (!response.ok) throw new Error(data.error || 'Failed to send email');
   return data;
 };
-import { Mail, LogIn, LogOut, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, LogIn, LogOut, Send, CheckCircle, AlertCircle, Loader2, Clock, TrendingUp, Users } from 'lucide-react';
 
 interface AuthStatus {
   authenticated: boolean;
@@ -152,51 +155,97 @@ export default function EmailView() {
   };
 
   // Check for OAuth callback
-    // Bulk send handler (with certificates)
-    const handleBulkSend = async () => {
-      if (!recipientColumn) {
-        setMessage({ type: 'error', text: 'Please select the recipient email column.' });
-        return;
-      }
-      if (!csvRows.length) {
-        setMessage({ type: 'error', text: 'No CSV data loaded.' });
-        return;
-      }
-      setSending(true);
-      setMessage(null);
-      let successCount = 0;
-      let failCount = 0;
-      for (const row of csvRows) {
-        const recipient = row.data[recipientColumn];
-        const subject = emailForm.subject.replace(/{{(\w+)}}/g, (_, key) => row.data[key] || '');
-        const body = emailForm.body.replace(/{{(\w+)}}/g, (_, key) => row.data[key] || '');
-        const cert = getCertificateForRow(row.id);
-        try {
-          await sendEmailWithAttachment({ recipient, subject, body, certificate: cert?.pdf });
-          successCount++;
-        } catch (e) {
-          failCount++;
-        }
-      }
-      // Show success message
-      setMessage({ type: 'success', text: `Sent ${successCount} emails successfully. ${failCount > 0 ? failCount + ' failed.' : ''}` });
+    // Initialize email queue
+  const {
+    queueState,
+    addToQueue,
+    startQueue,
+    stopQueue,
+    retryFailed,
+    clearQueue,
+    getFailedItems,
+    getCurrentSendingItems,
+    getEstimatedTimeRemaining,
+    formatEstimatedTime,
+  } = useEmailQueue();
+
+  // Queue-based bulk send handler
+  const handleBulkSend = async () => {
+    if (!recipientColumn) {
+      setMessage({ type: 'error', text: 'Please select the recipient email column.' });
+      return;
+    }
+    if (!csvRows.length) {
+      setMessage({ type: 'error', text: 'No CSV data loaded.' });
+      return;
+    }
+
+    // Clear any existing queue
+    await clearQueue();
+
+    // Prepare email requests for queue
+    const emailRequests = csvRows.map(row => {
+      const recipient = row.data[recipientColumn];
+      const subject = emailForm.subject.replace(/{{(\w+)}}/g, (_, key) => row.data[key] || '');
+      const body = emailForm.body.replace(/{{(\w+)}}/g, (_, key) => row.data[key] || '');
+      const cert = getCertificateForRow(row.id);
       
-      // Clear all site data after successful email sending
-      if (successCount > 0) {
-        try {
-          await clearAllSiteData();
-          // Update message to include data clearing info
-          setTimeout(() => {
-            setMessage({ type: 'success', text: `✅ Sent ${successCount} emails successfully! All site data has been cleared for privacy.${failCount > 0 ? ` ${failCount} failed.` : ''}` });
-          }, 1000);
-        } catch (error) {
-          console.error('Failed to clear site data:', error);
-          setMessage({ type: 'success', text: `Sent ${successCount} emails successfully. ${failCount > 0 ? failCount + ' failed.' : ''} (Note: Site data clearing failed)` });
-        }
-      }
+      return {
+        rowId: row.id,
+        recipient,
+        subject,
+        body,
+        certificateData: cert?.pdf,
+      };
+    });
+
+    // Add to queue and start processing
+    await addToQueue(emailRequests);
+    await startQueue();
+    
+    setMessage({ type: 'success', text: `Queue started: ${emailRequests.length} emails to send...` });
+  };
+
+  // Handle retry failed emails
+  const handleRetryFailed = async () => {
+    retryFailed();
+    setMessage({ type: 'success', text: 'Retrying failed emails...' });
+  };
+
+  // Handle queue completion
+  useEffect(() => {
+    if (queueState.completedAt && !queueState.isProcessing) {
+      const { sent, failed } = queueState.stats;
       
-      setSending(false);
-    };
+      if (sent > 0) {
+        setMessage({ 
+          type: 'success', 
+          text: `✅ Sent ${sent} emails successfully! ${failed > 0 ? `${failed} failed.` : ''}` 
+        });
+        
+        // Clear all site data after successful email sending
+        if (sent > 0) {
+          setTimeout(async () => {
+            try {
+              await clearAllSiteData();
+              setMessage({ 
+                type: 'success', 
+                text: `✅ Sent ${sent} emails successfully! All site data has been cleared for privacy.${failed > 0 ? ` ${failed} failed.` : ''}` 
+              });
+            } catch (error) {
+              console.error('Failed to clear site data:', error);
+              setMessage({ 
+                type: 'success', 
+                text: `Sent ${sent} emails successfully. ${failed > 0 ? `${failed} failed.` : ''} (Note: Site data clearing failed)` 
+              });
+            }
+          }, 2000);
+        }
+      } else if (failed > 0) {
+        setMessage({ type: 'error', text: `All ${failed} emails failed to send.` });
+      }
+    }
+  }, [queueState.completedAt, queueState.isProcessing, queueState.stats]);
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('auth_success') === 'true') {
@@ -351,22 +400,131 @@ export default function EmailView() {
             />
           </div>
 
+          {/* Enhanced Queue Progress Section */}
+          {queueState.items.length > 0 && (
+            <div className="mb-6 space-y-4">
+              {/* Progress Overview with Enhanced Visuals */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${queueState.isProcessing ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                    <h4 className="font-bold text-gray-900 text-lg">
+                      {queueState.isProcessing ? 'Sending in Progress' : 'Send Complete'}
+                    </h4>
+                  </div>
+                  {queueState.isProcessing && (
+                    <div className="flex items-center gap-1 text-sm text-blue-600">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Live
+                    </div>
+                  )}
+                </div>
+                
+                {/* Stats Grid */}
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 text-2xl font-bold text-green-600">
+                      <TrendingUp className="w-5 h-5" />
+                      {queueState.stats.sent}
+                    </div>
+                    <div className="text-xs text-gray-600">Sent</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 text-2xl font-bold text-amber-600">
+                      <Clock className="w-5 h-5" />
+                      {queueState.stats.pending}
+                    </div>
+                    <div className="text-xs text-gray-600">Pending</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 text-2xl font-bold text-red-600">
+                      <AlertCircle className="w-5 h-5" />
+                      {queueState.stats.failed}
+                    </div>
+                    <div className="text-xs text-gray-600">Failed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 text-2xl font-bold text-blue-600">
+                      <Users className="w-5 h-5" />
+                      {queueState.stats.total}
+                    </div>
+                    <div className="text-xs text-gray-600">Total</div>
+                  </div>
+                </div>
+                
+                {/* Enhanced Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm text-gray-700">
+                    <span>Overall Progress</span>
+                    <span className="font-mono font-bold">
+                      {Math.round((queueState.stats.sent / queueState.stats.total) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500 ease-out relative"
+                      style={{ width: `${(queueState.stats.sent / queueState.stats.total) * 100}%` }}
+                    >
+                      <div className="absolute inset-0 bg-white opacity-20 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Live Metrics */}
+                {queueState.isProcessing && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 text-blue-700">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span>Currently sending: {queueState.currentSendingIds.length} emails</span>
+                      </div>
+                      <div className="text-gray-600">
+                        Est. remaining: {formatEstimatedTime(getEstimatedTimeRemaining())}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Currently Sending */}
+              {queueState.isProcessing && getCurrentSendingItems().length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-900 mb-3">Currently Sending</h4>
+                  <SendProgressTable 
+                    items={getCurrentSendingItems()} 
+                    currentSendingIds={queueState.currentSendingIds}
+                    compact={true}
+                  />
+                </div>
+              )}
+
+              {/* Failed Items */}
+              {getFailedItems().length > 0 && (
+                <FailedRecipientsList
+                  failedItems={getFailedItems()}
+                  onRetryFailed={handleRetryFailed}
+                  isRetrying={queueState.isProcessing}
+                />
+              )}
+            </div>
+          )}
+
           {/* Preview summary */}
           <div className="mb-4 text-sm text-gray-700">
             <strong>Preview:</strong> {csvRows.length} emails will be sent. Each will have a unique certificate attached.<br/>
-            <span className="text-xs text-gray-500">(Backend support for attachments required)</span>
+            <span className="text-xs text-gray-500">(Queue-based sending with retry logic)</span>
           </div>
 
           <Button
             type="button"
-            disabled={sending || !recipientColumn || !csvRows.length}
+            disabled={queueState.isProcessing || sending || !recipientColumn || !csvRows.length}
             className="w-full flex items-center justify-center gap-2"
             onClick={handleBulkSend}
           >
-            {sending ? (
+            {queueState.isProcessing || sending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Sending...
+                {queueState.isProcessing ? 'Processing Queue...' : 'Sending...'}
               </>
             ) : (
               <>
