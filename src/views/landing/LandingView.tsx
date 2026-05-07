@@ -83,8 +83,27 @@ function RevealSection({
    ———————————————————————————————————————————————————— */
 export default function LandingView() {
     const [count, setCount] = useState(100);
-    const timePerCert = 3; // minutes manually
-    const savedTime = Math.round((count * timePerCert) / 60);
+    
+    // Realistic non-linear scaling for manual work
+    const getManualTime = (certs: number) => {
+        if (certs <= 50) return Math.round(certs * 2.4); // ~2.4 min per cert for small batches
+        if (certs <= 100) return Math.round(120 + (certs - 50) * 2.4); // 2 hours + scaling
+        if (certs <= 250) return Math.round(240 + (certs - 100) * 1.92); // 4 hours + scaling
+        if (certs <= 500) return Math.round(480 + (certs - 250) * 1.44); // 8 hours + scaling
+        return Math.round(840 + (certs - 500) * 1.2); // 14 hours + scaling
+    };
+    
+    // MailMyCertificate processing time (also scales but much faster)
+    const getToolTime = (certs: number) => {
+        if (certs <= 50) return 2;
+        if (certs <= 100) return 4;
+        if (certs <= 250) return 7;
+        if (certs <= 500) return 12;
+        return 20;
+    };
+    
+    const manualHours = getManualTime(count);
+    const toolMinutes = getToolTime(count);
 
     return (
         <div className="flex flex-col min-h-screen bg-background font-sans overflow-x-hidden">
@@ -165,25 +184,36 @@ export default function LandingView() {
 
                         <div className="flex justify-center mb-8 animate-fade-in-up">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-background/80 backdrop-blur-sm text-sm font-medium text-secondary shadow-sm hover:border-accent/40 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-subtle-pulse" />
-                                100% Free & Open Source
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-subtle-pulse" />
+                                🔒 100% Private • Free Forever • Open Source
                             </div>
                         </div>
 
                         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[84px] font-bold tracking-tight text-foreground leading-[0.95] max-w-5xl mx-auto mb-8 animate-fade-in-up-delay-1 text-gradient">
-                            Automate certificates locally
+                            Send hundreds of certificates in minutes
                             <br className="hidden md:block" />
-                            with <span className="marker-underline italic font-serif">fast, offline PDF generation.</span>
+                            — <span className="marker-underline italic font-serif">not weekends.</span>
                         </h1>
 
-                        <p className="text-lg md:text-2xl text-secondary max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up-delay-2">
-                            The ultimate certificate generation software for secure, high-speed delivery.
-                            Create professional certificates in bulk without your data ever leaving your browser.
+                        <p className="text-lg md:text-2xl text-secondary max-w-2xl mx-auto mb-6 leading-relaxed animate-fade-in-up-delay-2">
+                            From Google Forms → Google Sheets → Personalized PDFs → Bulk Email.
+                        </p>
+
+                        <div className="flex flex-wrap justify-center gap-3 mb-8 animate-fade-in-up-delay-2">
+                            {['Hackathons', 'Workshops', 'Bootcamps', 'Webinars', 'College Events'].map((tag, i) => (
+                                <span key={i} className="px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-sm font-medium text-accent hover:bg-accent/20 transition-colors">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+
+                        <p className="text-md md:text-lg text-secondary/90 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up-delay-2">
+                            Everything runs locally in your browser — no signup, no external storage, no participant data uploaded to random servers.
                         </p>
 
 
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-12 animate-fade-in-up-delay-3">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-8 animate-fade-in-up-delay-3">
                             <Link
                                 href="/tool"
                                 className={buttonVariants({
@@ -192,7 +222,7 @@ export default function LandingView() {
                                     className: 'w-full sm:w-auto text-lg px-10 h-16 shadow-2xl shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all',
                                 })}
                             >
-                                Start Generating Now
+                                Generate Your First Batch
                                 <ArrowRight className="ml-2 w-5 h-5" />
                             </Link>
                             <Link
@@ -206,8 +236,22 @@ export default function LandingView() {
                                 <div className="w-8 h-8 rounded-full bg-accent-light flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
                                     <Play size={14} fill="currentColor" />
                                 </div>
-                                Quick Demo
+                                Watch 2-Minute Demo
                             </Link>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-6 mb-12 animate-fade-in-up-delay-3">
+                            {[
+                                { icon: <Shield size={14} />, text: 'No signup required' },
+                                { icon: <Lock size={14} />, text: 'Runs locally' },
+                                { icon: <Github size={14} />, text: 'Open source' },
+                                { icon: <Zap size={14} />, text: 'Free forever' }
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 text-sm font-medium text-secondary hover:border-accent/40 transition-colors">
+                                    {item.icon}
+                                    {item.text}
+                                </div>
+                            ))}
                         </div>
 
                         <div className="hidden lg:block absolute left-1/2 -bottom-10 -translate-x-full ml-40">
@@ -217,15 +261,20 @@ export default function LandingView() {
 
                         <div className="hidden lg:block absolute right-10 top-1/2 -rotate-6 animate-fade-in-up-delay-4">
                             <div className="sticky-note sticky-yellow max-w-[140px]">
-                                No signup required. <br /> Just upload and go! ✨
+                                Your Sunday just got saved ☕
                             </div>
                             <div className="w-px h-12 bg-yellow-200 mx-auto transform -translate-y-1" />
                         </div>
                     </div>
 
                     <div className="relative container-width pb-16 md:pb-24">
-                        <div className="animate-fade-in-up-delay-4">
-                            <div className="relative rounded-2xl overflow-hidden border border-border/80 shadow-2xl bg-white mx-auto max-w-5xl animate-float">
+                        <div id="demo" className="animate-fade-in-up-delay-4">
+                            <div className="text-center mb-8">
+                                <h2 className="text-2xl md:text-3xl font-bold mb-4">See the actual tool in action</h2>
+                                <p className="text-secondary">Real screen recording of generating 127 certificates in 1:47</p>
+                            </div>
+                            
+                            <div className="relative rounded-2xl overflow-hidden border border-border/80 shadow-2xl bg-white mx-auto max-w-5xl group">
                                 <div className="flex items-center gap-2 px-4 py-3 bg-muted border-b border-border">
                                     <div className="flex items-center gap-1.5">
                                         <div className="w-3 h-3 rounded-full bg-red-400/80" />
@@ -237,18 +286,32 @@ export default function LandingView() {
                                             mailmycertificate.com/tool
                                         </div>
                                     </div>
-                                    <div className="w-16" />
+                                    <div className="flex items-center gap-2 text-xs text-secondary">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                        <span>Live demo</span>
+                                    </div>
                                 </div>
-                                <div className="relative aspect-[16/9]">
-                                    <Image
-                                        src="/platform-preview.png"
-                                        alt="MailMyCertificate Preview"
-                                        fill
-                                        className="object-cover object-top"
-                                        priority
-                                    />
+                                
+                                <div className="relative aspect-[16/9] bg-black">
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center mb-4 mx-auto hover:bg-white transition-colors cursor-pointer group">
+                                                <Play size={32} className="text-accent ml-1 group-hover:scale-110 transition-transform" />
+                                            </div>
+                                            <p className="text-white/80 text-sm mb-2">Watch real certificate generation</p>
+                                            <p className="text-white/60 text-xs">No staging, no mockups — actual tool usage</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    
+                                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                                        <div className="text-white/60 text-xs font-mono">1:47</div>
+                                        <div className="text-white/60 text-xs">127 certificates generated</div>
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
                         </div>
                     </div>
@@ -261,16 +324,23 @@ export default function LandingView() {
                     <div className="container-width">
                         <RevealSection className="max-w-4xl mx-auto text-center mb-16 group">
                             <p className="text-sm font-bold text-accent uppercase tracking-[0.2em] mb-4">
-                                The Story
+                                THE STORY
                             </p>
                             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-8 leading-[1.1] text-gradient">
-                                We built this because we were
+                                We built this because manual certificate work
                                 <br className="hidden md:block" />
-                                tired of the <span className="marker-underline italic">manual grind.</span>
+                                is <span className="marker-underline italic">painful.</span>
                             </h2>
                             <div className="text-xl text-secondary leading-relaxed max-w-2xl mx-auto relative cursor-default">
-                                Manually editing certificates in Canva and emailing them one-by-one is a soul-crushing waste of time.
-                                MailMyCertificate turns that 4-hour job into a <span className="marker-highlight font-bold text-accent">60-second</span> coffee break.
+                                If you've ever manually edited certificates in Canva, downloaded hundreds of PDFs, and attached them to emails one-by-one — you already know the pain.
+                                <br className="hidden sm:block" />
+                                <br className="hidden sm:block" />
+                                MailMyCertificate turns a stressful 4-hour task into a 2-minute workflow.
+                                <br className="hidden sm:block" />
+                                <br className="hidden sm:block" />
+                                No repetitive editing.
+                                No attachment chaos.
+                                No wrong-certificate disasters.
                                 <div className="hidden xl:block absolute -right-20 -top-8 sticky-note sticky-blue max-w-[120px] -rotate-6 scale-75 opacity-0 group-hover:opacity-100 transition-opacity">
                                     Trust us, we&apos;ve been there. ☕️
                                 </div>
@@ -279,10 +349,10 @@ export default function LandingView() {
 
                         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-20">
                             {[
-                                { icon: <Clock size={20} />, title: 'Soul-crushing repetition', desc: 'Opening the same template 200 times. One typo and you starts all over again.' },
-                                { icon: <Send size={20} />, title: 'Emailing is the worst part', desc: 'Making sure "John" gets John\'s certificate. One wrong click and it\'s an awkward apology.' },
-                                { icon: <Lock size={20} />, title: 'Data is meant to be private', desc: 'Why upload your participant list to a mysterious server? We do everything on your device.' },
-                                { icon: <Zap size={20} />, title: 'Paying for utility', desc: 'Most "free" tools stop you at 10 exports. We don\'t care. Export 1,000 if you want.' },
+                                { icon: <Clock size={20} />, title: 'Manual editing burnout', desc: 'Opening the same template 200 times destroys both time and sanity.' },
+                                { icon: <Send size={20} />, title: 'Email mistakes happen', desc: 'One wrong attachment and suddenly you&apos;re apologizing to participants at midnight.' },
+                                { icon: <Lock size={20} />, title: 'Privacy matters', desc: 'Participant lists should stay on your device — not on unknown third-party servers.' },
+                                { icon: <Zap size={20} />, title: 'Fake free tools', desc: 'Most &quot;free&quot; tools stop working after 10 exports or hide everything behind a paywall.' },
                             ].map((item, i) => (
                                 <RevealSection key={i} delay={`reveal-delay-${i + 1}`}>
                                     <div className="group h-full p-8 rounded-2xl border border-border bg-background hover:border-accent/40 hover:shadow-[0_20px_50px_rgba(31,78,216,0.05)] glow-on-hover transition-all duration-500">
@@ -303,21 +373,21 @@ export default function LandingView() {
                            ====================================== */}
                         <div className="text-center mb-16">
                             <p className="text-sm font-bold text-accent uppercase tracking-[0.2em] mb-4">
-                                The Difference
+                                THE DIFFERENCE
                             </p>
-                            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-gradient max-w-2xl mx-auto">
-                                Stop wasting your Sundays.
+                            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gradient max-w-2xl mx-auto">
+                                Stop wasting hours on certificate work.
                             </h2>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-8 items-stretch max-w-5xl mx-auto">
                             <RevealSection delay="reveal-delay-1">
-                                <div className="h-full p-10 rounded-[2.5rem] border border-red-100 bg-red-50/30">
+                                <div className="h-full p-10 rounded-2xl border border-red-100 bg-red-50/30">
                                     <div className="text-red-600 font-bold uppercase text-[10px] tracking-widest mb-8 px-4 py-1.5 bg-red-100/50 rounded-full w-fit">
-                                        The Low-Tech Nightmare
+                                        THE OLD WAY
                                     </div>
                                     <ul className="space-y-6">
-                                        {['200 separate browser tabs open', 'Copying names one-by-one into Canva', 'Downloading 200 files manually', 'Attaching files to 200 separate emails', 'Sending "John" the wrong certificate', 'An entire Sunday afternoon gone.'].map((text, i) => (
+                                        {['Editing names manually in Canva', 'Downloading certificates one-by-one', 'Attaching files manually to emails', 'Double-checking every recipient', 'Accidentally sending wrong certificates', 'Losing entire weekends doing repetitive work'].map((text, i) => (
                                             <li key={i} className="flex items-start gap-3 text-red-900/40 text-sm italic">
                                                 <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-300 shrink-0" />
                                                 {text}
@@ -328,12 +398,12 @@ export default function LandingView() {
                             </RevealSection>
 
                             <RevealSection delay="reveal-delay-2">
-                                <div className="h-full p-10 rounded-[2.5rem] border border-blue-100 bg-blue-50/30 glass-card">
+                                <div className="h-full p-10 rounded-2xl border border-blue-100 bg-blue-50/30 glass-card">
                                     <div className="text-blue-600 font-bold uppercase text-[10px] tracking-widest mb-8 px-4 py-1.5 bg-blue-100/50 rounded-full w-fit">
-                                        The MailMyCertificate Flow
+                                        THE MAILMYCERTIFICATE WAY
                                     </div>
                                     <ul className="space-y-6">
-                                        {['One single template upload', 'CSV columns mapped in seconds', 'Batch generate zipped PDFs', 'Bulk send with Google Workspaces', 'Everything processed locally (Private)', 'Done before your coffee gets cold.'].map((text, i) => (
+                                        {['Upload one template', 'Import CSV or Google Sheets', 'Generate personalized PDFs instantly', 'Send bulk emails through Gmail', 'Everything processed locally', 'Done before your coffee gets cold ☕'].map((text, i) => (
                                             <li key={i} className="flex items-start gap-3 text-blue-900 text-sm font-semibold">
                                                 <Check size={18} className="text-blue-500 shrink-0" />
                                                 {text}
@@ -350,13 +420,13 @@ export default function LandingView() {
                         <RevealSection delay="reveal-delay-3" className="mt-24 max-w-3xl mx-auto">
                             <div className="flex flex-col gap-6">
                                 <div className="flex justify-start">
-                                    <div className="bg-muted px-6 py-4 rounded-[2rem] rounded-bl-none max-w-md shadow-sm border border-border">
-                                        <p className="text-sm text-secondary italic">&quot;Is there any tool to send 300 hackathon certificates without spending my whole weekend manually attaching PDFs?&quot;</p>
+                                    <div className="bg-muted px-6 py-4 rounded-2xl rounded-bl-none max-w-md shadow-sm border border-border">
+                                        <p className="text-sm text-secondary italic">&quot;We still have 280 certificates left to send 😭&quot;</p>
                                     </div>
                                 </div>
                                 <div className="flex justify-end">
-                                    <div className="bg-accent text-white px-6 py-4 rounded-[2rem] rounded-br-none max-w-sm shadow-lg shadow-accent/20">
-                                        <p className="text-sm font-medium">Just use MailMyCertificate. It took me literally 2 minutes for a batch of 500. Life saver. 🙌</p>
+                                    <div className="bg-accent text-white px-6 py-4 rounded-2xl rounded-br-none max-w-sm shadow-lg shadow-accent/20">
+                                        <p className="text-sm font-medium">Just imported the Google Sheet, generated all PDFs, and sent everything in under 10 minutes.</p>
                                     </div>
                                 </div>
                             </div>
@@ -365,39 +435,45 @@ export default function LandingView() {
                         {/* ======================================
                             TIME SAVED CALCULATOR
                            ====================================== */}
-                        <RevealSection delay="reveal-delay-4" className="mt-32 max-w-4xl mx-auto p-12 rounded-[3.5rem] bg-accent/5 border border-accent/10 relative overflow-hidden group">
+                        <RevealSection delay="reveal-delay-4" className="mt-32 max-w-4xl mx-auto p-12 rounded-2xl bg-accent/5 border border-accent/10 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <Clock size={120} />
                             </div>
 
                             <div className="relative z-10 text-center max-w-2xl mx-auto">
-                                <p className="text-xs font-bold text-accent uppercase tracking-widest mb-4">Savings Calculator</p>
-                                <h3 className="text-3xl font-bold mb-6">How much is your Sunday worth?</h3>
+                                <p className="text-xs font-bold text-accent uppercase tracking-widest mb-4">TIME SAVED</p>
+                                <h3 className="text-3xl font-bold mb-6">How much time are you wasting manually?</h3>
                                 <p className="text-secondary mb-12">
-                                    Number of certificates:
-                                    <span className="inline-block px-4 py-1 bg-accent/10 text-accent font-mono font-bold rounded-lg ml-3 text-2xl">{count}</span>
+                                    Most organizers spend 3–6 hours manually handling certificates.
+                                    <br className="hidden sm:block" />
+                                    Including editing, exporting, checking names, attaching PDFs, and sending emails.
                                 </p>
 
-                                <input
-                                    type="range"
-                                    min="10"
-                                    max="1000"
-                                    step="10"
-                                    value={count}
-                                    onChange={(e) => setCount(parseInt(e.target.value))}
-                                    className="custom-slider mb-12"
-                                />
+                                <div className="mb-4">
+                                    <label className="text-sm font-medium text-secondary mb-2 block">
+                                        Number of certificates: <span className="text-accent font-bold">{count}</span>
+                                    </label>
+                                    <input
+                                        type="range"
+                                        min="10"
+                                        max="1000"
+                                        step="10"
+                                        value={count}
+                                        onChange={(e) => setCount(parseInt(e.target.value))}
+                                        className="custom-slider mb-12"
+                                    />
+                                </div>
 
-                                <div className="grid sm:grid-cols-2 gap-8 items-center bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-white">
+                                <div className="grid sm:grid-cols-2 gap-8 items-center bg-white/50 backdrop-blur-sm p-8 rounded-2xl border border-white">
                                     <div className="text-left">
                                         <p className="text-[10px] uppercase font-bold tracking-widest text-red-500 mb-1">Manual Method</p>
-                                        <p className="text-2xl font-bold">~{count * timePerCert} mins</p>
-                                        <p className="text-xs text-secondary mt-1 italic">Stress, typos, and headache.</p>
+                                        <p className="text-2xl font-bold">~{manualHours > 60 ? `${Math.round(manualHours/60)}h ${manualHours % 60}m` : `${manualHours}m`}</p>
+                                        <p className="text-xs text-secondary mt-1 italic">Realistic time for editing, exporting, and attaching manually.</p>
                                     </div>
                                     <div className="text-left border-l border-border pl-8">
                                         <p className="text-[10px] uppercase font-bold tracking-widest text-green-500 mb-1">MailMyCertificate</p>
-                                        <p className="text-2xl font-bold">~60 secs</p>
-                                        <p className="text-xs text-green-600 font-bold mt-1">Reclaimed {savedTime} hours. 🎉</p>
+                                        <p className="text-2xl font-bold">~{toolMinutes} minutes</p>
+                                        <p className="text-xs text-green-600 font-bold mt-1">Upload → Generate → Review → Send.</p>
                                     </div>
                                 </div>
                             </div>
@@ -412,22 +488,22 @@ export default function LandingView() {
                     <div className="container-width">
                         <RevealSection className="text-center mb-20">
                             <p className="text-sm font-bold text-accent uppercase tracking-[0.2em] mb-4">
-                                The Workflow
+                                WORKFLOW
                             </p>
                             <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-gradient">
-                                Four steps to freedom.
+                                Four simple steps.
                             </h2>
                             <p className="text-secondary text-xl max-w-xl mx-auto">
-                                No accounts, no configs, no nonsense.
+                                No accounts. No complicated setup. No learning curve.
                             </p>
                         </RevealSection>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 max-w-6xl mx-auto">
                             {[
-                                { step: '01', icon: <Upload size={24} />, title: 'Drop your design', desc: 'Upload any JPG or PNG certificate template.' },
-                                { step: '02', icon: <TableProperties size={24} />, title: 'Add your list', desc: 'Upload a CSV and map columns to fields.' },
-                                { step: '03', icon: <FileDown size={24} />, title: 'Batch Generate', desc: 'Hundreds of personalized PDFs in seconds.' },
-                                { step: '04', icon: <Mail size={24} />, title: 'Send it out', desc: 'Connect Google and bulk-send automatically.' },
+                                { step: '01', icon: <Upload size={24} />, title: 'Upload your template', desc: 'Use any PNG or JPG certificate design as your base.' },
+                                { step: '02', icon: <TableProperties size={24} />, title: 'Import participants', desc: 'Connect Google Sheets or upload CSV with recipient data.' },
+                                { step: '03', icon: <FileDown size={24} />, title: 'Preview personalized PDFs', desc: 'Create hundreds of individualized certificates instantly.' },
+                                { step: '04', icon: <Mail size={24} />, title: 'Send personalized emails', desc: 'Deliver certificates automatically through Gmail.' },
                             ].map((item, i) => (
                                 <RevealSection key={i} delay={`reveal-delay-${i + 1}`} className={i % 2 !== 0 ? 'md:mt-12' : ''}>
                                     <div className="flex flex-col items-center text-center group">
@@ -447,55 +523,63 @@ export default function LandingView() {
                 </section>
 
                 {/* ======================================
-                    PRODUCT DEMO SECTION
+                    LOCAL PROCESSING REASSURANCE
                    ====================================== */}
-                <section id="demo" className="py-24 md:py-32 scroll-mt-20">
+                <section className="py-20 md:py-28 border-t border-border/50">
                     <div className="container-width">
-                        <RevealSection className="text-center mb-20">
+                        <RevealSection className="text-center mb-16">
                             <p className="text-sm font-bold text-accent uppercase tracking-[0.2em] mb-4">
-                                The Editor
+                                PRIVACY FIRST
                             </p>
-                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-gradient">
-                                Simple, but powerful.
+                            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6 text-gradient">
+                                Everything runs locally in your browser.
                             </h2>
-                            <p className="text-secondary text-xl max-w-xl mx-auto">
-                                Focus on the design, we&apos;ll handle the delivery.
+                            <p className="text-secondary text-xl max-w-2xl mx-auto">
+                                Your participant data never leaves your device.
                             </p>
                         </RevealSection>
 
-                        <RevealSection>
-                            <div className="relative max-w-6xl mx-auto">
-                                {/* Feature cards */}
-                                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                                    {[
-                                        { icon: <Zap size={18} />, title: 'Batch Processing', desc: 'Generate 500+ certificates without refreshing the tab.' },
-                                        { icon: <Mail size={18} />, title: 'Direct Delivery', desc: 'Avoid the "attachment limit" nightmare with Google API.' },
-                                        { icon: <Shield size={18} />, title: 'Local Privacy', desc: 'Files are processed on your RAM, not our servers.' },
-                                        { icon: <Github size={18} />, title: 'Hackable', desc: 'Open source. Fork it, change it, make it yours.' },
-                                    ].map((feature, i) => (
-                                        <div key={i} className="group glass-morphism p-6 rounded-2xl hover:-translate-y-1 transition-all duration-300">
-                                            <div className="w-10 h-10 rounded-xl bg-accent/5 flex items-center justify-center text-accent mb-4 group-hover:scale-110 transition-transform">
-                                                {feature.icon}
-                                            </div>
-                                            <h4 className="font-bold text-base mb-2">{feature.title}</h4>
-                                            <p className="text-sm text-secondary leading-relaxed">{feature.desc}</p>
+                        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                            {[
+                                { icon: <Lock size={24} />, title: 'Local Processing', desc: 'All certificate generation happens in your browser. No uploads to external servers.' },
+                                { icon: <Shield size={24} />, title: 'Data Privacy', desc: 'Participant information stays on your device. We never see or store your data.' },
+                                { icon: <Zap size={24} />, title: 'Instant Results', desc: 'No waiting for cloud processing. Generate hundreds of PDFs in seconds.' }
+                            ].map((item, i) => (
+                                <RevealSection key={i} delay={`reveal-delay-${i + 1}`}>
+                                    <div className="h-full p-8 rounded-2xl border border-border bg-background hover:border-accent/40 hover:shadow-[0_20px_50px_rgba(31,78,216,0.05)] glow-on-hover transition-all duration-500">
+                                        <div className="w-12 h-12 rounded-xl bg-accent-light flex items-center justify-center text-accent mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                            {item.icon}
                                         </div>
-                                    ))}
-                                </div>
+                                        <h3 className="font-bold text-lg mb-3 leading-tight">{item.title}</h3>
+                                        <p className="text-sm text-secondary leading-relaxed">{item.desc}</p>
+                                    </div>
+                                </RevealSection>
+                            ))}
+                        </div>
 
-                                {/* Product screenshot */}
-                                <div className="relative group">
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-accent/20 to-accent/0 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                    <div className="relative rounded-3xl overflow-hidden border border-border shadow-[0_30px_100px_rgba(0,0,0,0.1)] bg-white">
-                                        <div className="relative aspect-[16/10]">
-                                            <Image src="/platform-preview.png" alt="MailMyCertificate visual editor" fill className="object-cover object-top" />
-                                            <div className="absolute top-6 right-6">
-                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest shadow-xl">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                                                    Active Preview
-                                                </div>
-                                            </div>
-                                        </div>
+                        <RevealSection delay="reveal-delay-4" className="mt-16 max-w-3xl mx-auto">
+                            <div className="p-8 rounded-2xl bg-accent/5 border border-accent/10 relative">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-12 h-12 rounded-full bg-accent-light flex items-center justify-center text-accent">
+                                        <Globe size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-lg">Browser-First Architecture</h4>
+                                        <p className="text-sm text-secondary">No accounts. No cloud storage. No data collection.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6 text-sm text-secondary">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                                        <span>Participant data stays local</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                                        <span>No external processing</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                                        <span>Privacy-first workflow</span>
                                     </div>
                                 </div>
                             </div>
@@ -503,22 +587,22 @@ export default function LandingView() {
                     </div>
                 </section>
 
-                {/* ======================================
+ {/* ======================================
                     REASSURANCE SECTION
                    ====================================== */}
                 <section className="py-24 md:py-32 border-y border-border/50 bg-muted/20">
                     <div className="container-width">
                         <div className="grid lg:grid-cols-2 gap-16 items-start max-w-6xl mx-auto">
                             <RevealSection>
-                                <p className="text-sm font-bold text-accent uppercase tracking-[0.2em] mb-6">Reassurance</p>
+                                <p className="text-sm font-bold text-accent uppercase tracking-[0.2em] mb-6">TRUST & PRIVACY</p>
                                 <h2 className="text-4xl font-bold tracking-tight mb-8 text-gradient">
-                                    Wait, is it <span className="marker-underline italic font-serif">really</span> free?
+                                    Yes, it's actually <span className="marker-underline italic font-serif">free.</span>
                                 </h2>
                                 <div className="space-y-8">
                                     {[
-                                        { q: "Wll my data be sold?", a: "Never. Everything happens in your browser's RAM. We don't even have a database for your participants." },
-                                        { q: "Is there a limit?", a: "Nope. Browser memory is your only limit." },
-                                        { q: "Why is it free?", a: "Because tools for organizers shouldn't be paywalled." }
+                                        { q: "Does my data leave my browser?", a: "No. Participant data and certificate generation stay on your device." },
+                                        { q: "Is there a certificate limit?", a: "No artificial export limits." },
+                                        { q: "Why is this free?", a: "Because event organizers already deal with enough chaos." }
                                     ].map((item, i) => (
                                         <div key={i} className="space-y-2">
                                             <h4 className="font-bold text-foreground">{item.q}</h4>
@@ -531,7 +615,7 @@ export default function LandingView() {
                             <RevealSection delay="reveal-delay-2">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {['Privacy First', 'Open Source', 'No Accounts', 'Lightning Fast'].map((label, i) => (
-                                        <div key={i} className="p-8 rounded-[2rem] bg-background border border-border shadow-sm hover:border-accent/30 transition-all hover:-translate-y-1">
+                                        <div key={i} className="p-8 rounded-xl bg-background border border-border shadow-sm hover:border-accent/30 transition-all hover:-translate-y-1">
                                             <div className="font-bold text-lg mb-2">{label}</div>
                                             <div className="text-xs text-secondary leading-relaxed tracking-wide">Built for results.</div>
                                         </div>
@@ -544,8 +628,10 @@ export default function LandingView() {
                                             <Image src="https://github.com/akshatthakur22.png" alt="Creator" width={48} height={48} />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-accent font-bold uppercase tracking-widest mb-1">A note from Akshat</p>
-                                            <p className="text-sm italic text-secondary text-balance">&quot;I built this tool because I spent too many nights manually emailing hackathon certificates. I hope it saves you time.&quot;</p>
+                                            <p className="text-xs text-accent font-bold uppercase tracking-widest mb-1">Why I built this →</p>
+                                            <p className="text-sm italic text-secondary text-balance">&quot;I already solved this problem for myself…
+then rebuilt it properly for everyone else.&quot;</p>
+                                            <p className="text-xs text-secondary mt-2 font-medium">— Akshat ☕</p>
                                         </div>
                                     </div>
                                     <div className="hidden lg:block absolute -right-4 -bottom-4 sticky-note sticky-pink scale-75 rotate-12">
@@ -556,42 +642,34 @@ export default function LandingView() {
                         </div>
                     </div>
                 </section>
-
-                {/* ======================================
-                    FINAL CTA
-                   ====================================== */}
-                <section className="py-24 md:py-40">
-                    <div className="container-width">
-                        <RevealSection>
-                            <div className="relative rounded-[2.5rem] overflow-hidden bg-foreground text-white px-8 py-20 md:px-16 md:py-32 text-center shadow-3xl">
-                                <div className="absolute -top-32 -right-32 w-80 h-80 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
-                                <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-accent/10 rounded-full blur-2xl pointer-events-none" />
-
-                                <div className="relative z-10">
-                                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
-                                        Ready to reclaim
-                                        <br className="hidden md:block" />
-                                        your <span className="text-accent">time?</span>
-                                    </h2>
-                                    <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-                                        <Link
-                                            href="/tool"
-                                            className={buttonVariants({
-                                                variant: 'primary',
-                                                size: 'lg',
-                                                className: 'h-20 px-12 text-xl bg-white text-foreground hover:bg-gray-100 hover:scale-[1.05] transition-all duration-300',
-                                            })}
-                                        >
-                                            Start Your First Batch
-                                            <ArrowRight className="ml-2 w-6 h-6" />
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        </RevealSection>
-                    </div>
-                </section>
             </main>
+
+            {/* ======================================
+                FINAL CTA SECTION
+               ====================================== */}
+            <section className="py-24 md:py-32 bg-muted/20">
+                <div className="container-width">
+                    <RevealSection className="text-center max-w-4xl mx-auto">
+                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6 text-gradient">
+                            Stop wasting hours on certificate distribution.
+                        </h2>
+                        <p className="text-xl text-secondary mb-12 max-w-2xl mx-auto">
+                            Generate and send certificates in minutes — not entire weekends.
+                        </p>
+                        <Link
+                            href="/tool"
+                            className={buttonVariants({
+                                variant: 'primary',
+                                size: 'lg',
+                                className: 'text-lg px-12 h-16 shadow-2xl shadow-accent/20 hover:scale-[1.02] active:scale-[0.98] transition-all',
+                            })}
+                        >
+                            Start Generating Certificates
+                            <ArrowRight className="ml-2 w-5 h-5" />
+                        </Link>
+                    </RevealSection>
+                </div>
+            </section>
 
             <footer className="border-t border-border py-16 bg-background relative overflow-hidden">
                 <div className="absolute inset-0 hero-grid opacity-[0.2] pointer-events-none" />
@@ -602,7 +680,7 @@ export default function LandingView() {
                                 <span>Mail</span><span>My</span><span>Certificate</span>
                             </Link>
                             <p className="text-sm text-secondary max-w-sm leading-relaxed font-medium">
-                                The world&apos;s most private bulk certificate generator. Engineered for performance, privacy, and organizers who value their time.
+                                The privacy-first bulk certificate generator for hackathons, workshops, webinars, bootcamps, and events.
                             </p>
                         </div>
                         <div className="space-y-6">

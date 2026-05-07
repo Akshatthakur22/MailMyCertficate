@@ -65,7 +65,7 @@ export const renderSingleCertificate = async ({ template, fields, data }: Genera
             const fontSize = field.fontSize;
 
             // Calculate Width for Alignment
-            const textWidth = font.widthOfTextAtSize(text, fontSize);
+            const textWidth = font.widthOfTextAtSize(String(text), fontSize);
 
             let x = field.x;
             // Adjust X based on alignment
@@ -107,7 +107,7 @@ export const renderSingleCertificate = async ({ template, fields, data }: Genera
             const g = parseInt(field.color.slice(3, 5), 16) / 255;
             const b = parseInt(field.color.slice(5, 7), 16) / 255;
 
-            page.drawText(text, {
+            page.drawText(String(text), {
                 x,
                 y,
                 size: fontSize,
