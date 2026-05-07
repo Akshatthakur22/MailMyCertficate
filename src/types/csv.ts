@@ -1,4 +1,4 @@
-export type CSVRow = Record<string, string>;
+export type CSVRow = Record<string, string | number>;
 
 export interface ParsedCSV {
     headers: string[];

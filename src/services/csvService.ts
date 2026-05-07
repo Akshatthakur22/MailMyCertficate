@@ -1,6 +1,17 @@
 import Papa from 'papaparse';
 import type { ParsedCSV, CSVRow } from '@/types/csv';
 
+/**
+ * Sanitize header strings to prevent PDF generation issues.
+ * Trims whitespace and replaces problematic characters with underscores.
+ */
+export const sanitizeHeader = (header: string): string => {
+    return header
+        .trim()
+        .replace(/[^\w\s-]/gi, '') // Remove most special chars except letters, numbers, spaces, underscores, and dashes
+        .replace(/\s+/g, ' '); // Normalize multiple spaces
+};
+
 export const parseCSV = (file: File): Promise<ParsedCSV> => {
     return new Promise((resolve, reject) => {
         Papa.parse<CSVRow>(file, {
@@ -13,8 +24,17 @@ export const parseCSV = (file: File): Promise<ParsedCSV> => {
                     return;
                 }
 
-                const data = results.data;
-                const headers = results.meta.fields || [];
+                const rawHeaders = results.meta.fields || [];
+                const headers = rawHeaders.map(sanitizeHeader);
+                
+                // Map data to sanitized headers
+                const data = results.data.map(row => {
+                    const sanitizedRow: CSVRow = {};
+                    rawHeaders.forEach((rawHeader, idx) => {
+                        sanitizedRow[headers[idx]] = row[rawHeader];
+                    });
+                    return sanitizedRow;
+                });
 
                 if (data.length === 0) {
                     reject(new Error("The CSV file appears to be empty."));

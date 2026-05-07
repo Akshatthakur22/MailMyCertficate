@@ -7,6 +7,9 @@ export class EmailQueue {
   private state: EmailQueueState;
   private config: QueueConfig;
   private progressCallback?: (update: SendProgressUpdate) => void;
+  // Fix #4 — lazy PDF resolver: injected by the hook so the queue itself
+  // never holds all blobs in memory.
+  private certificateResolver?: (sessionId: string, rowId: number) => Promise<Uint8Array | undefined>;
   private processingTimer?: NodeJS.Timeout;
   private currentDelay: number = DEFAULT_QUEUE_CONFIG.baseDelay;
 
@@ -25,18 +28,33 @@ export class EmailQueue {
     this.progressCallback = callback;
   }
 
-  // Add items to queue
+  // Inject a lazy PDF resolver (Fix #4).
+  // Called just-in-time inside sendSingle so we only load one PDF per send.
+  setCertificateResolver(resolver: (sessionId: string, rowId: number) => Promise<Uint8Array | undefined>) {
+    this.certificateResolver = resolver;
+  }
+
+  // Add items to queue.
+  // Uses a deterministic id (`sessionId-rowId`) so the same row can never be
+  // double-queued and IDB upserts are idempotent.
   addItems(items: Omit<EmailQueueItem, 'id' | 'status' | 'attempts' | 'createdAt' | 'updatedAt'>[]) {
     const now = Date.now();
-    const newItems: EmailQueueItem[] = items.map(item => ({
-      ...item,
-      id: `${item.sessionId}-${item.rowId}-${now}-${Math.random().toString(36).substr(2, 9)}`,
-      status: 'pending' as const,
-      attempts: 0,
-      maxAttempts: this.config.maxRetries + 1,
-      createdAt: now,
-      updatedAt: now,
-    }));
+
+    // Build a set of rowIds that are already in the queue so we can skip them.
+    const existingRowIds = new Set(this.state.items.map(i => i.rowId));
+
+    const newItems: EmailQueueItem[] = items
+      .filter(item => !existingRowIds.has(item.rowId))
+      .map(item => ({
+        ...item,
+        // Stable, deterministic primary key — no randomness.
+        id: `${item.sessionId}-${item.rowId}`,
+        status: 'pending' as const,
+        attempts: 0,
+        maxAttempts: this.config.maxRetries + 1,
+        createdAt: now,
+        updatedAt: now,
+      }));
 
     this.state.items = [...this.state.items, ...newItems];
     this.updateStats();
@@ -163,13 +181,20 @@ export class EmailQueue {
     this.state.currentSendingIds.push(item.id);
 
     try {
+      // Fix #4 — Lazily resolve the certificate PDF right before sending.
+      // This avoids holding all PDFs in memory simultaneously.
+      let certificateData = item.certificateData;
+      if (!certificateData && this.certificateResolver) {
+        certificateData = await this.certificateResolver(item.sessionId, item.rowId);
+      }
+
       // Only send with attachment if certificateData exists
-      const result = item.certificateData 
+      const result = certificateData
         ? await emailService.sendEmailWithAttachment({
             recipient: item.recipient,
             subject: item.subject,
             body: item.body,
-            certificate: item.certificateData,
+            certificate: certificateData,
           })
         : await emailService.sendEmail({
             recipient: item.recipient,
