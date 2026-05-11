@@ -148,6 +148,7 @@ export default function LandingView() {
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
+                            <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
                         </div>
                         <div className="flex items-center gap-3">
                             <Link
@@ -696,8 +697,6 @@ then rebuilt it properly for everyone else.&quot;</p>
                             <ul className="space-y-4 text-sm font-bold text-secondary">
                                 <li><Link href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link></li>
                                 <li><Link href="/terms-of-service" className="hover:text-accent transition-colors">Terms of Service</Link></li>
-                                <li><Link href="/cookies" className="hover:text-accent transition-colors">Cookie Policy</Link></li>
-                                <li><Link href="/disclaimer" className="hover:text-accent transition-colors">Disclaimer</Link></li>
                                 <li><Link href="/contact" className="hover:text-accent transition-colors">Contact Us</Link></li>
                             </ul>
                         </div>
