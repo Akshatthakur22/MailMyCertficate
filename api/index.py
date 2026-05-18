@@ -41,8 +41,7 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 # Configure CORS for Next.js frontend
 allowed_origins = [
     'http://localhost:3000',
-    'https://mailcertficate.vercel.app',
-    'https://mailcertficate-fe4oojaus-akshatthakur22s-projects.vercel.app'
+    'https://mailmycertificate.tech',
 ]
 CORS(app, origins=allowed_origins, supports_credentials=True)
 
