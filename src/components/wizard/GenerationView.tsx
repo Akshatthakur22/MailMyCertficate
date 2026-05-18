@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useGenerator } from '@/hooks/useGenerator';
 import { db } from '@/core/db/schema';
@@ -17,6 +17,9 @@ export function GenerationView() {
     const [isZipping, setIsZipping] = useState(false);
     const [totalCount, setTotalCount] = useState(0);
     const [completedCount, setCompletedCount] = useState(0);
+    const [activityLog, setActivityLog] = useState<{ text: string; ts: number }[]>([]);
+    const [etaText, setEtaText] = useState<string | null>(null);
+    const startTsRef = useRef<number | null>(null);
 
     useEffect(() => {
         const init = async () => {
@@ -32,6 +35,50 @@ export function GenerationView() {
         };
         init();
     }, [sessionId, startGeneration]);
+
+    // Poll IDB for live updates (processed count + recent activity)
+    useEffect(() => {
+        let mounted = true;
+        const tick = async () => {
+            const done = await db.certificates.where({ sessionId, status: 'completed' }).count();
+            if (!mounted) return;
+            setCompletedCount(done);
+
+            // Recent activity: last 6 entries
+            const recent = await db.certificates.where({ sessionId }).reverse().sortBy('updatedAt');
+            const lastSix = recent ? recent.slice(-6) : [];
+            const rows = await db.rows.where({ sessionId }).toArray();
+            const logs = lastSix.reverse().map(r => {
+                const row = rows.find(rr => rr.id === r.rowId);
+                const name = row?.data?.Name || row?.data?.name || `#${r.rowId}`;
+                const text = r.status === 'completed' ? `Rendered: ${name}.pdf` : `${r.status}: ${name}`;
+                return { text, ts: r.updatedAt || Date.now() };
+            });
+            setActivityLog(logs);
+
+            // ETA calculation (very lightweight): average time per completed
+            if (isGenerating) {
+                if (!startTsRef.current && done > 0) startTsRef.current = Date.now();
+                if (startTsRef.current && done > 0) {
+                    const elapsed = (Date.now() - startTsRef.current) / 1000; // seconds
+                    const avg = elapsed / done;
+                    const remaining = Math.max(0, totalCount - done);
+                    const eta = Math.round(avg * remaining);
+                    const mins = Math.floor(eta / 60);
+                    const secs = eta % 60;
+                    setEtaText(mins > 0 ? `${mins}m ${secs}s remaining` : `${secs}s remaining`);
+                }
+            } else {
+                startTsRef.current = null;
+                setEtaText(null);
+            }
+        };
+
+        // Kick off and poll every 750ms for smooth but lightweight updates
+        tick();
+        const interval = setInterval(tick, 750);
+        return () => { mounted = false; clearInterval(interval); };
+    }, [sessionId, isGenerating, totalCount]);
 
     const handleDownload = async () => {
         setIsZipping(true);
@@ -80,6 +127,14 @@ export function GenerationView() {
 
     const isDone = progress === 100 && !isGenerating;
     const hasPartialProgress = completedCount > 0 && completedCount < totalCount && !isGenerating;
+
+    const stages = [
+        { key: 'prepare', label: 'Preparing participant data', done: progress > 3 },
+        { key: 'load', label: 'Loading certificate template', done: progress > 8 },
+        { key: 'render', label: 'Rendering personalized certificates', done: progress > 95 },
+        { key: 'package', label: 'Packaging ZIP files', done: progress >= 99 },
+        { key: 'finish', label: 'Finalizing output', done: isDone },
+    ];
 
     return (
         <div className="max-w-2xl mx-auto text-center animate-in fade-in slide-in-from-bottom-8 duration-700">

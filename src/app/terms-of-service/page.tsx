@@ -68,6 +68,7 @@ export default function TermsPage() {
                         >
                             Contact
                         </Link>
+                        <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
 
                         <Link
                             href="/tool"
