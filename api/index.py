@@ -42,6 +42,7 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 allowed_origins = [
     'http://localhost:3000',
     'https://mailmycertificate.tech',
+    'https://mailmycertficate-git-dev-akshatthakur22s-projects.vercel.app',
 ]
 CORS(app, origins=allowed_origins, supports_credentials=True)
 
