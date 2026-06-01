@@ -312,6 +312,20 @@ def auth_status():
         print(f"Auth status error: {e}")
         return sanitize_error_response(e)
 
+EMAIL_ADDRESS_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+
+
+def normalize_recipient_email(value):
+    if value is None:
+        return ''
+    return str(value).strip()
+
+
+def is_valid_recipient_email(value):
+    normalized = normalize_recipient_email(value)
+    return bool(normalized) and EMAIL_ADDRESS_RE.match(normalized)
+
+
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
     """Send email using Gmail API"""
@@ -353,6 +367,12 @@ def send_email():
             
             if not all([recipient, subject, body]):
                 return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+
+        recipient = normalize_recipient_email(recipient)
+        if not is_valid_recipient_email(recipient):
+            return jsonify({
+                "error": "Invalid recipient email address. Check your participant data has a valid email column."
+            }), 400
         
         # Reconstruct credentials from minimal session data
         credentials = reconstruct_credentials(credentials_data)
@@ -413,7 +433,13 @@ def send_email():
     
     except HttpError as e:
         print(f"Gmail API error: {e}")
-        return jsonify({"error": "Failed to send email"}), 400
+        error_message = "Failed to send email"
+        if getattr(e, 'resp', None) and e.resp.status == 400:
+            error_message = (
+                "Gmail rejected this message. The recipient address may be invalid "
+                "or the message could not be delivered."
+            )
+        return jsonify({"error": error_message}), 400
     except Exception as e:
         print(f"Send email error: {e}")
         return sanitize_error_response(e)
