@@ -36,14 +36,14 @@ export default function AboutView() {
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-        <div className="container-width flex justify-between items-center h-16">
+        <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
           <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
             <span>Mail</span>
             <span>My</span>
             <span>Certificate</span>
           </Link>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center justify-between gap-3 flex-wrap sm:justify-end">
             <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
               <Link href="/about" className="hover:text-accent transition-colors">
                 About
@@ -110,7 +110,7 @@ export default function AboutView() {
 
         <section className="py-16 md:py-24 border-t border-border/50">
           <div className="container-width">
-            <div className="grid md:grid-cols-2 gap-12 md:gap-16 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 max-w-5xl mx-auto">
               <RevealSection className="space-y-6">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">The Real Story</h2>
                 <div className="space-y-4 text-secondary leading-relaxed">
@@ -193,7 +193,7 @@ attach_pdf("john_certificate.pdf")`}
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-12">
                 While rebuilding it, I kept a few things non-negotiable.
               </h2>
-              <div className="space-y-6 max-w-4xl">
+              <div className="space-y-4 sm:space-y-6 max-w-4xl">
                 {[
                   {
                     icon: Lock,

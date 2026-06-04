@@ -49,7 +49,7 @@ export default function TermsPage() {
                 NAVBAR
                ====================================== */}
             <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-                <div className="container-width flex justify-between items-center h-16">
+                <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
                     <Link
                         href="/"
                         className="brand-text hover:opacity-80 transition-opacity"
@@ -59,7 +59,7 @@ export default function TermsPage() {
                         <span>Certificate</span>
                     </Link>
 
-                    <div className="flex items-center gap-6 text-sm font-medium text-secondary">
+                    <div className="flex items-center justify-between gap-3 flex-wrap text-sm font-medium text-secondary sm:justify-end">
                         <Link
                             href="/about"
                             className="hover:text-foreground transition-colors"
@@ -147,7 +147,7 @@ export default function TermsPage() {
                    ====================================== */}
                 <section className="py-12 md:py-16 border-y border-border/40 bg-muted/20">
                     <div className="container-width">
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                             <div className="p-6 rounded-2xl bg-background border border-border/50">
                                 <Shield
                                     size={22}

@@ -414,11 +414,11 @@ export default function EmailView() {
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex flex-col gap-3 py-3 max-w-6xl items-start justify-between px-4 sm:h-14 sm:flex-row sm:items-center sm:px-6 lg:px-8 sm:py-0">
           <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
             <span>Mail</span><span>My</span><span>Certificate</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
             <ManageLocalDataMenu variant="header" />
             <div className="flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium">
               <span className={`h-2 w-2 rounded-full ${authStatus.authenticated ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -432,7 +432,7 @@ export default function EmailView() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <div className="mb-5">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Send certificates by email</h1>
           <p className="mt-1 text-sm text-secondary">

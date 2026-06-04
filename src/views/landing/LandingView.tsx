@@ -116,7 +116,7 @@ export default function LandingView() {
                 NAVIGATION
                ====================================== */}
             <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-                <div className="container-width flex justify-between items-center h-16">
+                <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
                     <Link
                         href="/"
                         className="brand-text hover:opacity-80 transition-opacity"
@@ -124,28 +124,33 @@ export default function LandingView() {
                         <span>Mail</span><span>My</span><span>Certificate</span>
                     </Link>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:gap-3">
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
                             <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
                             <Link href="/settings" className="hover:text-accent transition-colors">Your data</Link>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
                             <Link
                                 href="https://github.com/akshatthakur22/MailMyCertficate"
                                 target="_blank"
-                                className="flex items-center gap-2 text-sm font-medium text-secondary hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted"
+                                className="flex flex-1 items-center justify-center gap-2 text-sm font-medium text-secondary hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted sm:flex-none"
                             >
                                 <Github size={16} />
                                 <span className="hidden sm:inline">GitHub</span>
                             </Link>
                             <Link
                                 href="/tool"
-                                className={buttonVariants({ variant: 'primary', size: 'sm', className: 'shadow-sm' })}
+                                className={buttonVariants({ variant: 'primary', size: 'sm', className: 'w-full shadow-sm sm:w-auto' })}
                             >
                                 Open Tool
                             </Link>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-secondary md:hidden">
+                            <Link href="/about" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">About</Link>
+                            <Link href="/guide" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">Guide</Link>
+                            <Link href="/contact" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">Contact</Link>
                         </div>
                     </div>
 
@@ -446,13 +451,13 @@ export default function LandingView() {
                                     />
                                 </div>
 
-                                <div className="grid sm:grid-cols-2 gap-8 items-center bg-white/50 backdrop-blur-sm p-8 rounded-2xl border border-white">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center bg-white/50 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-white">
                                     <div className="text-left">
                                         <p className="text-[10px] uppercase font-bold tracking-widest text-red-500 mb-1">Manual Method</p>
                                         <p className="text-2xl font-bold">~{manualHours > 60 ? `${Math.round(manualHours/60)}h ${manualHours % 60}m` : `${manualHours}m`}</p>
                                         <p className="text-xs text-secondary mt-1 italic">Realistic time for editing, exporting, and attaching manually.</p>
                                     </div>
-                                    <div className="text-left border-l border-border pl-8">
+                                    <div className="text-left sm:border-l border-0 sm:border-border sm:pl-8">
                                         <p className="text-[10px] uppercase font-bold tracking-widest text-green-500 mb-1">MailMyCertificate</p>
                                         <p className="text-2xl font-bold">~{toolMinutes} minutes</p>
                                         <p className="text-xs text-green-600 font-bold mt-1">Upload → Generate → Review → Send.</p>
@@ -480,7 +485,7 @@ export default function LandingView() {
                             </p>
                         </RevealSection>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 max-w-6xl mx-auto">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 max-w-6xl mx-auto">
                             {[
                                 { step: '01', icon: <Upload size={24} />, title: 'Upload your template', desc: 'Use any PNG or JPG certificate design as your base.' },
                                 { step: '02', icon: <TableProperties size={24} />, title: 'Import participants', desc: 'Connect Google Sheets or upload CSV with recipient data.' },

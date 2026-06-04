@@ -49,7 +49,7 @@ export default function Guide() {
                 NAVIGATION
                ====================================== */}
             <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-                <div className="container-width flex justify-between items-center h-16">
+                <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
                     <Link
                         href="/"
                         className="brand-text hover:opacity-80 transition-opacity"
@@ -57,7 +57,7 @@ export default function Guide() {
                         <span>Mail</span><span>My</span><span>Certificate</span>
                     </Link>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center justify-between gap-3 flex-wrap sm:justify-end">
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>

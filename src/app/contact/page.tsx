@@ -25,7 +25,7 @@ export default function Contact() {
                 NAVIGATION
                ====================================== */}
             <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-                <div className="container-width flex justify-between items-center h-16">
+                <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
                     <Link
                         href="/"
                         className="brand-text hover:opacity-80 transition-opacity"
@@ -33,7 +33,7 @@ export default function Contact() {
                         <span>Mail</span><span>My</span><span>Certificate</span>
                     </Link>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center justify-between gap-3 flex-wrap sm:justify-end">
                         <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
@@ -91,7 +91,7 @@ export default function Contact() {
                    ====================================== */}
                 <section className="py-16 md:py-24 border-t border-border/50">
                     <div className="container-width">
-                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
                             {/* GitHub */}
                             <RevealSection>
                                 <div className="h-full p-8 rounded-2xl bg-muted/20 border border-border/50 hover:border-accent/30 transition-all group">
@@ -169,8 +169,8 @@ export default function Contact() {
                                 <p className="text-secondary mb-8 leading-relaxed text-lg">
                                     Sometimes email just feels right.
                                 </p>
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-8 rounded-2xl bg-muted/20 border border-border">
-                                    <div className="flex items-center gap-4">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 p-6 sm:p-8 rounded-2xl bg-muted/20 border border-border">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
                                             <Mail size={24} className="text-accent" />
                                         </div>

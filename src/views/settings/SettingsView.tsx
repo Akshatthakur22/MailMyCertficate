@@ -57,7 +57,7 @@ export default function SettingsView() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="container-width flex h-16 items-center justify-between">
+        <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
           <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
             <span>Mail</span><span>My</span><span>Certificate</span>
           </Link>
@@ -67,7 +67,7 @@ export default function SettingsView() {
         </div>
       </header>
 
-      <main className="container-width max-w-2xl py-10">
+      <main className="container-width max-w-2xl py-8 sm:py-10">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Session &amp; privacy</h1>
         <p className="mt-2 text-sm text-secondary leading-relaxed">
           All certificate and recipient data is stored in <strong className="text-foreground">this browser only</strong>.
@@ -162,9 +162,9 @@ export default function SettingsView() {
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+    <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
       <dt className="text-secondary">{label}</dt>
-      <dd className={`font-medium text-foreground text-right ${mono ? 'font-mono text-xs' : ''}`}>
+      <dd className={`font-medium text-foreground sm:text-right ${mono ? 'font-mono text-xs' : ''}`}>
         {value}
       </dd>
     </div>
@@ -195,7 +195,7 @@ function ActionCard({
       <Button
         variant={variant === 'danger' ? 'ghost' : 'outline'}
         size="sm"
-        className={`mt-3 gap-2 ${variant === 'danger' ? 'text-rose-600 hover:text-rose-700' : ''}`}
+        className={`mt-3 w-full sm:w-auto gap-2 ${variant === 'danger' ? 'text-rose-600 hover:text-rose-700' : ''}`}
         disabled={disabled}
         onClick={onClick}
       >

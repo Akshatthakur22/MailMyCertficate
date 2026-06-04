@@ -34,7 +34,7 @@ export function Hero() {
                 <div className="relative mb-12">
                     <div className="absolute inset-0 bg-muted/10 rounded-3xl transform -rotate-1"></div>
                     <div className="relative bg-background/80 backdrop-blur-sm rounded-3xl border border-border/40 shadow-lg overflow-hidden">
-                        <div className="p-8">
+                        <div className="p-6 sm:p-8">
                             {/* Floating Certificate Stack - simplified */}
                             <div className="absolute -right-4 -top-4 w-32 h-40 bg-muted/30 rounded-lg shadow-md transform rotate-12 border border-border/20">
                                 <div className="absolute inset-4 bg-background/50 rounded border border-border/20"></div>
@@ -42,7 +42,7 @@ export function Hero() {
                             
                             {/* Interactive Workflow Preview */}
                             <div className="relative z-10">
-                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                <div className="flex items-center justify-center sm:justify-between flex-wrap gap-4">
                                     <div className="flex items-center gap-3 group cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-accent/5 border border-accent/20 flex items-center justify-center group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-200">
                                             <Upload size={20} className="text-accent" />
@@ -52,7 +52,7 @@ export function Hero() {
                                             <div className="text-xs text-secondary/60">Template</div>
                                         </div>
                                     </div>
-                                    <ArrowRight size={20} className="text-border/30" />
+                                    <ArrowRight size={20} className="hidden sm:block text-border/30" />
                                     <div className="flex items-center gap-3 group cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-accent/5 border border-accent/20 flex items-center justify-center group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-200">
                                             <FileSpreadsheet size={20} className="text-accent" />
@@ -62,7 +62,7 @@ export function Hero() {
                                             <div className="text-xs text-secondary/60">Data</div>
                                         </div>
                                     </div>
-                                    <ArrowRight size={20} className="text-border/30" />
+                                    <ArrowRight size={20} className="hidden sm:block text-border/30" />
                                     <div className="flex items-center gap-3 group cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-accent/5 border border-accent/20 flex items-center justify-center group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-200">
                                             <Palette size={20} className="text-accent" />
@@ -72,7 +72,7 @@ export function Hero() {
                                             <div className="text-xs text-secondary/60">Fields</div>
                                         </div>
                                     </div>
-                                    <ArrowRight size={20} className="text-border/30" />
+                                    <ArrowRight size={20} className="hidden sm:block text-border/30" />
                                     <div className="flex items-center gap-3 group cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-accent/5 border border-accent/20 flex items-center justify-center group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-200">
                                             <Zap size={20} className="text-accent" />
@@ -82,7 +82,7 @@ export function Hero() {
                                             <div className="text-xs text-secondary/60">Certificates</div>
                                         </div>
                                     </div>
-                                    <ArrowRight size={20} className="text-border/30" />
+                                    <ArrowRight size={20} className="hidden sm:block text-border/30" />
                                     <div className="flex items-center gap-3 group cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-accent/5 border border-accent/20 flex items-center justify-center group-hover:bg-accent/10 group-hover:border-accent/30 transition-all duration-200">
                                             <Mail size={20} className="text-accent" />

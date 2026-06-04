@@ -21,17 +21,17 @@ export function CTASection() {
                         </p>
                     </div>
                     
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center">
                         <Link
                             href="/tool"
-                            className={buttonVariants({ variant: 'primary', size: 'lg', className: 'shadow-md hover:shadow-lg transition-shadow duration-300' })}
+                            className={buttonVariants({ variant: 'primary', size: 'lg', className: 'w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow duration-300' })}
                         >
                             Open Certificate Tool
                             <ArrowRight size={16} />
                         </Link>
                         <Link
                             href="/"
-                            className={buttonVariants({ variant: 'ghost', size: 'lg' })}
+                            className={buttonVariants({ variant: 'ghost', size: 'lg', className: 'w-full sm:w-auto' })}
                         >
                             Back to Home
                         </Link>
