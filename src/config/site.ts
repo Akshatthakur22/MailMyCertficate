@@ -1,17 +1,25 @@
 /**
  * Single source of truth for public app URL (marketing + OAuth + metadata).
- * Set NEXT_PUBLIC_APP_URL in production (e.g. https://mailmycertificate.tech).
+ * Set APP_URL or NEXT_PUBLIC_APP_URL in production (e.g. https://mailmycertificate.tech).
  */
 export const PRODUCTION_APP_URL = 'https://mailmycertificate.tech';
 
 export function getAppUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const fromEnv =
+    process.env.APP_URL?.trim() ||
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.SITE_URL?.trim();
   if (fromEnv) {
     return fromEnv.replace(/\/$/, '');
   }
 
+  if (process.env.VERCEL_ENV === 'production') {
+    return PRODUCTION_APP_URL;
+  }
+
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL.replace(/\/$/, '')}`;
+    const vercelUrl = process.env.VERCEL_URL.replace(/\/$/, '');
+    return vercelUrl.startsWith('http') ? vercelUrl : `https://${vercelUrl}`;
   }
 
   if (process.env.NODE_ENV === 'development') {
