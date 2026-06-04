@@ -8,10 +8,17 @@ PRODUCTION_APP_URL = 'https://mailmycertificate.tech'
 
 
 def get_app_url() -> str:
-    for key in ('APP_URL', 'NEXT_PUBLIC_APP_URL'):
+    for key in ('APP_URL', 'NEXT_PUBLIC_APP_URL', 'SITE_URL'):
         value = os.environ.get(key, '').strip()
         if value:
             return value.rstrip('/')
+
+    # Production deploys: use custom domain, not the per-deployment *.vercel.app URL
+    if os.environ.get('VERCEL_ENV') == 'production':
+        prod_host = os.environ.get('VERCEL_PROJECT_PRODUCTION_URL', '').strip()
+        if prod_host:
+            return prod_host if prod_host.startswith('http') else f'https://{prod_host.rstrip("/")}'
+        return PRODUCTION_APP_URL
 
     vercel_url = os.environ.get('VERCEL_URL', '').strip()
     if vercel_url:

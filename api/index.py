@@ -67,8 +67,7 @@ if not GOOGLE_CREDENTIALS_JSON:
 CLIENT_SECRETS = json.loads(GOOGLE_CREDENTIALS_JSON)
 CLIENT_ID = CLIENT_SECRETS['web']['client_id']
 CLIENT_SECRET = CLIENT_SECRETS['web']['client_secret']
-# Must match an entry in Google Cloud Console authorized redirect URIs
-REDIRECT_URI = get_oauth_redirect_uri()
+# Redirect URI is resolved per request in get_flow() (see site_config.py)
 
 # Session configuration for serverless - using Flask session cookies
 app.config['SESSION_COOKIE_SECURE'] = is_production()
@@ -157,7 +156,7 @@ def get_flow():
         # Disable PKCE for standard confidential OAuth flow
         autogenerate_code_verifier=False
     )
-    flow.redirect_uri = REDIRECT_URI
+    flow.redirect_uri = get_oauth_redirect_uri()
     return flow
 
 
