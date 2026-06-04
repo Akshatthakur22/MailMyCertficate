@@ -1,5 +1,6 @@
 import os
 import json
+import importlib.util
 import base64
 import secrets
 import csv
@@ -34,12 +35,21 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from site_config import (
-    get_app_url,
-    get_allowed_origins,
-    get_oauth_redirect_uri,
-    is_production,
-)
+def _load_site_config():
+    """Load site_config.py from the same directory (Vercel sys.path is project root)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "site_config.py")
+    spec = importlib.util.spec_from_file_location("site_config", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"site_config.py not found at {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+_site_config = _load_site_config()
+get_app_url = _site_config.get_app_url
+get_allowed_origins = _site_config.get_allowed_origins
+get_oauth_redirect_uri = _site_config.get_oauth_redirect_uri
+is_production = _site_config.is_production
 
 # Initialize Flask app for Vercel
 app = Flask(__name__)
