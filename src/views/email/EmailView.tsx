@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/core/db/schema';
 import { useAppStore } from '@/store/useAppStore';
-import { emailService } from '@/services/emailService';
+import { emailService, updateCsrfToken } from '@/services/emailService';
 import { ConnectGmailPanel } from '@/components/email/redesign/ConnectGmailPanel';
 import { GmailComposer } from '@/components/email/redesign/GmailComposer';
 import { SendReadinessPanel } from '@/components/email/redesign/SendReadinessPanel';
@@ -85,6 +85,11 @@ export default function EmailView() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const csrfFromOAuth = urlParams.get('csrf_token');
+    if (csrfFromOAuth) {
+      updateCsrfToken(csrfFromOAuth);
+      localStorage.setItem('csrf_token', csrfFromOAuth);
+    }
     if (urlParams.get('auth_success') === 'true') {
       window.history.replaceState({}, document.title, window.location.pathname);
       checkAuthStatus();

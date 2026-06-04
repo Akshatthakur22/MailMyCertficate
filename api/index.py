@@ -305,10 +305,14 @@ def auth_status():
                 "email": None
             })
         
-        return jsonify({
+        payload = {
             "authenticated": True,
-            "email": session.get('email')
-        })
+            "email": session.get('email'),
+        }
+        # Let the client sync CSRF after OAuth (session cookie holds the source of truth)
+        if session.get('csrf_token'):
+            payload["csrf_token"] = session['csrf_token']
+        return jsonify(payload)
     
     except Exception as e:
         print(f"Auth status error: {e}")

@@ -18,6 +18,7 @@ export interface EmailResponse {
 export interface AuthStatusResponse {
   authenticated: boolean;
   email: string | null;
+  csrf_token?: string;
 }
 
 export interface AuthLoginResponse {
@@ -71,6 +72,13 @@ export const emailService = {
 
       if (!response.ok) {
         throw new Error(data.error || 'Status check failed');
+      }
+
+      if (data.csrf_token) {
+        updateCsrfToken(data.csrf_token);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('csrf_token', data.csrf_token);
+        }
       }
 
       return data;
