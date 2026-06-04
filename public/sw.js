@@ -1,10 +1,12 @@
-const CACHE_NAME = 'mailmycertificate-v2';
+const CACHE_NAME = 'mailmycertificate-v3';
 const ASSETS_TO_CACHE = [
     '/',
     '/tool',
     '/manifest.json',
+    '/favicon-48.png',
     '/icon-192.png',
     '/icon-512.png',
+    '/logo.png',
     '/next.svg',
     '/globe.svg',
     '/window.svg'
