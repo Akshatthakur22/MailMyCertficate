@@ -11,7 +11,8 @@ import { FileText } from 'lucide-react';
 
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { DesktopOnlyGuard } from '@/components/guard/DesktopOnlyGuard';
-
+import { PrivacyNotice } from '@/components/session/PrivacyNotice';
+import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
 
 const STEPS = ["Upload Template", "Upload CSV", "Adjust & Preview", "Generate"];
 
@@ -45,14 +46,8 @@ export default function ToolWizardView() {
                         <span>Mail</span><span>My</span><span>Certificate</span>
                     </Link>
 
-                    <div className="flex items-center gap-4">
-                        <div className="hidden sm:flex flex-col items-end">
-                            <span className="text-[9px] text-accent font-black uppercase tracking-widest leading-none mb-1">Status</span>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[9px] text-secondary font-bold uppercase tracking-tight">Active Session</span>
-                            </div>
-                        </div>
+                    <div className="flex items-center gap-3">
+                        <ManageLocalDataMenu variant="header" />
                     </div>
                 </div>
             </header>
@@ -61,9 +56,7 @@ export default function ToolWizardView() {
                 <div className="flex-1 flex flex-col min-h-0 max-w-6xl mx-auto w-full">
                     <div className="mb-6 flex items-center justify-between shrink-0">
                         <Breadcrumbs items={breadcrumbItems} />
-                        <div className="px-3 py-1 bg-accent/5 border border-accent/10 rounded-full text-[10px] text-accent font-bold uppercase tracking-widest hidden sm:block">
-                            Local & Private
-                        </div>
+                        <ManageLocalDataMenu variant="button" />
                     </div>
 
                     <div className="shrink-0 mb-8">
@@ -72,6 +65,10 @@ export default function ToolWizardView() {
                             steps={STEPS}
                             onStepClick={handleStepClick}
                         />
+                    </div>
+
+                    <div className="mb-4 shrink-0">
+                        <PrivacyNotice compact />
                     </div>
 
                     <div className="flex-1 min-h-0 flex flex-col relative">

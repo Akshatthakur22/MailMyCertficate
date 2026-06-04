@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { buttonVariants } from '@/components/ui/Button';
 import { useReveal } from '@/hooks/useReveal';
+import { PRODUCTION_APP_URL } from '@/config/site';
 import {
     ArrowRight,
     Upload,
@@ -83,6 +84,10 @@ function RevealSection({
    ———————————————————————————————————————————————————— */
 export default function LandingView() {
     const [count, setCount] = useState(100);
+    const publicAppHost = (process.env.NEXT_PUBLIC_APP_URL || PRODUCTION_APP_URL).replace(
+        /^https?:\/\//,
+        ''
+    );
     
     // Realistic non-linear scaling for manual work
     const getManualTime = (certs: number) => {
@@ -107,31 +112,6 @@ export default function LandingView() {
 
     return (
         <div className="flex flex-col min-h-screen bg-background font-sans overflow-x-hidden">
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                        "@context": "https://schema.org",
-                        "@type": "WebApplication",
-                        "name": "MailMyCertificate",
-                        "url": "https://mailmycertificate.com",
-                        "description": "Free, privacy-first bulk certificate generator. Generate 1000+ localized PDFs in minutes entirely in your browser.",
-                        "applicationCategory": "BusinessApplication",
-                        "operatingSystem": "Web",
-                        "offers": {
-                            "@type": "Offer",
-                            "price": "0",
-                            "priceCurrency": "USD"
-                        },
-                        "author": {
-                            "@type": "Organization",
-                            "name": "MailMyCertificate",
-                            "url": "https://github.com/akshatthakur22/MailMyCertficate"
-                        }
-                    })
-                }}
-            />
-
             {/* ======================================
                 NAVIGATION
                ====================================== */}
@@ -149,6 +129,7 @@ export default function LandingView() {
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
                             <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
+                            <Link href="/settings" className="hover:text-accent transition-colors">Your data</Link>
                         </div>
                         <div className="flex items-center gap-3">
                             <Link
@@ -284,7 +265,7 @@ export default function LandingView() {
                                     </div>
                                     <div className="flex-1 flex justify-center">
                                         <div className="bg-background border border-border rounded-md px-4 py-1 text-xs text-secondary font-mono max-w-xs w-full text-center">
-                                            mailmycertificate.com/tool
+                                            {publicAppHost}/tool
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-secondary">

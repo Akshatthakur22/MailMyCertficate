@@ -137,29 +137,9 @@ export async function hasActiveQueueItems(sessionId?: string) {
 /**
  * Safe cleanup for new campaign start
  */
-export async function prepareForNewCampaign(newSessionId: string) {
-  try {
-    console.log('🔄 Preparing for new campaign...');
-    
-    // 1. Clean up old data
-    await cleanupQueueData({ forceCleanup: true });
-    
-    // 2. Clean up old sessions (older than 7 days)
-    await db.cleanupOldSessions();
-    
-    // 3. Verify clean state for new session
-    const existingQueueItems = await db.queueItems.where({ sessionId: newSessionId }).count();
-    if (existingQueueItems > 0) {
-      await db.queueItems.where({ sessionId: newSessionId }).delete();
-      console.log(`🧹 Cleaned up ${existingQueueItems} existing queue items for new session`);
-    }
-    
-    console.log('✅ Prepared successfully for new campaign');
-    
-  } catch (error) {
-    console.error('❌ Failed to prepare for new campaign:', error);
-    throw error;
-  }
+export async function prepareForNewCampaign(_newSessionId: string) {
+  const { startNewBatch } = await import('@/core/session/sessionManager');
+  await startNewBatch();
 }
 
 /**

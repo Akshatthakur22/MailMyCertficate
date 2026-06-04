@@ -3,6 +3,8 @@
 import { CheckCircle2, PartyPopper, RefreshCw, Download, RotateCcw, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import type { EmailQueueItem } from '@/core/queue/emailQueue';
+import { AutoCleanupCountdown } from '@/components/session/AutoCleanupCountdown';
+import { PrivacyNotice } from '@/components/session/PrivacyNotice';
 
 interface CompletionPanelProps {
   sent: number;
@@ -15,6 +17,9 @@ interface CompletionPanelProps {
   onDownloadReport: () => void;
   onDownloadFailed: () => void;
   onSendAnother: () => void;
+  onStartNewBatch: () => void;
+  onKeepSession: () => void;
+  showAutoCleanup?: boolean;
 }
 
 export function CompletionPanel({
@@ -28,6 +33,9 @@ export function CompletionPanel({
   onDownloadReport,
   onDownloadFailed,
   onSendAnother,
+  onStartNewBatch,
+  onKeepSession,
+  showAutoCleanup = false,
 }: CompletionPanelProps) {
   const successRate = total > 0 ? Math.round((sent / total) * 100) : 0;
   const allDelivered = failed === 0;
@@ -51,8 +59,9 @@ export function CompletionPanel({
             {allDelivered ? 'All certificates delivered' : 'Delivery finished — a few need attention'}
           </h2>
           <p className="mt-2 max-w-md text-sm leading-6 text-secondary">
-            {sent} {sent === 1 ? 'certificate was' : 'certificates were'} sent through your Gmail account
-            {totalTime !== '—' ? ` in ${totalTime}` : ''}. You can safely refresh or close this tab now.
+            {sent} / {total} {total === 1 ? 'email was' : 'emails were'} sent successfully
+            {totalTime !== '—' ? ` in ${totalTime}` : ''}. Your certificate and recipient data is still stored
+            locally in this browser.
           </p>
         </div>
 
@@ -88,10 +97,28 @@ export function CompletionPanel({
               Failed list
             </Button>
           )}
-          <Button variant="ghost" onClick={onSendAnother} className="inline-flex items-center justify-center gap-2">
+          <Button variant="ghost" onClick={onStartNewBatch} className="inline-flex items-center justify-center gap-2">
             <RotateCcw className="h-4 w-4" />
-            Send another batch
+            Start new batch
           </Button>
+          <Button variant="ghost" onClick={onKeepSession} className="inline-flex items-center justify-center gap-2">
+            Keep session
+          </Button>
+          {failed === 0 && (
+            <Button variant="ghost" onClick={onSendAnother} className="inline-flex items-center justify-center gap-2">
+              Back to tool
+            </Button>
+          )}
+        </div>
+
+        {showAutoCleanup && allDelivered && (
+          <div className="mt-5">
+            <AutoCleanupCountdown active onKeepSession={onKeepSession} />
+          </div>
+        )}
+
+        <div className="mt-5">
+          <PrivacyNotice compact />
         </div>
       </div>
 

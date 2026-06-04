@@ -1,14 +1,15 @@
 import { MetadataRoute } from 'next';
+import { absoluteUrl } from '@/config/site';
 
 export default function robots(): MetadataRoute.Robots {
-    return {
-        rules: [
-            {
-                userAgent: '*',
-                allow: '/',
-                disallow: ['/tool', '/email', '/api/'], // Wizard steps and internal APIs shouldn't be indexed
-            },
-        ],
-        sitemap: 'https://mailmycertificate.com/sitemap.xml',
-    };
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/tool', '/email', '/settings', '/api/'],
+      },
+    ],
+    sitemap: absoluteUrl('/sitemap.xml'),
+  };
 }

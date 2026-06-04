@@ -12,6 +12,7 @@ import { SendReadinessPanel } from '@/components/email/redesign/SendReadinessPan
 import { SendingTracker } from '@/components/email/redesign/SendingTracker';
 import { CompletionPanel } from '@/components/email/redesign/CompletionPanel';
 import { RefreshGuardBanner } from '@/components/email/redesign/RefreshGuardBanner';
+import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import type { EmailQueueItem } from '@/core/queue/emailQueue';
 import {
@@ -23,6 +24,12 @@ import {
   resolveRecipientEmail,
   summarizeRecipientValidation,
 } from '@/utils/recipientColumn';
+import {
+  persistEmailQueueItems,
+  startNewBatch,
+  touchActivity,
+  updateSession,
+} from '@/core/session/sessionManager';
 
 interface AuthStatus {
   authenticated: boolean;
@@ -58,6 +65,7 @@ export default function EmailView() {
   const [sendItems, setSendItems] = useState<EmailQueueItem[]>([]);
   const [failedItems, setFailedItems] = useState<EmailQueueItem[]>([]);
   const [confirming, setConfirming] = useState(false);
+  const [keepSession, setKeepSession] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,6 +73,8 @@ export default function EmailView() {
       const certs = await db.certificates.where({ sessionId, status: 'completed' }).toArray();
       setCsvRows(rows);
       setCertificates(certs);
+      await touchActivity(sessionId);
+      await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
     };
     fetchData();
   }, [sessionId]);
@@ -280,6 +290,8 @@ export default function EmailView() {
   const confirmAndStartSend = async () => {
     setConfirming(false);
     setSending(true);
+    setKeepSession(false);
+    await updateSession(sessionId, { workflowStage: 'SENDING' });
     setDeliveryStartedAt(Date.now());
     setDeliveryCompletedAt(null);
     setSendingState({ sending: true, processed: 0, total: sendItems.length, current: '' });
@@ -319,6 +331,12 @@ export default function EmailView() {
     setSending(false);
     setSendingState({ sending: false, processed: sendItems.length, total: sendItems.length, current: '' });
     setDeliveryCompletedAt(Date.now());
+    await persistEmailQueueItems(updatedItems);
+    await updateSession(sessionId, {
+      workflowStage: 'COMPLETED',
+      emailStatus: failed.length === 0 ? 'complete' : 'partial',
+    });
+    await touchActivity(sessionId);
     setMessage({ type: 'success', text: `Processing complete. ${sendItems.length - failed.length} sent, ${failed.length} failed.` });
   };
 
@@ -358,8 +376,15 @@ export default function EmailView() {
     }
   };
 
-  const sendAnotherBatch = () => {
+  const handleStartNewBatch = async () => {
+    await startNewBatch();
     router.push('/tool');
+  };
+
+  const handleKeepSession = async () => {
+    setKeepSession(true);
+    await updateSession(sessionId, { keepSessionAfterEmail: true });
+    await touchActivity(sessionId);
   };
 
   if (loading) {
@@ -388,13 +413,16 @@ export default function EmailView() {
           <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
             <span>Mail</span><span>My</span><span>Certificate</span>
           </Link>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium">
-            <span className={`h-2 w-2 rounded-full ${authStatus.authenticated ? 'bg-green-500' : 'bg-gray-300'}`} />
-            {authStatus.authenticated ? (
-              <span className="max-w-[160px] truncate text-foreground">{authStatus.email}</span>
-            ) : (
-              <span className="text-secondary">Gmail not connected</span>
-            )}
+          <div className="flex items-center gap-2">
+            <ManageLocalDataMenu variant="header" />
+            <div className="flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium">
+              <span className={`h-2 w-2 rounded-full ${authStatus.authenticated ? 'bg-green-500' : 'bg-gray-300'}`} />
+              {authStatus.authenticated ? (
+                <span className="max-w-[160px] truncate text-foreground">{authStatus.email}</span>
+              ) : (
+                <span className="text-secondary">Gmail not connected</span>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -509,7 +537,10 @@ export default function EmailView() {
             onRetryFailed={retryFailedItems}
             onDownloadReport={downloadDeliveryReport}
             onDownloadFailed={downloadFailureReport}
-            onSendAnother={sendAnotherBatch}
+            onSendAnother={() => router.push('/tool')}
+            onStartNewBatch={handleStartNewBatch}
+            onKeepSession={handleKeepSession}
+            showAutoCleanup={failedCount === 0 && !keepSession}
           />
         )}
       </div>

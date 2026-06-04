@@ -42,7 +42,7 @@ export const emailService = {
   // Authentication endpoints
   async login(): Promise<AuthLoginResponse> {
     try {
-      const response = await fetch('/api/auth/login');
+      const response = await fetch('/api/auth/login', { credentials: 'include' });
       const data = await response.json();
 
       if (!response.ok) {
@@ -66,7 +66,7 @@ export const emailService = {
 
   async getStatus(): Promise<AuthStatusResponse> {
     try {
-      const response = await fetch('/api/auth/status');
+      const response = await fetch('/api/auth/status', { credentials: 'include' });
       const data = await response.json();
 
       if (!response.ok) {
@@ -95,6 +95,7 @@ export const emailService = {
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         headers,
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -133,6 +134,7 @@ export const emailService = {
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify(emailRequest),
       });
 
@@ -177,6 +179,7 @@ export const emailService = {
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: formData,
       });
 

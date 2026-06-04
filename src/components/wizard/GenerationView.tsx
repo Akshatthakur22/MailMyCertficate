@@ -8,13 +8,20 @@ import { Button } from '@/components/ui/Button';
 import { CheckCircle, Download, Mail, AlertTriangle, Loader2, Play } from 'lucide-react';
 import JSZip from 'jszip';
 import { useRouter } from 'next/navigation';
+import { updateSession, touchActivity, startNewBatch } from '@/core/session/sessionManager';
+import { ZipDownloadSuccessPanel } from '@/components/session/ZipDownloadSuccessPanel';
 
 export function GenerationView() {
     const router = useRouter();
     const sessionId = useAppStore((state) => state.sessionId);
+    const sessionHydrationVersion = useAppStore((state) => state.sessionHydrationVersion);
+    const setCurrentStep = useAppStore((state) => state.setCurrentStep);
 
     const { startGeneration, isGenerating, progress, error } = useGenerator();
+    const [countsReady, setCountsReady] = useState(false);
     const [isZipping, setIsZipping] = useState(false);
+    const [zipDownloaded, setZipDownloaded] = useState(false);
+    const [batchBusy, setBatchBusy] = useState(false);
     const [totalCount, setTotalCount] = useState(0);
     const [completedCount, setCompletedCount] = useState(0);
     const [activityLog, setActivityLog] = useState<{ text: string; ts: number }[]>([]);
@@ -22,19 +29,38 @@ export function GenerationView() {
     const startTsRef = useRef<number | null>(null);
 
     useEffect(() => {
+        let cancelled = false;
+
         const init = async () => {
+            setCountsReady(false);
             const count = await db.rows.where({ sessionId }).count();
             const done = await db.certificates.where({ sessionId, status: 'completed' }).count();
+            if (cancelled) return;
+
             setTotalCount(count);
             setCompletedCount(done);
+            setCountsReady(true);
 
-            // Auto-start if no progress yet, otherwise wait for user to "Resume" or "Restart"
-            if (done === 0) {
-                startGeneration(sessionId);
-            }
+            await updateSession(sessionId, { workflowStage: 'GENERATE', currentStep: 4 });
+            await touchActivity(sessionId);
+
+            if (count === 0) return;
+
+            // All certificates already generated — completion UI handles this (no worker needed)
+            if (done >= count) return;
+
+            const partial = done > 0 && done < count;
+            if (partial) return;
+
+            // Nothing generated yet — start fresh
+            startGeneration(sessionId, false);
         };
+
         init();
-    }, [sessionId, startGeneration]);
+        return () => {
+            cancelled = true;
+        };
+    }, [sessionId, startGeneration, sessionHydrationVersion]);
 
     // Poll IDB for live updates (processed count + recent activity)
     useEffect(() => {
@@ -107,12 +133,46 @@ export function GenerationView() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            setZipDownloaded(true);
+            await updateSession(sessionId, {
+                workflowStage: 'DOWNLOAD',
+                zipDownloadedAt: Date.now(),
+            });
+            await touchActivity(sessionId);
         } catch (err) {
             console.error("ZIP Error:", err);
         } finally {
             setIsZipping(false);
         }
     };
+
+    const handleGenerateAgain = () => {
+        setZipDownloaded(false);
+        startGeneration(sessionId, false);
+    };
+
+    const handleStartNewBatch = async () => {
+        setBatchBusy(true);
+        try {
+            await startNewBatch();
+            setZipDownloaded(false);
+            setCurrentStep(1);
+            router.push('/tool');
+        } finally {
+            setBatchBusy(false);
+        }
+    };
+
+    if (!countsReady && !error) {
+        return (
+            <div className="py-16 flex flex-col items-center justify-center">
+                <Loader2 className="w-10 h-10 text-accent animate-spin" />
+                <p className="mt-4 text-sm text-secondary">Loading your session…</p>
+            </div>
+        );
+    }
 
     if (error) {
         return (
@@ -125,8 +185,15 @@ export function GenerationView() {
         );
     }
 
-    const isDone = progress === 100 && !isGenerating;
-    const hasPartialProgress = completedCount > 0 && completedCount < totalCount && !isGenerating;
+    const allCertificatesReady =
+        countsReady && totalCount > 0 && completedCount >= totalCount;
+    const isDone = allCertificatesReady || (progress === 100 && !isGenerating);
+    const hasPartialProgress =
+        countsReady &&
+        completedCount > 0 &&
+        completedCount < totalCount &&
+        !isGenerating &&
+        !isDone;
 
     const stages = [
         { key: 'prepare', label: 'Preparing participant data', done: progress > 3 },
@@ -199,11 +266,27 @@ export function GenerationView() {
                             {isZipping ? <Loader2 className="mr-3 animate-spin" /> : <Download className="mr-3 group-hover:-translate-y-1 transition-transform" />}
                             {isZipping ? 'Zipping...' : 'Download All (ZIP)'}
                         </Button>
-                        <Button onClick={() => router.push('/email')} variant="secondary" size="lg" className="h-16 px-10 text-lg font-bold rounded-2xl w-full sm:w-auto border-2 border-accent/10 hover:border-accent group">
+                        <Button
+                            onClick={async () => {
+                                await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
+                                router.push('/email');
+                            }}
+                            variant="secondary"
+                            size="lg"
+                            className="h-16 px-10 text-lg font-bold rounded-2xl w-full sm:w-auto border-2 border-accent/10 hover:border-accent group"
+                        >
                             <Mail className="mr-3 group-hover:scale-110 transition-transform text-accent" />
                             Send Email
                         </Button>
                     </div>
+
+                    {zipDownloaded && (
+                        <ZipDownloadSuccessPanel
+                            onGenerateAgain={handleGenerateAgain}
+                            onStartNewBatch={handleStartNewBatch}
+                            busy={batchBusy}
+                        />
+                    )}
                 </div>
             )}
         </div>

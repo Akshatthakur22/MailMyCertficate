@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { SessionProvider } from "@/components/session/SessionProvider";
+import { getGoogleSiteVerification, getRootMetadataBase } from "@/lib/metadata";
+import { absoluteUrl } from "@/config/site";
+import { GlobalStructuredData } from "@/components/seo/GlobalStructuredData";
+import { SEO_KEYWORDS } from "@/lib/seo-keywords";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,19 +14,20 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://mailmycertificate.com'),
+  metadataBase: getRootMetadataBase(),
   title: {
-    default: "MailMyCertificate | Bulk Certificate Generator & Automator",
+    default: "MailMyCertificate | Free Bulk Certificate Generator & Gmail Sender",
     template: "%s | MailMyCertificate"
   },
-  description: "Free, privacy-first bulk certificate generator. Generate 1000+ localized PDFs in minutes entirely in your browser. No data leaves your device. Open source.",
-  keywords: ["bulk certificate generator", "certificate automation", "free certificate maker", "privacy-first", "browser-based PDF generation", "Next.js certificate tool"],
+  description: "Generate and email hundreds of personalized certificates in minutes. Upload a template + CSV, create PDFs locally in your browser, send via Gmail. Free, private, open source.",
+  keywords: [...SEO_KEYWORDS.home],
+  verification: getGoogleSiteVerification(),
   authors: [{ name: "Akshat Thakur", url: "https://github.com/akshatthakur22" }],
   creator: "Akshat Thakur",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://mailmycertificate.com",
+    url: absoluteUrl('/'),
     title: "MailMyCertificate | Free Bulk Certificate Automation",
     description: "Generate and send professional certificates in bulk. Local-first, private, and lightning fast.",
     siteName: "MailMyCertificate",
@@ -41,8 +47,8 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-192.png",
+    icon: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
   alternates: {
     canonical: "/",
@@ -60,12 +66,14 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1F4ED8" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
+        <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
       </head>
 
 
       <body className={`${inter.variable} antialiased`}>
-        {children}
+        <GlobalStructuredData />
+        <SessionProvider>{children}</SessionProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

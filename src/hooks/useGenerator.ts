@@ -9,7 +9,11 @@ export function useGenerator() {
     const workerRef = useRef<Worker | null>(null);
 
     const startGeneration = useCallback(async (sessionId: string, resume = false) => {
-        if (isGenerating) return;
+        // Allow restart (e.g. after session recovery) by terminating any in-flight worker
+        if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+        }
 
         setIsGenerating(true);
         setError(null);
@@ -43,7 +47,6 @@ export function useGenerator() {
             }
 
             // 3. Initialize Worker
-            if (workerRef.current) workerRef.current.terminate();
             workerRef.current = new Worker(new URL('../core/worker/pdf.worker.ts', import.meta.url));
 
             let processedCount = rows.length - pendingRows.length;
@@ -105,8 +108,9 @@ export function useGenerator() {
             setError(err.message || "Generation failed");
             setIsGenerating(false);
             workerRef.current?.terminate();
+            workerRef.current = null;
         }
-    }, [isGenerating]);
+    }, []);
 
     const stopGeneration = useCallback(() => {
         workerRef.current?.terminate();
