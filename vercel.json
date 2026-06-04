@@ -1,34 +1,17 @@
 {
-  "version": 2,
-
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": ".",
+      "framework": "nextjs",
+      "routePrefix": "/"
     },
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
+    "backend": {
+      "entrypoint": "api/index.py",
+      "routePrefix": "/api"
     }
-  ],
-
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-
+  },
   "cleanUrls": true,
   "trailingSlash": false,
-
   "headers": [
     {
       "source": "/(.*)",

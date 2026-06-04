@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "axios": "^1.13.5",
     "clsx": "^2.1.1",
     "dexie": "^4.3.0",
