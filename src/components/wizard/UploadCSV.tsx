@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { FileSpreadsheet, AlertCircle, AlertTriangle, ArrowRight, Trash2, Link2, Loader2, RefreshCw, CheckCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
+import { touchActivity, updateSession } from '@/core/session/sessionManager';
 import type { CSVRow } from '@/types/csv';
 
 type ImportSource = 'csv' | 'sheets';
@@ -122,6 +123,9 @@ export function UploadCSV() {
             setImportSource('csv');
             localStorage.setItem('mmc-import-source', 'csv');
             localStorage.removeItem('mmc-sheet-url');
+
+            await updateSession(sessionId, { workflowStage: 'UPLOAD', currentStep: 2 });
+            await touchActivity(sessionId);
         } catch (err: any) {
             setError(err.message || 'Failed to import data.');
         }

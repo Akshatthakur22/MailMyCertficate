@@ -1,55 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { db } from '@/core/db/schema';
 import { useAppStore } from '@/store/useAppStore';
-import { Button } from '@/components/ui/Button';
 import { emailService } from '@/services/emailService';
-import { SendProgressTable } from '@/components/email/SendProgressTable';
-import { FailedRecipientsList } from '@/components/email/FailedRecipientsList';
-import { DeliveryIllustrationSection } from '@/components/email/delivery/DeliveryIllustrationSection';
-import { DeliverySummary } from '@/components/email/delivery/DeliverySummary';
-import { EmailPreviewCard } from '@/components/email/delivery/EmailPreviewCard';
-import { DeliveryProgress } from '@/components/email/delivery/DeliveryProgress';
-import { LiveActivityFeed } from '@/components/email/delivery/LiveActivityFeed';
-import { DeliveryCompletionState } from '@/components/email/delivery/DeliveryCompletionState';
-import { RetryPanel } from '@/components/email/delivery/RetryPanel';
-import ContextRail from '@/components/layout/ContextRail';
-import ComposePane from '@/components/email/redesign/ComposePane';
-import LivePreviewInline from '@/components/email/redesign/LivePreviewInline';
-import { Mail, LogIn, LogOut, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { ConnectGmailPanel } from '@/components/email/redesign/ConnectGmailPanel';
+import { GmailComposer } from '@/components/email/redesign/GmailComposer';
+import { SendReadinessPanel } from '@/components/email/redesign/SendReadinessPanel';
+import { SendingTracker } from '@/components/email/redesign/SendingTracker';
+import { CompletionPanel } from '@/components/email/redesign/CompletionPanel';
+import { RefreshGuardBanner } from '@/components/email/redesign/RefreshGuardBanner';
+import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import type { EmailQueueItem } from '@/core/queue/emailQueue';
-
-async function sendEmailWithAttachment({ recipient, subject, body, certificate }: { recipient: string; subject: string; body: string; certificate: Uint8Array | undefined }) {
-  if (!certificate) throw new Error('No certificate PDF provided');
-
-  const formData = new FormData();
-  formData.append('recipient', recipient);
-  formData.append('subject', subject);
-  formData.append('body', body);
-
-  const arrayBuffer = certificate.buffer instanceof ArrayBuffer ? certificate.buffer : new Uint8Array(certificate).buffer;
-  const pdfBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
-  formData.append('attachment', pdfBlob, 'certificate.pdf');
-
-  const response = await fetch('/api/send-email', {
-    method: 'POST',
-    body: formData,
-  });
-
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Failed to send email');
-  return data;
-}
+import {
+  buildTemplateText,
+  detectEmailColumn,
+  detectNameColumn,
+  getDisplayName,
+  isValidEmail,
+  resolveRecipientEmail,
+  summarizeRecipientValidation,
+} from '@/utils/recipientColumn';
+import {
+  persistEmailQueueItems,
+  startNewBatch,
+  touchActivity,
+  updateSession,
+} from '@/core/session/sessionManager';
 
 interface AuthStatus {
   authenticated: boolean;
   email: string | null;
 }
 
-interface EmailRequest {
-  recipient: string;
+interface EmailFormState {
   subject: string;
   body: string;
 }
@@ -65,17 +52,20 @@ export default function EmailView() {
   const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
   const [sending, setSending] = useState(false);
-  const [emailForm, setEmailForm] = useState<EmailRequest>({ recipient: '', subject: 'Certificate of Completion for {{Name}}', body: 'Dear {{Name}},\n\nCongratulations on completing your course! Your certificate is attached.\n\nBest regards,\nYour Team' });
-  const [recipientColumn, setRecipientColumn] = useState('');
+  const [emailForm, setEmailForm] = useState<EmailFormState>({
+    subject: 'Certificate of Completion for {{name}}',
+    body: 'Dear {{name}},\n\nCongratulations on completing your course! Your certificate is attached.\n\nBest regards,\nYour Team',
+  });
+  const [emailColumnOverride, setEmailColumnOverride] = useState<string | null>(null);
   const [previewIndex, setPreviewIndex] = useState(0);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [deliveryStartedAt, setDeliveryStartedAt] = useState<number | null>(null);
   const [deliveryCompletedAt, setDeliveryCompletedAt] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [sendingState, setSendingState] = useState({ sending: false, processed: 0, total: 0, current: '' });
   const [sendItems, setSendItems] = useState<EmailQueueItem[]>([]);
   const [failedItems, setFailedItems] = useState<EmailQueueItem[]>([]);
-  const [showReviewBeforeSend, setShowReviewBeforeSend] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [keepSession, setKeepSession] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +73,8 @@ export default function EmailView() {
       const certs = await db.certificates.where({ sessionId, status: 'completed' }).toArray();
       setCsvRows(rows);
       setCertificates(certs);
+      await touchActivity(sessionId);
+      await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
     };
     fetchData();
   }, [sessionId]);
@@ -103,6 +95,17 @@ export default function EmailView() {
       setMessage({ type: 'error', text: `Authentication failed: ${error}` });
     }
   }, []);
+
+  // Guard against accidental refresh / tab close while a send is in progress.
+  useEffect(() => {
+    if (!sending) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [sending]);
 
   const formatDuration = (ms: number) => {
     const seconds = Math.max(0, Math.round(ms / 1000));
@@ -140,27 +143,71 @@ export default function EmailView() {
     downloadTextFile(`failed_recipients_${sessionId}.csv`, rows.join('\n'));
   };
 
+  const rowDataList = useMemo(
+    () => csvRows.map((row) => (row.data ?? {}) as Record<string, unknown>),
+    [csvRows]
+  );
+
+  const emailDetection = useMemo(
+    () => detectEmailColumn(csvHeaders, rowDataList),
+    [csvHeaders, rowDataList]
+  );
+
+  const nameColumn = useMemo(() => detectNameColumn(csvHeaders), [csvHeaders]);
+
+  const emailColumn = emailColumnOverride ?? emailDetection.column;
+
+  const recipientValidation = useMemo(() => {
+    if (!emailColumn) return { valid: 0, invalid: 0, invalidExamples: [] as string[] };
+    return summarizeRecipientValidation(rowDataList, emailColumn);
+  }, [emailColumn, rowDataList]);
+
+  const templateTokens = useMemo(
+    () => csvHeaders.map((header) => `{{${header}}}`),
+    [csvHeaders]
+  );
+
+  const sampleRecipients = useMemo(() => {
+    if (!emailColumn) return [] as { name: string; email: string }[];
+    const out: { name: string; email: string }[] = [];
+    for (const row of csvRows) {
+      const data = (row.data ?? {}) as Record<string, unknown>;
+      const email = resolveRecipientEmail(data, emailColumn);
+      if (!isValidEmail(email)) continue;
+      out.push({ name: getDisplayName(data, nameColumn), email });
+      if (out.length >= 2) break;
+    }
+    return out;
+  }, [csvRows, emailColumn, nameColumn]);
+
   const getCertificateForRow = (rowId: number) => certificates.find((certificate) => certificate.rowId === rowId);
-  const getNameForRow = (row: any) => row?.data?.Name || row?.data?.name || row?.data?.fullName || row?.data?.FullName || row?.data?.participant || row?.data?.Participant || row?.data?.email || row?.data?.Email || 'Participant';
-  const buildTemplateText = (template: string, data: Record<string, any>) => template.replace(/{{(\w+)}}/g, (_, key) => String(data[key] ?? ''));
+
+  const getPreviewLabel = (row: { data?: Record<string, unknown> }) => {
+    if (!row.data) return 'Participant';
+    return getDisplayName(row.data, nameColumn);
+  };
 
   const previewRows = csvRows.slice(0, 3);
   const currentPreviewRow = previewRows[previewIndex] || previewRows[0];
-  const currentPreviewName = currentPreviewRow ? getNameForRow(currentPreviewRow) : 'First participant';
+  const currentPreviewData = (currentPreviewRow?.data ?? {}) as Record<string, unknown>;
+  const currentPreviewName = currentPreviewRow ? getDisplayName(currentPreviewData, nameColumn) : 'First participant';
+  const currentPreviewEmail = emailColumn ? resolveRecipientEmail(currentPreviewData, emailColumn) : '';
   const currentSendingRecipient = sendingState.current || sendItems.find((item) => item.status === 'pending' || item.status === 'retry')?.recipient || '';
   const sentCount = sendItems.filter((item) => item.status === 'sent').length;
   const failedCount = failedItems.length;
-  const activeCount = sendItems.filter((item) => item.status === 'pending' || item.status === 'retry').length;
   const totalCount = sendItems.length || csvRows.length;
   const remainingCount = Math.max(0, totalCount - sentCount - failedCount);
   const isSending = sendingState.sending;
   const isComplete = !isSending && totalCount > 0 && sendItems.length > 0 && sendItems.every((item) => item.status === 'sent' || item.status === 'failed');
-  const totalElapsed = deliveryStartedAt && deliveryCompletedAt ? formatDuration(deliveryCompletedAt - deliveryStartedAt) : totalCount > 0 ? formatDuration(totalCount * 1200) : '—';
+  const totalElapsed = deliveryStartedAt && deliveryCompletedAt ? formatDuration(deliveryCompletedAt - deliveryStartedAt) : '—';
   const estimatedRemaining = isSending ? formatDuration(Math.max(1, remainingCount) * 1200) : 'Ready';
-  const currentActivityItems = sendItems.filter((item) => item.status !== 'pending').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 6);
-  const previewSubject = buildTemplateText(emailForm.subject, currentPreviewRow?.data ?? {});
-  const previewBody = buildTemplateText(emailForm.body, currentPreviewRow?.data ?? {});
+  const previewSubject = buildTemplateText(emailForm.subject, currentPreviewData);
+  const previewBody = buildTemplateText(emailForm.body, currentPreviewData);
   const currentSendingIds = currentSendingRecipient ? sendItems.filter((item) => item.recipient === currentSendingRecipient).map((item) => item.id) : [];
+
+  const validRecipients = recipientValidation.valid;
+  const estimatedMinutes = Math.max(1, Math.ceil((validRecipients * 1.2) / 60));
+  const canSend = Boolean(emailColumn) && validRecipients > 0;
 
   const checkAuthStatus = async () => {
     try {
@@ -194,39 +241,57 @@ export default function EmailView() {
     }
   };
 
-  const handleBulkSend = async () => {
-    if (!recipientColumn) {
-      setMessage({ type: 'error', text: 'Please select the recipient email column.' });
+  const prepareSend = () => {
+    if (!emailColumn) {
+      setMessage({
+        type: 'error',
+        text: 'Could not find an email column in your participant data. Add a column with valid email addresses.',
+      });
       return;
     }
     if (!csvRows.length) {
       setMessage({ type: 'error', text: 'No CSV data loaded.' });
       return;
     }
+    if (recipientValidation.valid === 0) {
+      setMessage({ type: 'error', text: 'None of your rows have a valid email address in the detected column.' });
+      return;
+    }
 
-    const items: EmailQueueItem[] = csvRows.map((row) => ({
-      id: `${sessionId}-${row.id}`,
-      sessionId,
-      rowId: row.id,
-      recipient: row.data[recipientColumn],
-      subject: buildTemplateText(emailForm.subject, row.data),
-      body: buildTemplateText(emailForm.body, row.data),
-      status: 'pending',
-      attempts: 0,
-      maxAttempts: 3,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }));
+    const items: EmailQueueItem[] = [];
+    for (const row of csvRows) {
+      const data = (row.data ?? {}) as Record<string, unknown>;
+      const recipient = resolveRecipientEmail(data, emailColumn);
+      if (!isValidEmail(recipient)) continue;
+
+      items.push({
+        id: `${sessionId}-${row.id}`,
+        sessionId,
+        rowId: row.id,
+        recipient,
+        displayName: getDisplayName(data, nameColumn),
+        subject: buildTemplateText(emailForm.subject, data),
+        body: buildTemplateText(emailForm.body, data),
+        status: 'pending',
+        attempts: 0,
+        maxAttempts: 3,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
 
     setSendItems(items);
     setFailedItems([]);
     setDeliveryCompletedAt(null);
-    setShowReviewBeforeSend(true);
+    setMessage(null);
+    setConfirming(true);
   };
 
   const confirmAndStartSend = async () => {
-    setShowReviewBeforeSend(false);
+    setConfirming(false);
     setSending(true);
+    setKeepSession(false);
+    await updateSession(sessionId, { workflowStage: 'SENDING' });
     setDeliveryStartedAt(Date.now());
     setDeliveryCompletedAt(null);
     setSendingState({ sending: true, processed: 0, total: sendItems.length, current: '' });
@@ -240,7 +305,13 @@ export default function EmailView() {
 
       try {
         const certificate = getCertificateForRow(item.rowId);
-        await sendEmailWithAttachment({ recipient: item.recipient, subject: item.subject, body: item.body, certificate: certificate?.pdf });
+        if (!certificate?.pdf) throw new Error('No certificate PDF found for this recipient');
+        await emailService.sendEmailWithAttachment({
+          recipient: item.recipient,
+          subject: item.subject,
+          body: item.body,
+          certificate: certificate.pdf,
+        });
         const sentItem: EmailQueueItem = { ...item, status: 'sent', updatedAt: Date.now(), sentAt: Date.now() };
         updatedItems.push(sentItem);
       } catch (error: any) {
@@ -260,6 +331,12 @@ export default function EmailView() {
     setSending(false);
     setSendingState({ sending: false, processed: sendItems.length, total: sendItems.length, current: '' });
     setDeliveryCompletedAt(Date.now());
+    await persistEmailQueueItems(updatedItems);
+    await updateSession(sessionId, {
+      workflowStage: 'COMPLETED',
+      emailStatus: failed.length === 0 ? 'complete' : 'partial',
+    });
+    await touchActivity(sessionId);
     setMessage({ type: 'success', text: `Processing complete. ${sendItems.length - failed.length} sent, ${failed.length} failed.` });
   };
 
@@ -275,7 +352,13 @@ export default function EmailView() {
     for (const item of failedItems) {
       try {
         const certificate = getCertificateForRow(item.rowId);
-        await sendEmailWithAttachment({ recipient: item.recipient, subject: item.subject, body: item.body, certificate: certificate?.pdf });
+        if (!certificate?.pdf) throw new Error('No certificate PDF found for this recipient');
+        await emailService.sendEmailWithAttachment({
+          recipient: item.recipient,
+          subject: item.subject,
+          body: item.body,
+          certificate: certificate.pdf,
+        });
         retriedItems.push({ ...item, status: 'sent', updatedAt: Date.now(), sentAt: Date.now() });
       } catch (error: any) {
         retriedItems.push({ ...item, status: 'failed', updatedAt: Date.now(), error: error?.message || String(error) });
@@ -293,202 +376,173 @@ export default function EmailView() {
     }
   };
 
-  const sendAnotherBatch = () => {
+  const handleStartNewBatch = async () => {
+    await startNewBatch();
     router.push('/tool');
+  };
+
+  const handleKeepSession = async () => {
+    setKeepSession(true);
+    await updateSession(sessionId, { keepSessionAfterEmail: true });
+    await touchActivity(sessionId);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white px-6 py-16">
-        <div className="mx-auto flex min-h-64 max-w-3xl items-center justify-center rounded-3xl border border-gray-200 bg-gray-50">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      <div className="min-h-screen bg-background px-6 py-16">
+        <div className="mx-auto flex min-h-64 max-w-3xl items-center justify-center rounded-2xl border border-border bg-muted">
+          <Loader2 className="h-8 w-8 animate-spin text-secondary" />
         </div>
       </div>
     );
   }
 
+  const phase: 'connect' | 'sending' | 'complete' | 'compose' = !authStatus.authenticated
+    ? 'connect'
+    : isSending
+      ? 'sending'
+      : isComplete
+        ? 'complete'
+        : 'compose';
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(to_bottom,rgba(250,250,249,1),rgba(255,255,255,1))]">
+    <div className="min-h-screen bg-background">
+      {/* Top bar */}
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
+            <span>Mail</span><span>My</span><span>Certificate</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <ManageLocalDataMenu variant="header" />
+            <div className="flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium">
+              <span className={`h-2 w-2 rounded-full ${authStatus.authenticated ? 'bg-green-500' : 'bg-gray-300'}`} />
+              {authStatus.authenticated ? (
+                <span className="max-w-[160px] truncate text-foreground">{authStatus.email}</span>
+              ) : (
+                <span className="text-secondary">Gmail not connected</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">Email delivery</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-gray-900">Guided Delivery Studio</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
-              A calm, premium workflow for sending personalized certificates through Gmail.
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 self-start rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Local processing • secure delivery
-          </div>
+        <div className="mb-5">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Send certificates by email</h1>
+          <p className="mt-1 text-sm text-secondary">
+            {phase === 'sending'
+              ? 'Delivery is running — keep this tab open.'
+              : phase === 'complete'
+                ? 'Your delivery is finished.'
+                : 'Write your message, review the recipients, and send personalized certificates through Gmail.'}
+          </p>
         </div>
 
         {message && (
-          <div className={`mb-6 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm shadow-sm ${message.type === 'success' ? 'border-emerald-100 bg-emerald-50/80 text-emerald-800' : 'border-rose-100 bg-rose-50/80 text-rose-800'}`}>
+          <div
+            className={`mb-5 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${
+              message.type === 'success'
+                ? 'border-green-200 bg-green-50 text-green-800'
+                : 'border-rose-200 bg-rose-50 text-rose-800'
+            }`}
+          >
             {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
             <span>{message.text}</span>
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <ContextRail
-            email={authStatus.email}
-            sentCount={sentCount}
-            attachments={certificates.length}
-            onLogin={handleLogin}
-            onLogout={handleLogout}
+        {phase === 'connect' && (
+          <ConnectGmailPanel
+            recipientCount={validRecipients || csvRows.length}
+            certificateCount={certificates.length}
             authenticating={authenticating}
-            authenticated={authStatus.authenticated}
+            onLogin={handleLogin}
           />
+        )}
 
-          <main className="space-y-10">
-            {!authStatus.authenticated ? (
-              <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-                <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">Start here</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-gray-900">Connect Gmail to begin delivery</h2>
-                    <p className="mt-3 max-w-xl text-sm leading-6 text-gray-600">
-                      Once connected, you can review personalized emails, preview attachments, and send with calm operational transparency.
-                    </p>
-                  </div>
-                  <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
-                    <p className="text-sm font-medium text-gray-900">Why this is safe</p>
-                    <ul className="mt-3 space-y-2 text-sm leading-6 text-gray-600">
-                      <li>• No participant data is uploaded for delivery.</li>
-                      <li>• Your Google password is never shared.</li>
-                      <li>• You can review every message before sending.</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white/60 p-6 rounded-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">Delivery setup</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-gray-900">Prepare personalized emails</h2>
-                    <p className="mt-2 text-sm leading-6 text-gray-600">Write once, personalize automatically, then review before delivery.</p>
-                  </div>
-                  <div className="text-sm text-gray-500">{csvRows.length} recipients • {certificates.length} attachments ready</div>
-                </div>
+        {phase === 'compose' && (
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:items-stretch">
+            <div className="min-w-0 lg:col-span-2 lg:col-start-1 lg:row-start-1">
+              <RefreshGuardBanner active={false} />
+            </div>
+            <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+              <GmailComposer
+                fromEmail={authStatus.email}
+                emailColumn={emailDetection.column}
+                nameColumn={nameColumn}
+                recipientCount={validRecipients}
+                validation={recipientValidation}
+                ambiguousColumns={emailDetection.ambiguousColumns}
+                selectedColumn={emailColumn}
+                onSelectColumn={setEmailColumnOverride}
+                emailForm={emailForm}
+                setEmailForm={setEmailForm}
+                templateTokens={templateTokens.length > 0 ? templateTokens.slice(0, 8) : ['{{name}}', '{{email}}']}
+                attachmentCount={certificates.length}
+                previewRows={previewRows}
+                previewIndex={previewIndex}
+                setPreviewIndex={setPreviewIndex}
+                getPreviewLabel={getPreviewLabel}
+                previewSubject={previewSubject}
+                previewBody={previewBody}
+                previewName={currentPreviewName}
+                previewEmail={currentPreviewEmail}
+              />
+            </div>
+            <div className="flex min-h-0 min-w-0 flex-col lg:col-start-2 lg:row-start-2 lg:sticky lg:top-[4.25rem] lg:self-stretch">
+              <SendReadinessPanel
+                  email={authStatus.email}
+                  validRecipients={validRecipients}
+                  totalRows={csvRows.length}
+                  invalidRecipients={recipientValidation.invalid}
+                  certificateCount={certificates.length}
+                  sampleRecipients={sampleRecipients}
+                  canSend={canSend}
+                  estimatedMinutes={estimatedMinutes}
+                  confirming={confirming}
+                  onLogout={handleLogout}
+                  onRequestSend={prepareSend}
+                  onConfirmSend={confirmAndStartSend}
+                  onCancelConfirm={() => setConfirming(false)}
+                />
+            </div>
+          </div>
+        )}
 
-                <div className="mt-8">
-                  <ComposePane
-                    csvHeaders={csvHeaders}
-                    recipientColumn={recipientColumn}
-                    setRecipientColumn={setRecipientColumn}
-                    emailForm={emailForm}
-                    setEmailForm={setEmailForm}
-                    previewRows={previewRows}
-                    previewIndex={previewIndex}
-                    setPreviewIndex={setPreviewIndex}
-                    onReview={handleBulkSend}
-                    sending={sending}
-                  />
+        {phase === 'sending' && (
+          <div className="space-y-5">
+            <RefreshGuardBanner active />
+            <SendingTracker
+              sent={sentCount}
+              failed={failedCount}
+              remaining={remainingCount}
+              total={totalCount}
+              currentRecipient={currentSendingRecipient}
+              estimatedRemaining={estimatedRemaining}
+              items={sendItems}
+              currentSendingIds={currentSendingIds}
+            />
+          </div>
+        )}
 
-                  <div className="mt-6">
-                    <LivePreviewInline subject={previewSubject} body={previewBody} previewRecipient={currentPreviewName} attachmentCount={certificates.length} />
-                  </div>
-
-                  <div className="mt-6 text-sm text-gray-600">
-                    Your template never leaves your browser. Use tokens like <span className="font-medium text-gray-900">{'{{Name}}'}</span>, <span className="font-medium text-gray-900">{'{{Event}}'}</span>, and <span className="font-medium text-gray-900">{'{{College}}'}</span> to personalize the batch.
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showReviewBeforeSend && (
-              <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">Pre-send review</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-gray-900">Review delivery before it starts</h2>
-                    <p className="mt-2 text-sm leading-6 text-gray-600">This is the last calm checkpoint before Gmail delivery begins.</p>
-                  </div>
-                  <div className="rounded-full border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600">Please keep this tab open during delivery</div>
-                </div>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Account</div>
-                    <div className="mt-2 text-sm font-medium text-gray-900">{authStatus.email}</div>
-                  </div>
-                  <div className="rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Recipients</div>
-                    <div className="mt-2 text-sm font-medium text-gray-900">{sendItems.length}</div>
-                  </div>
-                  <div className="rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Attachments</div>
-                    <div className="mt-2 text-sm font-medium text-gray-900">{sendItems.length} certificates</div>
-                  </div>
-                  <div className="rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Estimated duration</div>
-                    <div className="mt-2 text-sm font-medium text-gray-900">~{Math.max(1, Math.ceil(sendItems.length * 1.2 / 60))} min</div>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm leading-6 text-emerald-800">
-                  Everything is processed locally inside your browser. Your Gmail password is never shared with MailMyCertificate.
-                </div>
-
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                  <Button variant="secondary" onClick={() => setShowReviewBeforeSend(false)}>
-                    Go back
-                  </Button>
-                  <Button onClick={confirmAndStartSend} className="inline-flex items-center justify-center gap-2">
-                    <Send className="h-4 w-4" />
-                    Start delivery
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {(isSending || isComplete || failedCount > 0) && (
-              <div className="space-y-6">
-                {(isSending || isComplete) && (
-                  <DeliveryProgress
-                    sent={sentCount}
-                    total={totalCount}
-                    currentRecipient={currentSendingRecipient}
-                    estimatedRemaining={isSending ? estimatedRemaining : totalElapsed}
-                    active={isSending}
-                  />
-                )}
-
-                {(isSending || currentActivityItems.length > 0 || failedCount > 0 || isComplete) && (
-                  <LiveActivityFeed items={sendItems} currentSendingIds={currentSendingIds} />
-                )}
-
-                {isComplete && (
-                  <DeliveryCompletionState
-                    delivered={sentCount}
-                    failed={failedCount}
-                    totalTime={totalElapsed}
-                    onDownloadReport={downloadDeliveryReport}
-                    onSendAnotherBatch={sendAnotherBatch}
-                  />
-                )}
-
-                {failedCount > 0 && <RetryPanel failedCount={failedCount} onRetryFailed={retryFailedItems} onDownloadFailed={downloadFailureReport} />}
-
-                {(isSending || currentActivityItems.length > 0 || failedCount > 0) && (
-                  <details open={detailsOpen} onToggle={(event) => setDetailsOpen(event.currentTarget.open)} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <summary className="cursor-pointer list-none text-sm font-medium text-gray-900 outline-none">
-                      View detailed delivery logs
-                      <span className="ml-2 text-xs font-normal text-gray-500">Optional, secondary detail</span>
-                    </summary>
-                    <div className="mt-5 space-y-5">
-                      <SendProgressTable items={sendItems} currentSendingIds={currentSendingIds} />
-                      {failedCount > 0 && <FailedRecipientsList failedItems={failedItems} onRetryFailed={retryFailedItems} onRetrySingle={retryFailedItems as any} isRetrying={isSending} />}
-                    </div>
-                  </details>
-                )}
-              </div>
-            )}
-          </main>
-        </div>
+        {phase === 'complete' && (
+          <CompletionPanel
+            sent={sentCount}
+            failed={failedCount}
+            total={totalCount}
+            totalTime={totalElapsed}
+            failedItems={failedItems}
+            isRetrying={isSending}
+            onRetryFailed={retryFailedItems}
+            onDownloadReport={downloadDeliveryReport}
+            onDownloadFailed={downloadFailureReport}
+            onSendAnother={() => router.push('/tool')}
+            onStartNewBatch={handleStartNewBatch}
+            onKeepSession={handleKeepSession}
+            showAutoCleanup={failedCount === 0 && !keepSession}
+          />
+        )}
       </div>
     </div>
   );

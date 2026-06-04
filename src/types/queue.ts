@@ -3,6 +3,8 @@ export interface EmailQueueItem {
   sessionId: string;
   rowId: number;
   recipient: string;
+  /** Participant name for UI only — not sent to Gmail */
+  displayName?: string;
   subject: string;
   body: string;
   status: 'pending' | 'sending' | 'sent' | 'failed' | 'retry';

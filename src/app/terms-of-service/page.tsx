@@ -1,5 +1,6 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { createPageMetadata } from '@/lib/metadata';
 import {
     Scale,
     Shield,
@@ -11,11 +12,15 @@ import {
     FileText,
 } from 'lucide-react';
 
-export const metadata: Metadata = {
+import { SEO_KEYWORDS } from '@/lib/seo-keywords';
+
+export const metadata: Metadata = createPageMetadata({
     title: 'Terms of Service',
     description:
-        'Terms and conditions for using MailMyCertificate and its certificate generation workflows.',
-};
+        'Terms and conditions for using MailMyCertificate, including certificate generation, Gmail integration, and acceptable use.',
+    path: '/terms-of-service',
+    keywords: [...SEO_KEYWORDS.terms],
+});
 
 function Section({
     title,

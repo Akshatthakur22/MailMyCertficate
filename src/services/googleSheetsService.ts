@@ -36,6 +36,7 @@ export async function importFromGoogleSheets(url: string): Promise<ParsedCSV & {
     const response = await fetch('/api/sheets/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ url }),
     });
 

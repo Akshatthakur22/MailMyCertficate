@@ -1,4 +1,3 @@
-import { Metadata } from 'next';
 import { Github, Mail, Twitter, Linkedin, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/Button';
@@ -18,11 +17,6 @@ function RevealSection({
     // Simple reveal animation placeholder
     return <div className={className}>{children}</div>;
 }
-
-export const metadata: Metadata = {
-    title: 'Contact',
-    description: 'Questions, ideas, or just want to say hi — here\'s how to reach me.',
-};
 
 export default function Contact() {
     return (

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { UploadCloud, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
+import { createSession, updateSession, touchActivity } from '@/core/session/sessionManager';
 
 export function UploadTemplate() {
     const setTemplate = useAppStore((state) => state.setTemplate);
@@ -41,13 +42,12 @@ export function UploadTemplate() {
                 blob: file
             });
 
-            // 2. Set Session Metadata in IDB
-            await db.sessions.put({
-                id: sessionId,
-                createdAt: Date.now(),
+            await updateSession(sessionId, {
                 templateDimensions: { width, height },
-                currentStep: 2
+                currentStep: 2,
+                workflowStage: 'UPLOAD',
             });
+            await touchActivity(sessionId);
 
             // 3. Update Zustand with only necessary metadata for UI
             setTemplate(base64, { width, height }); // base64 is kept for preview only in Step 3

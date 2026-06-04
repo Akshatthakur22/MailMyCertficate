@@ -1,5 +1,6 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { createPageMetadata } from '@/lib/metadata';
 import {
     Shield,
     Database,
@@ -12,11 +13,15 @@ import {
     ArrowRight,
 } from 'lucide-react';
 
-export const metadata: Metadata = {
+import { SEO_KEYWORDS } from '@/lib/seo-keywords';
+
+export const metadata: Metadata = createPageMetadata({
     title: 'Privacy Policy',
     description:
-        'MailMyCertificate is built with a local-first architecture where your certificate data stays inside your browser.',
-};
+        'MailMyCertificate privacy policy: local-first certificate generation, browser storage, Gmail OAuth, and how your data is handled.',
+    path: '/privacy-policy',
+    keywords: [...SEO_KEYWORDS.privacy],
+});
 
 function Section({
     title,

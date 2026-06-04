@@ -27,6 +27,7 @@ import {
     Sparkles,
     ArrowRight,
     Eye,
+    Database,
 } from 'lucide-react';
 
 // Import refined components
@@ -38,6 +39,8 @@ import { TroubleshootingSection } from '@/components/guide/TroubleshootingSectio
 import { Hero } from '@/components/guide/Hero';
 import { OAuthFlow } from '@/components/guide/OAuthFlow';
 import { CTASection } from '@/components/guide/CTASection';
+import { LocalDataManagementSection } from '@/components/guide/LocalDataManagementSection';
+import { GUIDE_FAQS } from '@/data/guideFaqs';
 
 export default function Guide() {
     return (
@@ -59,6 +62,8 @@ export default function Guide() {
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
                             <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
+                            <Link href="/guide#local-data" className="hover:text-accent transition-colors">Your data</Link>
+                            <Link href="/settings" className="hover:text-accent transition-colors">Settings</Link>
                         </div>
                         <div className="flex items-center gap-3">
                             <Link
@@ -135,6 +140,11 @@ export default function Guide() {
                                 icon={<AlertCircle size={16} className="text-yellow-500" />}
                                 title="No PDF Templates"
                                 subtitle="Convert to image"
+                            />
+                            <CompactChecklistItem
+                                icon={<Database size={16} className="text-accent" />}
+                                title="Know your data controls"
+                                subtitle="See Managing local data below"
                             />
                         </div>
                         
@@ -772,12 +782,27 @@ export default function Guide() {
                 </div>
             </section>
 
+            <WorkflowSeparator />
+
+            {/* ======================================
+                LOCAL DATA MANAGEMENT
+               ====================================== */}
+            <RevealSection>
+                <LocalDataManagementSection />
+            </RevealSection>
+
             {/* ======================================
                 TROUBLESHOOTING SECTION
                ====================================== */}
             <RevealSection>
                 <TroubleshootingSection
                     items={[
+                        {
+                            icon: <Database size={18} className="text-accent" />,
+                            title: "Previous session stuck or confusing?",
+                            description: "Recovery modal or generate step not progressing",
+                            solution: "Open Your local data in the tool header → Continue this batch, or Delete data & start fresh. See the Managing local data section above."
+                        },
                         {
                             icon: <Layers size={18} className="text-accent" />,
                             title: "Google Sheet not importing?",
@@ -810,42 +835,7 @@ export default function Guide() {
                 FAQ SECTION
                ====================================== */}
             <RevealSection>
-                <FAQSection
-                    faqs={[
-                        {
-                            question: "Is my data uploaded to your servers?",
-                            answer: "No. Certificate generation happens locally in your browser. Only minimal technical data for website operation is collected."
-                        },
-                        {
-                            question: "Can I use Google Sheets instead of CSV?",
-                            answer: "Yes. Simply provide a public Google Sheets URL. This works perfectly with Google Forms for event registration workflows."
-                        },
-                        {
-                            question: "Does this work on mobile devices?",
-                            answer: "The visual editor requires desktop for precise field placement. However, you can still download certificates on mobile after setting up on desktop."
-                        },
-                        {
-                            question: "Why does Google ask for permissions?",
-                            answer: "MailMyCertificate uses official Google OAuth to send emails. This is secure way to integrate with Gmail without handling passwords directly."
-                        },
-                        {
-                            question: "Can I only download certificates without email?",
-                            answer: "Absolutely. Many organizers prefer downloading certificates as ZIP files and distributing them manually through other channels."
-                        },
-                        {
-                            question: "How many emails can I send at once?",
-                            answer: "We recommend ~400 emails per workflow for best reliability. Gmail API limits and browser performance affect larger batches."
-                        },
-                        {
-                            question: "Are PDF templates supported?",
-                            answer: "Currently only PNG and JPG image templates are supported. Convert PDFs to images using screenshot tools or online converters."
-                        },
-                        {
-                            question: "Why should I avoid refreshing during email sending?",
-                            answer: "Email sending continues in background. Refreshing can interrupt process and require starting over for unsent emails."
-                        }
-                    ]}
-                />
+                <FAQSection faqs={GUIDE_FAQS} />
             </RevealSection>
 
             {/* ======================================

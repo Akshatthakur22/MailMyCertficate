@@ -34,17 +34,19 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from site_config import (
+    get_app_url,
+    get_allowed_origins,
+    get_oauth_redirect_uri,
+    is_production,
+)
+
 # Initialize Flask app for Vercel
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 
-# Configure CORS for Next.js frontend
-allowed_origins = [
-    'http://localhost:3000',
-    'https://mailcertficate.vercel.app',
-    'https://mailcertficate-fe4oojaus-akshatthakur22s-projects.vercel.app'
-]
-CORS(app, origins=allowed_origins, supports_credentials=True)
+# Configure CORS — origins from APP_URL / ALLOWED_ORIGINS (see site_config.py)
+CORS(app, origins=get_allowed_origins(), supports_credentials=True)
 
 # Google OAuth Configuration
 GOOGLE_CREDENTIALS_JSON = os.environ.get('GOOGLE_CREDENTIALS_JSON')
@@ -55,16 +57,11 @@ if not GOOGLE_CREDENTIALS_JSON:
 CLIENT_SECRETS = json.loads(GOOGLE_CREDENTIALS_JSON)
 CLIENT_ID = CLIENT_SECRETS['web']['client_id']
 CLIENT_SECRET = CLIENT_SECRETS['web']['client_secret']
-# Use the first redirect URI or fallback to production callback
-redirect_uris = CLIENT_SECRETS['web'].get('redirect_uris', [])
-if redirect_uris:
-    REDIRECT_URI = redirect_uris[0]
-else:
-    # Fallback to production callback URL
-    REDIRECT_URI = 'https://mailcertficate.vercel.app/api/auth/callback'
+# Must match an entry in Google Cloud Console authorized redirect URIs
+REDIRECT_URI = get_oauth_redirect_uri()
 
 # Session configuration for serverless - using Flask session cookies
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('VERCEL') == '1'
+app.config['SESSION_COOKIE_SECURE'] = is_production()
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
@@ -75,8 +72,8 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 
 # Helper functions for production-safe credential management
 def get_frontend_url():
-    """Get appropriate frontend URL based on request host"""
-    return 'https://mailcertficate.vercel.app' if 'vercel.app' in request.host else 'http://localhost:3000'
+    """Frontend base URL for OAuth redirects (aligned with NEXT_PUBLIC_APP_URL / APP_URL)."""
+    return get_app_url()
 
 def reconstruct_credentials(session_data):
     """Reconstruct Google OAuth credentials from minimal session data"""
@@ -123,23 +120,19 @@ def sanitize_error_response(error_msg, include_details=False):
     if include_details:
         return jsonify({"error": str(error_msg)}), 500
     
-    # Generic error for production, specific for development
-    if 'vercel.app' in request.host:
+    if is_production():
         return jsonify({"error": "Internal server error"}), 500
-    else:
-        return jsonify({"error": str(error_msg)}), 500
+    return jsonify({"error": str(error_msg)}), 500
 
 def validate_csrf_token():
     """Lightweight CSRF protection for POST routes"""
-    # Check for custom header or session token
     csrf_token = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
     session_token = session.get('csrf_token')
-    
-    # In development, be more lenient
-    if 'vercel.app' not in request.host:
+
+    if not is_production():
         return True
-    
-    return csrf_token == session_token
+
+    return bool(csrf_token and session_token and csrf_token == session_token)
 
 def get_flow():
     """Create OAuth flow with environment credentials - standard confidential flow"""
@@ -312,6 +305,20 @@ def auth_status():
         print(f"Auth status error: {e}")
         return sanitize_error_response(e)
 
+EMAIL_ADDRESS_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+
+
+def normalize_recipient_email(value):
+    if value is None:
+        return ''
+    return str(value).strip()
+
+
+def is_valid_recipient_email(value):
+    normalized = normalize_recipient_email(value)
+    return bool(normalized) and EMAIL_ADDRESS_RE.match(normalized)
+
+
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
     """Send email using Gmail API"""
@@ -353,6 +360,12 @@ def send_email():
             
             if not all([recipient, subject, body]):
                 return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+
+        recipient = normalize_recipient_email(recipient)
+        if not is_valid_recipient_email(recipient):
+            return jsonify({
+                "error": "Invalid recipient email address. Check your participant data has a valid email column."
+            }), 400
         
         # Reconstruct credentials from minimal session data
         credentials = reconstruct_credentials(credentials_data)
@@ -413,7 +426,13 @@ def send_email():
     
     except HttpError as e:
         print(f"Gmail API error: {e}")
-        return jsonify({"error": "Failed to send email"}), 400
+        error_message = "Failed to send email"
+        if getattr(e, 'resp', None) and e.resp.status == 400:
+            error_message = (
+                "Gmail rejected this message. The recipient address may be invalid "
+                "or the message could not be delivered."
+            )
+        return jsonify({"error": error_message}), 400
     except Exception as e:
         print(f"Send email error: {e}")
         return sanitize_error_response(e)

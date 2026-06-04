@@ -4,7 +4,12 @@ import { CheckCircle2, AlertTriangle, Loader2, Clock3 } from 'lucide-react';
 import { type EmailQueueItem } from '@/core/queue/emailQueue';
 
 function getName(item: EmailQueueItem) {
-  return item.recipient.split('@')[0].replace(/[._-]+/g, ' ');
+  if (item.displayName?.trim()) return item.displayName.trim();
+  const local = item.recipient.split('@')[0];
+  if (local && item.recipient.includes('@')) {
+    return local.replace(/[._+-]+/g, ' ');
+  }
+  return item.recipient || 'Recipient';
 }
 
 export function LiveActivityFeed({ items, currentSendingIds }: { items: EmailQueueItem[]; currentSendingIds: string[] }) {

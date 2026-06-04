@@ -8,6 +8,8 @@ import type { Field } from '@/types/field';
 interface AppState {
     // --- Session Identity ---
     sessionId: string;
+    /** Bumped after session restore so step views re-sync from IDB */
+    sessionHydrationVersion: number;
 
     // --- Input State (Persist only metadata) ---
     template: string | null; // This will now be a temporary preview URL or handled via IDB
@@ -37,6 +39,7 @@ interface AppActions {
     setGenerationProgress: (progress: number) => void;
     setGenerating: (isGenerating: boolean) => void;
     setError: (error: string | null) => void;
+    bumpSessionHydration: () => void;
     resetAll: () => void;
 }
 
@@ -50,6 +53,7 @@ export const useAppStore = create<AppStore>()(
         persist(
             (set) => ({
                 sessionId: generateSessionId(),
+                sessionHydrationVersion: 0,
                 template: null,
                 templateDimensions: null,
                 csvHeaders: [],
@@ -87,24 +91,12 @@ export const useAppStore = create<AppStore>()(
 
                 setError: (error) => set({ errorState: error }),
 
+                bumpSessionHydration: () =>
+                    set((state) => ({ sessionHydrationVersion: state.sessionHydrationVersion + 1 })),
+
                 resetAll: () => {
-                    // Clean up queue data when starting fresh
-                    import('@/utils/queueCleanup').then(({ prepareForNewCampaign }) => {
-                        const newSessionId = generateSessionId();
-                        prepareForNewCampaign(newSessionId).catch(console.error);
-                    });
-                    
-                    set({
-                        sessionId: generateSessionId(),
-                        template: null,
-                        templateDimensions: null,
-                        csvHeaders: [],
-                        csvData: [],
-                        fields: [],
-                        currentStep: 1,
-                        isGenerating: false,
-                        generationProgress: 0,
-                        errorState: null,
+                    import('@/core/session/sessionManager').then(({ startNewBatch }) => {
+                        startNewBatch().catch(console.error);
                     });
                 },
             }),
