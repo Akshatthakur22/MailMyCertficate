@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { SessionProvider } from "@/components/session/SessionProvider";
-import { getGoogleSiteVerification, getRootMetadataBase } from "@/lib/metadata";
-import { absoluteUrl } from "@/config/site";
+import { Analytics } from "@vercel/analytics/react";
 import { GlobalStructuredData } from "@/components/seo/GlobalStructuredData";
+import { SessionProvider } from "@/components/session/SessionProvider";
+import { absoluteUrl } from "@/config/site";
+import { getGoogleSiteVerification, getRootMetadataBase } from "@/lib/metadata";
 import { SEO_KEYWORDS } from "@/lib/seo-keywords";
 import "./globals.css";
 
@@ -74,6 +75,7 @@ export default function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <GlobalStructuredData />
         <SessionProvider>{children}</SessionProvider>
+        <Analytics />
         <script
           dangerouslySetInnerHTML={{
             __html: `
