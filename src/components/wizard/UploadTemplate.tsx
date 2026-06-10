@@ -8,6 +8,7 @@ import { UploadCloud, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
 import { createSession, updateSession, touchActivity } from '@/core/session/sessionManager';
+import { hasActivated, markActivated, trackEvent } from '@/lib/analytics';
 
 export function UploadTemplate() {
     const setTemplate = useAppStore((state) => state.setTemplate);
@@ -52,6 +53,28 @@ export function UploadTemplate() {
             // 3. Update Zustand with only necessary metadata for UI
             setTemplate(base64, { width, height }); // base64 is kept for preview only in Step 3
             setCurrentStep(2);
+
+            const fileType = file.type === 'image/png' ? 'png' : 'jpeg';
+            const templateName = `custom_${fileType}_${width}x${height}`;
+
+            trackEvent(
+                {
+                    event: 'template_selected',
+                    template_name: templateName,
+                    template_width: width,
+                    template_height: height,
+                    file_type: fileType,
+                },
+                { dedupeKey: `${sessionId}-template` }
+            );
+
+            if (!hasActivated()) {
+                markActivated();
+                trackEvent(
+                    { event: 'sign_up_completed', activation_step: 'template_uploaded' },
+                    { dedupeKey: `${sessionId}-activation` }
+                );
+            }
         } catch (err: unknown) {
             console.error(err);
             if (err instanceof Error) {

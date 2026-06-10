@@ -1,5 +1,6 @@
 import { Github, Mail, Twitter, Linkedin, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { ContactChannelLink } from '@/components/analytics/ContactChannelLink';
 import { buttonVariants } from '@/components/ui/Button';
 
 /* ————————————————————————————————————————————————————
@@ -102,14 +103,15 @@ export default function Contact() {
                                     <p className="text-secondary mb-6 leading-relaxed">
                                         Best place for bug reports, feature ideas, or technical discussions.
                                     </p>
-                                    <Link
+                                    <ContactChannelLink
                                         href="https://github.com/akshatthakur22/MailMyCertficate/issues"
                                         target="_blank"
+                                        channel="github"
                                         className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                                     >
                                         Open Issue
                                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                    </Link>
+                                    </ContactChannelLink>
                                 </div>
                             </RevealSection>
 
@@ -123,14 +125,15 @@ export default function Contact() {
                                     <p className="text-secondary mb-6 leading-relaxed">
                                         Usually the fastest way to reach me for quick questions or feedback.
                                     </p>
-                                    <Link
+                                    <ContactChannelLink
                                         href="https://x.com/akshatt66612958"
                                         target="_blank"
+                                        channel="twitter"
                                         className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                                     >
                                         DM on X
                                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                    </Link>
+                                    </ContactChannelLink>
                                 </div>
                             </RevealSection>
 
@@ -144,14 +147,15 @@ export default function Contact() {
                                     <p className="text-secondary mb-6 leading-relaxed">
                                         For collaborations, networking, or professional conversations.
                                     </p>
-                                    <Link
+                                    <ContactChannelLink
                                         href="https://www.linkedin.com/in/akshatthakur22/"
                                         target="_blank"
+                                        channel="linkedin"
                                         className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
                                     >
                                         Connect
                                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                    </Link>
+                                    </ContactChannelLink>
                                 </div>
                             </RevealSection>
                         </div>

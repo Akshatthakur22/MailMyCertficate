@@ -30,6 +30,7 @@ import {
   touchActivity,
   updateSession,
 } from '@/core/session/sessionManager';
+import { trackEvent } from '@/lib/analytics';
 
 interface AuthStatus {
   authenticated: boolean;
@@ -93,6 +94,10 @@ export default function EmailView() {
     if (urlParams.get('auth_success') === 'true') {
       window.history.replaceState({}, document.title, window.location.pathname);
       checkAuthStatus();
+      trackEvent(
+        { event: 'login_completed', auth_provider: 'gmail' },
+        { dedupeKey: 'gmail-oauth' }
+      );
       setMessage({ type: 'success', text: 'Your Gmail account is securely connected.' });
     } else if (urlParams.get('error')) {
       const error = urlParams.get('error');
@@ -336,6 +341,19 @@ export default function EmailView() {
     setSending(false);
     setSendingState({ sending: false, processed: sendItems.length, total: sendItems.length, current: '' });
     setDeliveryCompletedAt(Date.now());
+
+    const sentCount = updatedItems.filter((item) => item.status === 'sent').length;
+    trackEvent(
+      {
+        event: 'certificate_emailed',
+        certificates_count: sendItems.length,
+        sent_count: sentCount,
+        failed_count: failed.length,
+        user_plan: 'free',
+      },
+      { dedupeKey: `${sessionId}-email-${sendItems.length}` }
+    );
+
     await persistEmailQueueItems(updatedItems);
     await updateSession(sessionId, {
       workflowStage: 'COMPLETED',

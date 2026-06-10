@@ -7,4 +7,10 @@ export const SESSION_BROADCAST_CHANNEL = 'mmc-session-sync';
 export const BATCH_LOCAL_STORAGE_KEYS = ['mmc-import-source', 'mmc-sheet-url'] as const;
 
 /** Keys preserved during batch cleanup and delete-all-local-data (except full wipe). */
-export const PRESERVED_LOCAL_STORAGE_KEYS = ['csrf_token'] as const;
+export const PRESERVED_LOCAL_STORAGE_KEYS = [
+  'csrf_token',
+  'mmc_analytics_visitor_id',
+  'mmc_tool_visit_count',
+  'mmc_generation_count',
+  'mmc_has_activated',
+] as const;

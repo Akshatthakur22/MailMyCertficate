@@ -10,6 +10,9 @@ import JSZip from 'jszip';
 import { useRouter } from 'next/navigation';
 import { updateSession, touchActivity, startNewBatch } from '@/core/session/sessionManager';
 import { ZipDownloadSuccessPanel } from '@/components/session/ZipDownloadSuccessPanel';
+import { GitHubStarPrompt } from '@/components/github/GitHubStarPrompt';
+import { trackEvent } from '@/lib/analytics';
+import type { GitHubStarPromptTrigger } from '@/lib/analytics';
 
 export function GenerationView() {
     const router = useRouter();
@@ -136,6 +139,20 @@ export function GenerationView() {
             URL.revokeObjectURL(url);
 
             setZipDownloaded(true);
+
+            const completedCerts = await db.certificates
+                .where({ sessionId, status: 'completed' })
+                .count();
+
+            trackEvent(
+                {
+                    event: 'certificate_downloaded',
+                    certificates_count: completedCerts,
+                    user_plan: 'free',
+                },
+                { dedupeKey: `${sessionId}-zip` }
+            );
+
             await updateSession(sessionId, {
                 workflowStage: 'DOWNLOAD',
                 zipDownloadedAt: Date.now(),
@@ -194,6 +211,12 @@ export function GenerationView() {
         completedCount < totalCount &&
         !isGenerating &&
         !isDone;
+
+    const starPromptTrigger: GitHubStarPromptTrigger | null = zipDownloaded
+        ? 'certificate_downloaded'
+        : isDone
+          ? 'certificate_generated'
+          : null;
 
     const stages = [
         { key: 'prepare', label: 'Preparing participant data', done: progress > 3 },
@@ -285,6 +308,13 @@ export function GenerationView() {
                             onGenerateAgain={handleGenerateAgain}
                             onStartNewBatch={handleStartNewBatch}
                             busy={batchBusy}
+                        />
+                    )}
+
+                    {starPromptTrigger && (
+                        <GitHubStarPrompt
+                            trigger={starPromptTrigger}
+                            certificatesCount={completedCount}
                         />
                     )}
                 </div>

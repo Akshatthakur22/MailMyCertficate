@@ -10,6 +10,7 @@ import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
 import { touchActivity, updateSession } from '@/core/session/sessionManager';
 import type { CSVRow } from '@/types/csv';
+import { trackEvent } from '@/lib/analytics';
 
 type ImportSource = 'csv' | 'sheets';
 type ImportMode = 'csv' | 'sheets';
@@ -126,6 +127,16 @@ export function UploadCSV() {
 
             await updateSession(sessionId, { workflowStage: 'UPLOAD', currentStep: 2 });
             await touchActivity(sessionId);
+
+            trackEvent(
+                {
+                    event: 'csv_uploaded',
+                    row_count: allData.length,
+                    column_count: allHeaders.length,
+                    import_source: 'csv',
+                },
+                { dedupeKey: `${sessionId}-csv-${allData.length}` }
+            );
         } catch (err: any) {
             setError(err.message || 'Failed to import data.');
         }
@@ -166,6 +177,16 @@ export function UploadCSV() {
             setImportSource('sheets');
             localStorage.setItem('mmc-import-source', 'sheets');
             localStorage.setItem('mmc-sheet-url', sheetUrl);
+
+            trackEvent(
+                {
+                    event: 'csv_uploaded',
+                    row_count: data.length,
+                    column_count: headers.length,
+                    import_source: 'google_sheets',
+                },
+                { dedupeKey: `${sessionId}-sheets-${data.length}` }
+            );
         } catch (err: unknown) {
             console.error(err);
             if (err instanceof Error) {

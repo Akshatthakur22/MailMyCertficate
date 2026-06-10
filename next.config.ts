@@ -2,16 +2,17 @@ import type { NextConfig } from "next";
 
 const CSP_HEADER = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com;
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data:;
+  img-src 'self' blob: data: https://www.googletagmanager.com https://www.google-analytics.com;
   font-src 'self' data:;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
   frame-ancestors 'none';
+  frame-src https://www.googletagmanager.com;
   worker-src 'self' blob:;
-  connect-src 'self' https://*.sentry.io https://api.brevo.com;
+  connect-src 'self' https://*.sentry.io https://api.brevo.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com;
   upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
 

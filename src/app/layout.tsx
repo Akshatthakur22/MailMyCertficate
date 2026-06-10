@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { GoogleTagManager, GoogleTagManagerNoscript } from "@/components/analytics/GoogleTagManager";
 import { GlobalStructuredData } from "@/components/seo/GlobalStructuredData";
 import { SessionProvider } from "@/components/session/SessionProvider";
 import { absoluteUrl } from "@/config/site";
@@ -77,8 +80,14 @@ export default function RootLayout({
 
 
       <body className={`${inter.variable} antialiased`}>
+        <GoogleTagManagerNoscript />
         <GlobalStructuredData />
-        <SessionProvider>{children}</SessionProvider>
+        <GoogleTagManager />
+        <Suspense fallback={null}>
+          <AnalyticsProvider>
+            <SessionProvider>{children}</SessionProvider>
+          </AnalyticsProvider>
+        </Suspense>
         <Analytics />
         <script
           dangerouslySetInnerHTML={{

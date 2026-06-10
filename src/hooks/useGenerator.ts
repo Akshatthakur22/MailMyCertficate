@@ -1,6 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
 import { db } from '@/core/db/schema';
 import { useAppStore } from '@/store/useAppStore';
+import {
+    getGenerationCount,
+    incrementGenerationCount,
+    trackEvent,
+} from '@/lib/analytics';
+import type { GenerationMethod } from '@/lib/analytics';
 
 export function useGenerator() {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -9,6 +15,7 @@ export function useGenerator() {
     const workerRef = useRef<Worker | null>(null);
 
     const startGeneration = useCallback(async (sessionId: string, resume = false) => {
+        const generationMethod: GenerationMethod = resume ? 'resume' : 'fresh';
         // Allow restart (e.g. after session recovery) by terminating any in-flight worker
         if (workerRef.current) {
             workerRef.current.terminate();
@@ -45,6 +52,15 @@ export function useGenerator() {
                 setIsGenerating(false);
                 return;
             }
+
+            trackEvent(
+                {
+                    event: 'certificate_generation_started',
+                    certificates_count: pendingRows.length,
+                    generation_method: generationMethod,
+                },
+                { dedupeKey: `${sessionId}-gen-start-${generationMethod}` }
+            );
 
             // 3. Initialize Worker
             workerRef.current = new Worker(new URL('../core/worker/pdf.worker.ts', import.meta.url));
@@ -94,6 +110,42 @@ export function useGenerator() {
                 if (processedCount === total) {
                     setIsGenerating(false);
                     workerRef.current?.terminate();
+
+                    void db.certificates
+                        .where({ sessionId, status: 'failed' })
+                        .count()
+                        .then((failedCount) => {
+                            const dimensions = useAppStore.getState().templateDimensions;
+                            const templateName = dimensions
+                                ? `custom_${dimensions.width}x${dimensions.height}`
+                                : 'custom_upload';
+
+                            const priorGenerations = getGenerationCount();
+                            const generationCount = incrementGenerationCount();
+
+                            trackEvent(
+                                {
+                                    event: 'certificate_generated',
+                                    certificates_count: total - failedCount,
+                                    failed_count: failedCount,
+                                    template_name: templateName,
+                                    generation_method: generationMethod,
+                                    user_plan: 'free',
+                                },
+                                { dedupeKey: `${sessionId}-gen-done-${total}` }
+                            );
+
+                            if (priorGenerations > 0) {
+                                trackEvent(
+                                    {
+                                        event: 'repeat_certificate_generation',
+                                        generation_count: generationCount,
+                                        certificates_count: total - failedCount,
+                                    },
+                                    { dedupeKey: `${sessionId}-repeat-${generationCount}` }
+                                );
+                            }
+                        });
                 }
             };
 

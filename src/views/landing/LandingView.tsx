@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { buttonVariants } from '@/components/ui/Button';
 import { useReveal } from '@/hooks/useReveal';
 import { PRODUCTION_APP_URL } from '@/config/site';
@@ -140,12 +141,13 @@ export default function LandingView() {
                                 <Github size={16} />
                                 <span className="hidden sm:inline">GitHub</span>
                             </Link>
-                            <Link
+                            <TrackToolCta
                                 href="/tool"
+                                entryPoint="navbar"
                                 className={buttonVariants({ variant: 'primary', size: 'sm', className: 'w-full shadow-sm sm:w-auto' })}
                             >
                                 Open Tool
-                            </Link>
+                            </TrackToolCta>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-secondary md:hidden">
                             <Link href="/about" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">About</Link>
@@ -201,8 +203,9 @@ export default function LandingView() {
 
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-8 animate-fade-in-up-delay-3">
-                            <Link
+                            <TrackToolCta
                                 href="/tool"
+                                entryPoint="hero_cta"
                                 className={buttonVariants({
                                     variant: 'primary',
                                     size: 'lg',
@@ -211,7 +214,7 @@ export default function LandingView() {
                             >
                                 Generate Your First Batch
                                 <ArrowRight className="ml-2 w-5 h-5" />
-                            </Link>
+                            </TrackToolCta>
                             <Link
                                 href="#demo"
                                 className={buttonVariants({
@@ -643,8 +646,9 @@ then rebuilt it properly for everyone else.&quot;</p>
                         <p className="text-xl text-secondary mb-12 max-w-2xl mx-auto">
                             Generate and send certificates in minutes — not entire weekends.
                         </p>
-                        <Link
+                        <TrackToolCta
                             href="/tool"
+                            entryPoint="footer_cta"
                             className={buttonVariants({
                                 variant: 'primary',
                                 size: 'lg',
@@ -653,7 +657,7 @@ then rebuilt it properly for everyone else.&quot;</p>
                         >
                             Start Generating Certificates
                             <ArrowRight className="ml-2 w-5 h-5" />
-                        </Link>
+                        </TrackToolCta>
                     </RevealSection>
                 </div>
             </section>
