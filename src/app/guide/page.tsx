@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/Button';
-import { RevealSection } from '@/components/guide/ClientOnlyGuide';
+import { RevealSection } from '@/components/layout/RevealSection';
 import { 
     Upload,
     FileSpreadsheet,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   trackEvent,
   trackPageView,
@@ -34,23 +34,18 @@ const PAGE_EVENT_MAP: Record<string, () => void> = {
 };
 
 /**
- * Tracks virtual pageviews on client-side navigation (App Router).
- * Fires business page events once per route change.
+ * Client-side route analytics — mounted as a sibling to page content
+ * so marketing routes stay server-rendered with semantic HTML.
  */
-export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+export function AnalyticsTracker() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!pathname) return;
 
-    const fullPath = searchParams?.toString()
-      ? `${pathname}?${searchParams.toString()}`
-      : pathname;
-
-    if (lastPathRef.current === fullPath) return;
-    lastPathRef.current = fullPath;
+    if (lastPathRef.current === pathname) return;
+    lastPathRef.current = pathname;
 
     trackPageView(pathname);
 
@@ -59,11 +54,20 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       firePageEvent();
     }
 
-    // Pricing page not built yet — hook ready for /pricing
     if (pathname === '/pricing') {
       trackEvent({ event: 'pricing_viewed' }, { dedupeKey: '/pricing' });
     }
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
-  return <>{children}</>;
+  return null;
+}
+
+/** @deprecated Use AnalyticsTracker as a layout sibling instead of wrapping children. */
+export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <AnalyticsTracker />
+      {children}
+    </>
+  );
 }

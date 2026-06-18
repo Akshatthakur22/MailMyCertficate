@@ -19,6 +19,42 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/google-sheets-certificate-generator`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.88,
+    },
+    {
+      url: `${baseUrl}/google-forms-to-certificates`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.87,
+    },
+    {
+      url: `${baseUrl}/send-certificates-gmail-bulk`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.87,
+    },
+    {
+      url: `${baseUrl}/hackathon-certificate-generator`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.87,
+    },
+    {
+      url: `${baseUrl}/canva-certificate-alternative`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.86,
+    },
+    {
+      url: `${baseUrl}/vs/certifier`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.86,
+    },
+    {
       url: `${baseUrl}/about`,
       lastModified: now,
       changeFrequency: 'monthly',

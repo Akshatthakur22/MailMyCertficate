@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit:html": "bash scripts/audit-html.sh http://localhost:3000"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsProvider";
 import { GoogleTagManager, GoogleTagManagerNoscript } from "@/components/analytics/GoogleTagManager";
 import { GlobalStructuredData } from "@/components/seo/GlobalStructuredData";
-import { SessionProvider } from "@/components/session/SessionProvider";
 import { absoluteUrl } from "@/config/site";
 import { getGoogleSiteVerification, getRootMetadataBase } from "@/lib/metadata";
 import { SEO_KEYWORDS } from "@/lib/seo-keywords";
@@ -83,11 +81,8 @@ export default function RootLayout({
         <GoogleTagManagerNoscript />
         <GlobalStructuredData />
         <GoogleTagManager />
-        <Suspense fallback={null}>
-          <AnalyticsProvider>
-            <SessionProvider>{children}</SessionProvider>
-          </AnalyticsProvider>
-        </Suspense>
+        <AnalyticsTracker />
+        {children}
         <Analytics />
         <script
           dangerouslySetInnerHTML={{
