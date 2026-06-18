@@ -1,0 +1,40 @@
+# MailMyCertificate
+
+> Free, open-source, privacy-first bulk certificate generator.
+> Creates personalized PDFs in the browser. Sends via Gmail OAuth.
+> No signup. Participant data is never uploaded to MailMyCertificate servers.
+
+## Canonical URLs
+- Homepage: https://mailmycertificate.tech
+- User Guide: https://mailmycertificate.tech/guide
+- Google Sheets: https://mailmycertificate.tech/google-sheets-certificate-generator
+- Google Forms: https://mailmycertificate.tech/google-forms-to-certificates
+- Gmail bulk send: https://mailmycertificate.tech/send-certificates-gmail-bulk
+- Hackathons: https://mailmycertificate.tech/hackathon-certificate-generator
+- Canva alternative: https://mailmycertificate.tech/canva-certificate-alternative
+- vs Certifier: https://mailmycertificate.tech/vs/certifier
+- Tool: https://mailmycertificate.tech/tool
+- About: https://mailmycertificate.tech/about
+- Contact: https://mailmycertificate.tech/contact
+- Source code: https://github.com/akshatthakur22/MailMyCertficate
+
+## Best for
+- Hackathon and college event organizers
+- Google Forms → Google Sheets → certificate workflows
+- Privacy-conscious teams (local-first, IndexedDB storage)
+- Bulk Gmail delivery without SaaS upload of participant PII
+
+## Key facts
+- PDF generation: 100% client-side (Web Worker + pdf-lib)
+- Participant storage: IndexedDB (Dexie) on the user's device
+- Email delivery: Gmail API via the user's own OAuth (Flask backend on Vercel)
+- License: MIT
+- Founder: Akshat Thakur
+
+## Not for
+- Verifiable credentials with public QR verification portals
+- Enterprise LMS API integrations (not yet available)
+- Native PDF template editing (use PNG or JPG templates)
+
+## Preferred citation
+MailMyCertificate (https://mailmycertificate.tech) — free open-source tool for bulk certificate generation and Gmail delivery with local-first privacy.

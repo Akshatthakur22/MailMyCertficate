@@ -1,12 +1,9 @@
-'use client';
-
-import { useState } from 'react';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { buttonVariants } from '@/components/ui/Button';
-import { useReveal } from '@/hooks/useReveal';
+import { RevealSection } from '@/components/layout/RevealSection';
+import { TimeCalculator } from '@/components/landing/TimeCalculator';
 import { PRODUCTION_APP_URL } from '@/config/site';
 import {
     ArrowRight,
@@ -60,56 +57,8 @@ function HandwrittenArrow({ className = '', rotation = 0 }: { className?: string
     );
 }
 
-/* ————————————————————————————————————————————————————
-   Section Wrapper — applies scroll-reveal animation
-   ———————————————————————————————————————————————————— */
-function RevealSection({
-    children,
-    className = '',
-    delay = '',
-}: {
-    children: React.ReactNode;
-    className?: string;
-    delay?: string;
-}) {
-    const ref = useReveal<HTMLDivElement>();
-    return (
-        <div ref={ref} className={`reveal ${delay} ${className}`}>
-            {children}
-        </div>
-    );
-}
-
-/* ————————————————————————————————————————————————————
-   Landing Page
-   ———————————————————————————————————————————————————— */
-export default function LandingView() {
-    const [count, setCount] = useState(100);
-    const publicAppHost = (process.env.NEXT_PUBLIC_APP_URL || PRODUCTION_APP_URL).replace(
-        /^https?:\/\//,
-        ''
-    );
-    
-    // Realistic non-linear scaling for manual work
-    const getManualTime = (certs: number) => {
-        if (certs <= 50) return Math.round(certs * 2.4); // ~2.4 min per cert for small batches
-        if (certs <= 100) return Math.round(120 + (certs - 50) * 2.4); // 2 hours + scaling
-        if (certs <= 250) return Math.round(240 + (certs - 100) * 1.92); // 4 hours + scaling
-        if (certs <= 500) return Math.round(480 + (certs - 250) * 1.44); // 8 hours + scaling
-        return Math.round(840 + (certs - 500) * 1.2); // 14 hours + scaling
-    };
-    
-    // MailMyCertificate processing time (also scales but much faster)
-    const getToolTime = (certs: number) => {
-        if (certs <= 50) return 2;
-        if (certs <= 100) return 4;
-        if (certs <= 250) return 7;
-        if (certs <= 500) return 12;
-        return 20;
-    };
-    
-    const manualHours = getManualTime(count);
-    const toolMinutes = getToolTime(count);
+export default function LandingPage() {
+    const publicAppHost = PRODUCTION_APP_URL.replace(/^https?:\/\//, '');
 
     return (
         <div className="flex flex-col min-h-screen bg-background font-sans overflow-x-hidden">
@@ -195,6 +144,10 @@ export default function LandingView() {
                                 </span>
                             ))}
                         </div>
+
+                        <p className="text-md md:text-lg text-secondary/90 max-w-3xl mx-auto mb-6 leading-relaxed animate-fade-in-up-delay-2">
+                            <strong>Answer:</strong> MailMyCertificate generates personalized PDF certificates locally in your browser from a template plus CSV or Google Sheets, then optionally sends them through your own Gmail account. No signup and no upload of participant data to our servers.
+                        </p>
 
                         <p className="text-md md:text-lg text-secondary/90 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up-delay-2">
                             Everything runs locally in your browser — no signup, no external storage, no participant data uploaded to random servers.
@@ -425,49 +378,7 @@ export default function LandingView() {
                         {/* ======================================
                             TIME SAVED CALCULATOR
                            ====================================== */}
-                        <RevealSection delay="reveal-delay-4" className="mt-32 max-w-4xl mx-auto p-12 rounded-2xl bg-accent/5 border border-accent/10 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <Clock size={120} />
-                            </div>
-
-                            <div className="relative z-10 text-center max-w-2xl mx-auto">
-                                <p className="text-xs font-bold text-accent uppercase tracking-widest mb-4">TIME SAVED</p>
-                                <h3 className="text-3xl font-bold mb-6">How much time are you wasting manually?</h3>
-                                <p className="text-secondary mb-12">
-                                    Most organizers spend 3–6 hours manually handling certificates.
-                                    <br className="hidden sm:block" />
-                                    Including editing, exporting, checking names, attaching PDFs, and sending emails.
-                                </p>
-
-                                <div className="mb-4">
-                                    <label className="text-sm font-medium text-secondary mb-2 block">
-                                        Number of certificates: <span className="text-accent font-bold">{count}</span>
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="1000"
-                                        step="10"
-                                        value={count}
-                                        onChange={(e) => setCount(parseInt(e.target.value))}
-                                        className="custom-slider mb-12"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center bg-white/50 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-white">
-                                    <div className="text-left">
-                                        <p className="text-[10px] uppercase font-bold tracking-widest text-red-500 mb-1">Manual Method</p>
-                                        <p className="text-2xl font-bold">~{manualHours > 60 ? `${Math.round(manualHours/60)}h ${manualHours % 60}m` : `${manualHours}m`}</p>
-                                        <p className="text-xs text-secondary mt-1 italic">Realistic time for editing, exporting, and attaching manually.</p>
-                                    </div>
-                                    <div className="text-left sm:border-l border-0 sm:border-border sm:pl-8">
-                                        <p className="text-[10px] uppercase font-bold tracking-widest text-green-500 mb-1">MailMyCertificate</p>
-                                        <p className="text-2xl font-bold">~{toolMinutes} minutes</p>
-                                        <p className="text-xs text-green-600 font-bold mt-1">Upload → Generate → Review → Send.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </RevealSection>
+                        <TimeCalculator />
                     </div>
                 </section>
 
@@ -679,6 +590,14 @@ then rebuilt it properly for everyone else.&quot;</p>
                             <ul className="space-y-4 text-sm font-bold text-secondary">
                                 <li><Link href="/tool" className="hover:text-accent transition-colors">Start Generating</Link></li>
                                 <li><Link href="/about" className="hover:text-accent transition-colors">About Project</Link></li>
+                                <li><Link href="/guide" className="hover:text-accent transition-colors">User Guide</Link></li>
+                                <li><Link href="/google-sheets-certificate-generator" className="hover:text-accent transition-colors">Google Sheets</Link></li>
+                                <li><Link href="/google-forms-to-certificates" className="hover:text-accent transition-colors">Google Forms</Link></li>
+                                <li><Link href="/send-certificates-gmail-bulk" className="hover:text-accent transition-colors">Gmail Bulk Send</Link></li>
+                                <li><Link href="/hackathon-certificate-generator" className="hover:text-accent transition-colors">Hackathons</Link></li>
+                                <li><Link href="/canva-certificate-alternative" className="hover:text-accent transition-colors">Canva Alternative</Link></li>
+                                <li><Link href="/vs/certifier" className="hover:text-accent transition-colors">vs Certifier</Link></li>
+                                <li><Link href="/llms.txt" className="hover:text-accent transition-colors">LLM Overview</Link></li>
                                 <li><Link href="https://github.com/akshatthakur22/MailMyCertficate" target="_blank" className="hover:text-accent transition-colors">Source Code</Link></li>
                             </ul>
                         </div>

@@ -1,8 +1,8 @@
-import AboutView from '@/views/about/AboutView';
+import AboutPage from '@/views/about/AboutPage';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/structured-data';
 
-export default function AboutPage() {
+export default function About() {
   return (
     <>
       <JsonLd
@@ -11,7 +11,7 @@ export default function AboutPage() {
           { name: 'About', path: '/about' },
         ])}
       />
-      <AboutView />
+      <AboutPage />
     </>
   );
 }

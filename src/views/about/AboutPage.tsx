@@ -1,7 +1,5 @@
-'use client';
-
 import Link from 'next/link';
-import { useReveal } from '@/hooks/useReveal';
+import { RevealSection } from '@/components/layout/RevealSection';
 import { buttonVariants } from '@/components/ui/Button';
 import {
   ArrowRight,
@@ -15,24 +13,8 @@ import {
   Mail,
 } from 'lucide-react';
 
-function RevealSection({
-  children,
-  className = '',
-  delay = '',
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: string;
-}) {
-  const ref = useReveal<HTMLDivElement>();
-  return (
-    <div ref={ref} className={`reveal ${delay} ${className}`}>
-      {children}
-    </div>
-  );
-}
 
-export default function AboutView() {
+export default function AboutPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       <nav className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
