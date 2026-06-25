@@ -3,11 +3,10 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { loadTemplate } from '@/services/templateService';
-import { Button } from '@/components/ui/Button';
 import { UploadCloud, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
-import { createSession, updateSession, touchActivity } from '@/core/session/sessionManager';
+import { updateSession, touchActivity } from '@/core/session/sessionManager';
 import { hasActivated, markActivated, trackEvent } from '@/lib/analytics';
 
 export function UploadTemplate() {
@@ -23,24 +22,21 @@ export function UploadTemplate() {
         try {
             setError(null);
 
-            // Robust validation
             const allowedTypes = ['image/png', 'image/jpeg'];
             if (!allowedTypes.includes(file.type)) {
-                throw new Error("Invalid file type. Please upload a PNG or JPEG image.");
+                throw new Error('Invalid file type. Please upload a PNG or JPEG image.');
             }
             if (file.size > 5 * 1024 * 1024) {
-                throw new Error("File too large. Maximum size is 5MB.");
+                throw new Error('File too large. Maximum size is 5MB.');
             }
 
             const { base64, width, height } = await loadTemplate(file);
 
-
-            // 1. Store in IDB (Blob for efficiency)
             await db.files.put({
                 id: `${sessionId}-template`,
                 sessionId,
                 type: 'template',
-                blob: file
+                blob: file,
             });
 
             await updateSession(sessionId, {
@@ -50,8 +46,7 @@ export function UploadTemplate() {
             });
             await touchActivity(sessionId);
 
-            // 3. Update Zustand with only necessary metadata for UI
-            setTemplate(base64, { width, height }); // base64 is kept for preview only in Step 3
+            setTemplate(base64, { width, height });
             setCurrentStep(2);
 
             const fileType = file.type === 'image/png' ? 'png' : 'jpeg';
@@ -65,14 +60,14 @@ export function UploadTemplate() {
                     template_height: height,
                     file_type: fileType,
                 },
-                { dedupeKey: `${sessionId}-template` }
+                { dedupeKey: `${sessionId}-template` },
             );
 
             if (!hasActivated()) {
                 markActivated();
                 trackEvent(
                     { event: 'sign_up_completed', activation_step: 'template_uploaded' },
-                    { dedupeKey: `${sessionId}-activation` }
+                    { dedupeKey: `${sessionId}-activation` },
                 );
             }
         } catch (err: unknown) {
@@ -84,7 +79,6 @@ export function UploadTemplate() {
             }
         }
     };
-
 
     const onDragOver = (e: DragEvent) => {
         e.preventDefault();
@@ -109,14 +103,10 @@ export function UploadTemplate() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="mb-10 text-center">
-                <h2 className="text-3xl font-bold tracking-tight mb-3">Let&apos;s start with the design</h2>
-                <p className="text-secondary text-sm max-w-md mx-auto">
-                    Upload the high-resolution image of your certificate. <br />
-                    Don&apos;t worry about the names yet, we&apos;ll add them next.
-                </p>
-            </div>
+        <div className="text-center">
+            <p className="text-secondary text-sm mb-6 max-w-sm mx-auto leading-relaxed">
+                Upload your certificate design. Recipient names are added in the next step.
+            </p>
 
             <div
                 onDragOver={onDragOver}
@@ -124,11 +114,9 @@ export function UploadTemplate() {
                 onDrop={onDrop}
                 onClick={() => inputRef.current?.click()}
                 className={cn(
-                    'border-2 border-dashed rounded-[2rem] p-16 transition-all duration-500 cursor-pointer bg-white/50 hover:bg-white hover:shadow-2xl hover:shadow-accent/5 group relative overflow-hidden',
-                    dragging
-                        ? 'border-accent bg-accent/5 scale-[1.02]'
-                        : 'border-border/60',
-                    error ? 'border-red-500 bg-red-50' : ''
+                    'border-2 border-dashed rounded-xl p-10 md:p-12 transition-colors cursor-pointer group',
+                    dragging ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/40 hover:bg-muted/30',
+                    error && 'border-red-300 bg-red-50/50',
                 )}
             >
                 <input
@@ -139,54 +127,35 @@ export function UploadTemplate() {
                     onChange={onFileChange}
                 />
 
-                <div className="flex flex-col items-center justify-center gap-6 relative z-10">
-                    <div className={cn(
-                        "w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm",
-                        dragging ? "bg-accent text-white scale-110 rotate-6" : "bg-accent/5 text-accent group-hover:bg-accent group-hover:text-white group-hover:rotate-6"
-                    )}>
-                        <UploadCloud size={40} strokeWidth={1.5} />
+                <div className="flex flex-col items-center gap-4">
+                    <div
+                        className={cn(
+                            'w-14 h-14 rounded-xl flex items-center justify-center transition-colors',
+                            dragging ? 'bg-accent text-white' : 'bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white',
+                        )}
+                    >
+                        <UploadCloud size={28} strokeWidth={1.5} />
                     </div>
-                    <div className="space-y-2">
-                        <p className="font-bold text-xl tracking-tight">
-                            {dragging ? 'Drop it like it&apos;s hot!' : 'Drop your template here'}
+                    <div>
+                        <p className="font-medium text-foreground">
+                            {dragging ? 'Drop to upload' : 'Drop your template here'}
                         </p>
-                        <p className="text-sm text-secondary font-medium">
-                            or click to browse your files
-                        </p>
+                        <p className="text-sm text-secondary mt-1">or click to browse</p>
                     </div>
-
-                    <div className="pt-4 flex items-center gap-6 opacity-40 group-hover:opacity-100 transition-opacity">
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> PNG
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> JPG
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> MAX 5MB
-                        </div>
-                    </div>
+                    <p className="text-xs text-secondary/70">PNG or JPG · max 5 MB</p>
                 </div>
             </div>
 
             {error && (
-                <div className="mt-8 flex items-center justify-center gap-3 text-red-600 bg-red-50 p-4 rounded-2xl border border-red-100 animate-shake">
-                    <AlertCircle size={20} />
-                    <span className="text-sm font-bold tracking-tight">{error}</span>
+                <div className="mt-4 flex items-center justify-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-100 text-sm">
+                    <AlertCircle size={16} />
+                    <span>{error}</span>
                 </div>
             )}
 
-            <div className="mt-16 p-6 rounded-2xl bg-accent/5 border border-accent/10 flex items-start gap-4 text-left max-w-lg mx-auto">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-                    <AlertCircle size={16} />
-                </div>
-                <div>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Pro Tip</h4>
-                    <p className="text-xs text-secondary leading-relaxed">
-                        For the best quality, use a template with at least <span className="font-bold">2000px width</span>. This ensures the text looks crisp when printed or viewed on high-res screens.
-                    </p>
-                </div>
-            </div>
+            <p className="mt-6 text-xs text-secondary/60">
+                Tip: use at least 2000px width for crisp print quality.
+            </p>
         </div>
     );
 }

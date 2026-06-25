@@ -117,10 +117,10 @@ export function DraggableField({
             style={style}
             onMouseDown={handleMouseDown}
             className={cn(
-                "group",
+                'group rounded-sm',
                 isSelected
-                    ? "z-50 ring-2 ring-accent ring-offset-2 bg-accent/5"
-                    : "hover:bg-accent/5 ring-1 ring-transparent hover:ring-accent/40 transition-shadow duration-200"
+                    ? 'z-50 ring-2 ring-accent bg-accent/5'
+                    : 'hover:bg-accent/5 ring-1 ring-transparent hover:ring-accent/30',
             )}
         >
             <span className={cn(
