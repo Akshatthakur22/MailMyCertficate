@@ -35,6 +35,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (!skip) {
         const recoverable = await detectRecoverableSession();
         if (mounted && recoverable) {
+          const currentId = useAppStore.getState().sessionId;
+          const onWorkflowPage =
+            pathname?.startsWith('/tool') || pathname?.startsWith('/email');
+          const midFlow =
+            recoverable.certificatesCount > 0 ||
+            recoverable.currentStep > 1 ||
+            recoverable.workflowStage === 'EMAIL_SETUP' ||
+            recoverable.workflowStage === 'SENDING';
+
+          // Same project, user is mid-flow (e.g. tool → email) — don't interrupt with a modal
+          if (recoverable.sessionId === currentId && onWorkflowPage && midFlow) {
+            markRecoveryDecided();
+            await hydrateSessionFromIDB(currentId).catch(() => {});
+            setSummary(null);
+            return;
+          }
+
           setSummary(recoverable);
           return;
         }

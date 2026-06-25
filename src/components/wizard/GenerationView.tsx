@@ -5,10 +5,10 @@ import { useAppStore } from '@/store/useAppStore';
 import { useGenerator } from '@/hooks/useGenerator';
 import { db } from '@/core/db/schema';
 import { Button } from '@/components/ui/Button';
-import { CheckCircle, Download, Mail, AlertTriangle, Loader2, Play } from 'lucide-react';
+import { CheckCircle, Download, Mail, AlertTriangle, Loader2, Play, Sparkles } from 'lucide-react';
 import JSZip from 'jszip';
 import { useRouter } from 'next/navigation';
-import { updateSession, touchActivity, startNewBatch } from '@/core/session/sessionManager';
+import { updateSession, touchActivity, startNewBatch, markRecoveryDecided } from '@/core/session/sessionManager';
 import { ZipDownloadSuccessPanel } from '@/components/session/ZipDownloadSuccessPanel';
 import { GitHubStarPrompt } from '@/components/github/GitHubStarPrompt';
 import { trackEvent } from '@/lib/analytics';
@@ -27,7 +27,6 @@ export function GenerationView() {
     const [batchBusy, setBatchBusy] = useState(false);
     const [totalCount, setTotalCount] = useState(0);
     const [completedCount, setCompletedCount] = useState(0);
-    const [activityLog, setActivityLog] = useState<{ text: string; ts: number }[]>([]);
     const [etaText, setEtaText] = useState<string | null>(null);
     const startTsRef = useRef<number | null>(null);
 
@@ -48,14 +47,11 @@ export function GenerationView() {
             await touchActivity(sessionId);
 
             if (count === 0) return;
-
-            // All certificates already generated — completion UI handles this (no worker needed)
             if (done >= count) return;
 
             const partial = done > 0 && done < count;
             if (partial) return;
 
-            // Nothing generated yet — start fresh
             startGeneration(sessionId, false);
         };
 
@@ -65,7 +61,6 @@ export function GenerationView() {
         };
     }, [sessionId, startGeneration, sessionHydrationVersion]);
 
-    // Poll IDB for live updates (processed count + recent activity)
     useEffect(() => {
         let mounted = true;
         const tick = async () => {
@@ -73,29 +68,16 @@ export function GenerationView() {
             if (!mounted) return;
             setCompletedCount(done);
 
-            // Recent activity: last 6 entries
-            const recent = await db.certificates.where({ sessionId }).reverse().sortBy('updatedAt');
-            const lastSix = recent ? recent.slice(-6) : [];
-            const rows = await db.rows.where({ sessionId }).toArray();
-            const logs = lastSix.reverse().map(r => {
-                const row = rows.find(rr => rr.id === r.rowId);
-                const name = row?.data?.Name || row?.data?.name || `#${r.rowId}`;
-                const text = r.status === 'completed' ? `Rendered: ${name}.pdf` : `${r.status}: ${name}`;
-                return { text, ts: r.updatedAt || Date.now() };
-            });
-            setActivityLog(logs);
-
-            // ETA calculation (very lightweight): average time per completed
             if (isGenerating) {
                 if (!startTsRef.current && done > 0) startTsRef.current = Date.now();
                 if (startTsRef.current && done > 0) {
-                    const elapsed = (Date.now() - startTsRef.current) / 1000; // seconds
+                    const elapsed = (Date.now() - startTsRef.current) / 1000;
                     const avg = elapsed / done;
                     const remaining = Math.max(0, totalCount - done);
                     const eta = Math.round(avg * remaining);
                     const mins = Math.floor(eta / 60);
                     const secs = eta % 60;
-                    setEtaText(mins > 0 ? `${mins}m ${secs}s remaining` : `${secs}s remaining`);
+                    setEtaText(mins > 0 ? `About ${mins}m ${secs}s left` : `About ${secs}s left`);
                 }
             } else {
                 startTsRef.current = null;
@@ -103,10 +85,12 @@ export function GenerationView() {
             }
         };
 
-        // Kick off and poll every 750ms for smooth but lightweight updates
         tick();
         const interval = setInterval(tick, 750);
-        return () => { mounted = false; clearInterval(interval); };
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
     }, [sessionId, isGenerating, totalCount]);
 
     const handleDownload = async () => {
@@ -114,19 +98,17 @@ export function GenerationView() {
         try {
             const zip = new JSZip();
 
-            // Memory safe cursor-based processing
             await db.certificates
                 .where({ sessionId, status: 'completed' })
                 .each((cert) => {
                     if (cert.pdf) {
-                        const fileName = `certificate_${cert.rowId}.pdf`;
-                        zip.file(fileName, cert.pdf);
+                        zip.file(`certificate_${cert.rowId}.pdf`, cert.pdf);
                     }
                 });
 
             const content = await zip.generateAsync({
                 type: 'blob',
-                compression: 'STORE' // Faster, as PDFs are already compressed
+                compression: 'STORE',
             });
 
             const url = URL.createObjectURL(content);
@@ -150,7 +132,7 @@ export function GenerationView() {
                     certificates_count: completedCerts,
                     user_plan: 'free',
                 },
-                { dedupeKey: `${sessionId}-zip` }
+                { dedupeKey: `${sessionId}-zip` },
             );
 
             await updateSession(sessionId, {
@@ -159,7 +141,7 @@ export function GenerationView() {
             });
             await touchActivity(sessionId);
         } catch (err) {
-            console.error("ZIP Error:", err);
+            console.error('ZIP Error:', err);
         } finally {
             setIsZipping(false);
         }
@@ -184,20 +166,27 @@ export function GenerationView() {
 
     if (!countsReady && !error) {
         return (
-            <div className="py-16 flex flex-col items-center justify-center">
-                <Loader2 className="w-10 h-10 text-accent animate-spin" />
-                <p className="mt-4 text-sm text-secondary">Loading your session…</p>
+            <div className="py-12 flex flex-col items-center justify-center">
+                <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl scale-150" />
+                    <Loader2 className="relative w-9 h-9 text-accent animate-spin" />
+                </div>
+                <p className="mt-5 text-sm text-secondary">Loading your session…</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="max-w-xl mx-auto text-center mt-12 p-8 border border-red-200 bg-red-50 rounded-xl">
-                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-red-800 mb-2">Generation Failed</h3>
-                <p className="text-red-600 mb-6">{error}</p>
-                <Button onClick={() => startGeneration(sessionId)}>Try Again</Button>
+            <div className="max-w-md mx-auto text-center py-6">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 ring-1 ring-red-100">
+                    <AlertTriangle className="w-7 h-7" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Generation failed</h3>
+                <p className="text-sm text-secondary mb-6 leading-relaxed">{error}</p>
+                <Button onClick={() => startGeneration(sessionId)} className="rounded-lg">
+                    Try again
+                </Button>
             </div>
         );
     }
@@ -218,105 +207,132 @@ export function GenerationView() {
           ? 'certificate_generated'
           : null;
 
-    const stages = [
-        { key: 'prepare', label: 'Preparing participant data', done: progress > 3 },
-        { key: 'load', label: 'Loading certificate template', done: progress > 8 },
-        { key: 'render', label: 'Rendering personalized certificates', done: progress > 95 },
-        { key: 'package', label: 'Packaging ZIP files', done: progress >= 99 },
-        { key: 'finish', label: 'Finalizing output', done: isDone },
-    ];
+    const displayProgress = isGenerating && totalCount > 0
+        ? Math.round((completedCount / totalCount) * 100)
+        : progress;
 
     return (
-        <div className="max-w-2xl mx-auto text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="text-center">
             {hasPartialProgress ? (
-                <div className="py-16">
-                    <div className="w-20 h-20 bg-amber-100 rounded-[2rem] flex items-center justify-center text-amber-600 mx-auto mb-8">
-                        <Play size={32} fill="currentColor" />
+                <div className="py-4">
+                    <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+                        <Play size={22} fill="currentColor" />
                     </div>
-                    <h2 className="text-3xl font-bold mb-4">Resume Generation?</h2>
-                    <p className="text-secondary mb-10">
-                        We found <span className="font-bold text-accent">{completedCount}</span> certificates already generated from a previous attempt.
+                    <h2 className="text-lg font-semibold text-foreground mb-2">Resume generation?</h2>
+                    <p className="text-sm text-secondary mb-8 max-w-xs mx-auto leading-relaxed">
+                        <span className="font-medium text-foreground">{completedCount}</span> of{' '}
+                        <span className="font-medium text-foreground">{totalCount}</span> certificates
+                        are already done.
                     </p>
-                    <div className="flex gap-4 justify-center">
-                        <Button onClick={() => startGeneration(sessionId, true)} size="lg" className="rounded-2xl px-8 h-14">
-                            Resume Session
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-xs mx-auto">
+                        <Button onClick={() => startGeneration(sessionId, true)} className="rounded-lg flex-1">
+                            Resume
                         </Button>
-                        <Button onClick={() => startGeneration(sessionId, false)} variant="secondary" size="lg" className="rounded-2xl px-8 h-14">
-                            Start Over
+                        <Button
+                            onClick={() => startGeneration(sessionId, false)}
+                            variant="outline"
+                            className="rounded-lg flex-1"
+                        >
+                            Start over
                         </Button>
                     </div>
                 </div>
             ) : !isDone ? (
-                <div className="py-16">
-                    <div className="relative w-32 h-32 mx-auto mb-10">
-                        <div className="absolute inset-0 bg-accent/10 rounded-full animate-ping opacity-20" />
-                        <div className="relative w-32 h-32 bg-accent/5 rounded-full flex items-center justify-center border-2 border-accent/20">
-                            <Loader2 className="w-12 h-12 text-accent animate-spin" />
-                        </div>
+                <div className="py-4">
+                    <div className="relative mx-auto mb-6 w-fit">
+                        <div className="absolute inset-0 rounded-full bg-accent/15 blur-2xl scale-[2]" />
+                        <Loader2 className="relative w-10 h-10 text-accent animate-spin" />
                     </div>
 
-                    <h2 className="text-3xl font-bold tracking-tight mb-3">Brewing your certificates...</h2>
-                    <p className="text-secondary text-sm max-w-md mx-auto mb-12 italic">
-                        Processing <span className="font-bold text-accent">{totalCount}</span> individual PDFs.
+                    <h2 className="text-lg font-semibold text-foreground mb-1">Generating certificates</h2>
+                    <p className="text-sm text-secondary mb-8">
+                        {completedCount > 0 ? (
+                            <>
+                                <span className="font-medium text-foreground">{completedCount}</span> of{' '}
+                                <span className="font-medium text-foreground">{totalCount}</span> complete
+                            </>
+                        ) : (
+                            <>Preparing {totalCount} PDFs…</>
+                        )}
                     </p>
 
-                    <div className="max-w-md mx-auto relative px-4">
-                        <div className="h-4 bg-muted/40 rounded-full overflow-hidden border border-border/20 shadow-inner">
+                    <div className="max-w-sm mx-auto">
+                        <div className="h-2.5 bg-muted/80 rounded-full overflow-hidden ring-1 ring-border/40">
                             <div
-                                className="h-full bg-gradient-to-r from-accent/80 to-accent transition-all duration-700 ease-out"
-                                style={{ width: `${progress}%` }}
+                                className="h-full bg-gradient-to-r from-accent/80 to-accent transition-all duration-500 ease-out rounded-full"
+                                style={{ width: `${Math.max(displayProgress, 2)}%` }}
                             />
                         </div>
-                        <div className="flex justify-between items-center mt-3">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-secondary/40">Privacy Protected</span>
-                            <span className="text-lg font-mono font-black text-accent">{progress}%</span>
+                        <div className="flex justify-between items-center mt-2.5 text-xs text-secondary">
+                            <span>{displayProgress}%</span>
+                            {etaText && <span>{etaText}</span>}
                         </div>
                     </div>
                 </div>
             ) : (
-                <div className="py-16 animate-in zoom-in-95 duration-700">
-                    <div className="w-24 h-24 bg-green-500 rounded-[2rem] flex items-center justify-center text-white mx-auto mb-10 shadow-2xl shadow-green-200 rotate-6 hover:rotate-0 transition-transform duration-500">
-                        <CheckCircle size={48} strokeWidth={2.5} />
+                <div className="py-2">
+                    <div className="relative mx-auto mb-6 w-fit">
+                        <div className="absolute inset-0 rounded-2xl bg-emerald-400/25 blur-2xl scale-[1.8]" />
+                        <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30">
+                            <CheckCircle size={36} strokeWidth={2} />
+                        </div>
                     </div>
 
-                    <h2 className="text-4xl font-black tracking-tight mb-4">Done!</h2>
-                    <p className="text-secondary text-lg mb-12 max-w-md mx-auto">
-                        <span className="text-foreground font-bold underline decoration-accent decoration-2 underline-offset-4">{totalCount} certificates</span> are ready for download.
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/15 mb-3">
+                        <Sparkles size={12} />
+                        All done
+                    </div>
+
+                    <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2">
+                        {totalCount.toLocaleString()} certificate{totalCount !== 1 ? 's' : ''} ready
+                    </h2>
+                    <p className="text-sm text-secondary mb-8 max-w-xs mx-auto leading-relaxed">
+                        Download your ZIP or send them by email — everything stays in your browser.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center max-w-lg mx-auto">
-                        <Button onClick={handleDownload} disabled={isZipping} size="lg" className="h-16 px-10 text-lg font-bold rounded-2xl w-full sm:w-auto shadow-xl shadow-accent/20 group">
-                            {isZipping ? <Loader2 className="mr-3 animate-spin" /> : <Download className="mr-3 group-hover:-translate-y-1 transition-transform" />}
-                            {isZipping ? 'Zipping...' : 'Download All (ZIP)'}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                        <Button
+                            onClick={handleDownload}
+                            disabled={isZipping}
+                            className="rounded-lg flex-1 shadow-sm shadow-accent/15 h-11"
+                        >
+                            {isZipping ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="mr-2 h-4 w-4" />
+                            )}
+                            {isZipping ? 'Preparing ZIP…' : 'Download ZIP'}
                         </Button>
                         <Button
                             onClick={async () => {
+                                markRecoveryDecided();
                                 await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
                                 router.push('/email');
                             }}
-                            variant="secondary"
-                            size="lg"
-                            className="h-16 px-10 text-lg font-bold rounded-2xl w-full sm:w-auto border-2 border-accent/10 hover:border-accent group"
+                            variant="outline"
+                            className="rounded-lg flex-1 h-11 bg-white hover:bg-muted/30"
                         >
-                            <Mail className="mr-3 group-hover:scale-110 transition-transform text-accent" />
-                            Send Email
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send email
                         </Button>
                     </div>
 
-                    {zipDownloaded && (
-                        <ZipDownloadSuccessPanel
-                            onGenerateAgain={handleGenerateAgain}
-                            onStartNewBatch={handleStartNewBatch}
-                            busy={batchBusy}
-                        />
-                    )}
+                    <div className="mt-8 space-y-4">
+                        {zipDownloaded && (
+                            <ZipDownloadSuccessPanel
+                                onGenerateAgain={handleGenerateAgain}
+                                onStartNewBatch={handleStartNewBatch}
+                                busy={batchBusy}
+                            />
+                        )}
 
-                    {starPromptTrigger && (
-                        <GitHubStarPrompt
-                            trigger={starPromptTrigger}
-                            certificatesCount={completedCount}
-                        />
-                    )}
+                        {starPromptTrigger && (
+                            <GitHubStarPrompt
+                                trigger={starPromptTrigger}
+                                certificatesCount={completedCount}
+                            />
+                        )}
+                    </div>
                 </div>
             )}
         </div>

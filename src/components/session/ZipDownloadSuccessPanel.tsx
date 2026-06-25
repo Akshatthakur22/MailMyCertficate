@@ -1,8 +1,7 @@
 'use client';
 
-import { Download, RotateCcw, RefreshCw } from 'lucide-react';
+import { Download, RotateCcw, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { PrivacyNotice } from './PrivacyNotice';
 
 interface ZipDownloadSuccessPanelProps {
   onGenerateAgain: () => void;
@@ -16,37 +15,37 @@ export function ZipDownloadSuccessPanel({
   busy = false,
 }: ZipDownloadSuccessPanelProps) {
   return (
-    <div className="mt-8 rounded-2xl border border-green-200 bg-green-50 p-6 text-left animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-md mx-auto rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-5 text-left">
       <div className="flex items-start gap-3">
-        <Download className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-green-900">ZIP downloaded successfully</h3>
-          <p className="mt-1 text-sm leading-6 text-green-800">
-            Your certificate data is still stored locally in this browser. You can verify files,
-            re-download the ZIP, or regenerate if you need to fix something.
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-600 ring-1 ring-emerald-200">
+          <CheckCircle2 className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-emerald-950">ZIP downloaded</h3>
+          <p className="mt-1 text-xs leading-relaxed text-emerald-800/80">
+            Your files are saved locally. Re-download, regenerate, or start a new batch anytime.
           </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Button
               variant="outline"
+              size="sm"
               onClick={onGenerateAgain}
               disabled={busy}
-              className="gap-2 border-green-300 bg-white text-green-900 hover:bg-green-100"
+              className="gap-2 rounded-lg border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-50"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-3.5 w-3.5" />
               Generate again
             </Button>
             <Button
               variant="ghost"
+              size="sm"
               onClick={onStartNewBatch}
               disabled={busy}
-              className="gap-2 text-green-900"
+              className="gap-2 rounded-lg text-emerald-900 hover:bg-emerald-100/60"
             >
-              <RotateCcw className="h-4 w-4" />
-              Start new batch
+              <RotateCcw className="h-3.5 w-3.5" />
+              New batch
             </Button>
-          </div>
-          <div className="mt-4">
-            <PrivacyNotice compact />
           </div>
         </div>
       </div>
