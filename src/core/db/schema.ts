@@ -1,6 +1,7 @@
 import Dexie, { Table } from 'dexie';
 import { CSVRow } from '@/types/csv';
 import type { EmailStatus, WorkflowStage } from '@/types/session';
+import type { QueueItemStatus } from '@/types/queue';
 
 export interface Session {
     id: string;
@@ -42,9 +43,10 @@ export interface QueueItem {
     sessionId: string;
     rowId: number;
     recipient: string;
+    displayName?: string;
     subject: string;
     body: string;
-    status: 'pending' | 'sending' | 'sent' | 'failed' | 'retry';
+    status: QueueItemStatus;
     attempts: number;
     maxAttempts: number;
     error?: string;

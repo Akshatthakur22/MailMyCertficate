@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { db } from '@/core/db/schema';
+import { db, type CertificateResult, type CSVRowData } from '@/core/db/schema';
 import { useAppStore } from '@/store/useAppStore';
 import { emailService, updateCsrfToken } from '@/services/emailService';
+import { EmailQueue, type EmailQueueItem, type SendProgressUpdate } from '@/core/queue/emailQueue';
 import { ConnectGmailPanel } from '@/components/email/redesign/ConnectGmailPanel';
 import { GmailComposer } from '@/components/email/redesign/GmailComposer';
 import { SendReadinessPanel } from '@/components/email/redesign/SendReadinessPanel';
@@ -13,8 +14,8 @@ import { SendingTracker } from '@/components/email/redesign/SendingTracker';
 import { CompletionPanel } from '@/components/email/redesign/CompletionPanel';
 import { RefreshGuardBanner } from '@/components/email/redesign/RefreshGuardBanner';
 import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
+import { Button } from '@/components/ui/Button';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import type { EmailQueueItem } from '@/core/queue/emailQueue';
 import {
   buildTemplateText,
   detectEmailColumn,
@@ -25,7 +26,6 @@ import {
   summarizeRecipientValidation,
 } from '@/utils/recipientColumn';
 import {
-  persistEmailQueueItems,
   startNewBatch,
   touchActivity,
   updateSession,
@@ -46,9 +46,11 @@ export default function EmailView() {
   const router = useRouter();
   const sessionId = useAppStore((state) => state.sessionId);
   const csvHeaders = useAppStore((state) => state.csvHeaders);
+  const queueRef = useRef<EmailQueue | null>(null);
+  const completedEventRef = useRef(false);
 
-  const [csvRows, setCsvRows] = useState<any[]>([]);
-  const [certificates, setCertificates] = useState<any[]>([]);
+  const [csvRows, setCsvRows] = useState<CSVRowData[]>([]);
+  const [certificates, setCertificates] = useState<CertificateResult[]>([]);
   const [authStatus, setAuthStatus] = useState<AuthStatus>({ authenticated: false, email: null });
   const [loading, setLoading] = useState(true);
   const [authenticating, setAuthenticating] = useState(false);
@@ -65,8 +67,101 @@ export default function EmailView() {
   const [sendingState, setSendingState] = useState({ sending: false, processed: 0, total: 0, current: '' });
   const [sendItems, setSendItems] = useState<EmailQueueItem[]>([]);
   const [failedItems, setFailedItems] = useState<EmailQueueItem[]>([]);
+  const [resumePromptVisible, setResumePromptVisible] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [keepSession, setKeepSession] = useState(false);
+
+  useEffect(() => {
+    completedEventRef.current = false;
+    const queue = new EmailQueue({
+      maxConcurrent: 1,
+      baseDelay: 250,
+      maxDelay: 1500,
+      retryDelay: 1000,
+      maxRetries: 2,
+    });
+
+    queue.onProgress((update: SendProgressUpdate) => {
+      const items = update.queueState.items;
+      const failed = items.filter((item) => item.status === 'failed');
+      const currentItem =
+        update.currentItem ??
+        items.find((item) => update.queueState.currentSendingIds.includes(item.id));
+
+      setSendItems(items);
+      setFailedItems(failed);
+      setSending(update.queueState.isProcessing);
+      setSendingState({
+        sending: update.queueState.isProcessing,
+        processed: update.queueState.stats.sent + update.queueState.stats.failed,
+        total: update.queueState.stats.total,
+        current: currentItem?.recipient || '',
+      });
+
+      if (update.type === 'complete' && items.length > 0 && !completedEventRef.current) {
+        completedEventRef.current = true;
+        setDeliveryCompletedAt(Date.now());
+        setResumePromptVisible(false);
+
+        const sent = items.filter((item) => item.status === 'sent').length;
+        const failedCount = failed.length;
+        trackEvent(
+          {
+            event: 'certificate_emailed',
+            certificates_count: items.length,
+            sent_count: sent,
+            failed_count: failedCount,
+            user_plan: 'free',
+          },
+          { dedupeKey: `${sessionId}-email-${items.length}` }
+        );
+
+        void updateSession(sessionId, {
+          workflowStage: 'COMPLETED',
+          emailStatus: failedCount === 0 ? 'complete' : 'partial',
+        });
+        void touchActivity(sessionId);
+        setMessage({ type: 'success', text: `Processing complete. ${sent} sent, ${failedCount} failed.` });
+      }
+    });
+
+    queue.setCertificateResolver(async (sid, rid) => {
+      const cert = await db.certificates.get({ sessionId: sid, rowId: rid });
+      return cert?.pdf;
+    });
+
+    queueRef.current = queue;
+
+    const restoreQueue = async () => {
+      const restored = await queue.loadCampaign(sessionId, { markInterrupted: true });
+      const items = restored.items;
+      if (items.length === 0) return;
+
+      const hasUnfinished = items.some((item) =>
+        item.status === 'pending' || item.status === 'retry' || item.status === 'sending' || item.status === 'interrupted'
+      );
+      const interruptedCount = items.filter((item) => item.status === 'interrupted').length;
+
+      if (hasUnfinished) {
+        setResumePromptVisible(true);
+        setMessage({
+          type: 'error',
+          text:
+            interruptedCount > 0
+              ? `${interruptedCount} email ${interruptedCount === 1 ? 'was' : 'were'} interrupted while waiting for Gmail confirmation. Review before resuming to avoid duplicate sends.`
+              : 'Previous email campaign detected. Resume or discard it before starting another send.',
+        });
+      }
+    };
+
+    restoreQueue().catch(() => {
+      setMessage({ type: 'error', text: 'Failed to restore the saved email queue.' });
+    });
+
+    return () => {
+      queue.stopProcessing();
+    };
+  }, [sessionId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -190,8 +285,6 @@ export default function EmailView() {
     return out;
   }, [csvRows, emailColumn, nameColumn]);
 
-  const getCertificateForRow = (rowId: number) => certificates.find((certificate) => certificate.rowId === rowId);
-
   const getPreviewLabel = (row: { data?: Record<string, unknown> }) => {
     if (!row.data) return 'Participant';
     return getDisplayName(row.data, nameColumn);
@@ -205,8 +298,9 @@ export default function EmailView() {
   const currentSendingRecipient = sendingState.current || sendItems.find((item) => item.status === 'pending' || item.status === 'retry')?.recipient || '';
   const sentCount = sendItems.filter((item) => item.status === 'sent').length;
   const failedCount = failedItems.length;
+  const interruptedCount = sendItems.filter((item) => item.status === 'interrupted').length;
   const totalCount = sendItems.length || csvRows.length;
-  const remainingCount = Math.max(0, totalCount - sentCount - failedCount);
+  const remainingCount = Math.max(0, totalCount - sentCount - failedCount - interruptedCount);
   const isSending = sendingState.sending;
   const isComplete = !isSending && totalCount > 0 && sendItems.length > 0 && sendItems.every((item) => item.status === 'sent' || item.status === 'failed');
   const totalElapsed = deliveryStartedAt && deliveryCompletedAt ? formatDuration(deliveryCompletedAt - deliveryStartedAt) : '—';
@@ -217,7 +311,7 @@ export default function EmailView() {
 
   const validRecipients = recipientValidation.valid;
   const estimatedMinutes = Math.max(1, Math.ceil((validRecipients * 1.2) / 60));
-  const canSend = Boolean(emailColumn) && validRecipients > 0;
+  const canSend = Boolean(emailColumn) && validRecipients > 0 && !resumePromptVisible;
 
   const checkAuthStatus = async () => {
     try {
@@ -251,7 +345,8 @@ export default function EmailView() {
     }
   };
 
-  const prepareSend = () => {
+  const prepareSend = async () => {
+    if (!queueRef.current) return;
     if (!emailColumn) {
       setMessage({
         type: 'error',
@@ -268,36 +363,40 @@ export default function EmailView() {
       return;
     }
 
-    const items: EmailQueueItem[] = [];
+    const items: Array<{
+      rowId: number;
+      recipient: string;
+      displayName: string;
+      subject: string;
+      body: string;
+      maxAttempts: number;
+    }> = [];
     for (const row of csvRows) {
       const data = (row.data ?? {}) as Record<string, unknown>;
       const recipient = resolveRecipientEmail(data, emailColumn);
       if (!isValidEmail(recipient)) continue;
 
       items.push({
-        id: `${sessionId}-${row.id}`,
-        sessionId,
         rowId: row.id,
         recipient,
         displayName: getDisplayName(data, nameColumn),
         subject: buildTemplateText(emailForm.subject, data),
         body: buildTemplateText(emailForm.body, data),
-        status: 'pending',
-        attempts: 0,
         maxAttempts: 3,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
       });
     }
 
-    setSendItems(items);
+    const queueState = await queueRef.current.createCampaign(sessionId, items);
+    setSendItems(queueState.items);
     setFailedItems([]);
     setDeliveryCompletedAt(null);
+    setResumePromptVisible(false);
     setMessage(null);
     setConfirming(true);
   };
 
   const confirmAndStartSend = async () => {
+    if (!queueRef.current) return;
     setConfirming(false);
     setSending(true);
     setKeepSession(false);
@@ -305,98 +404,46 @@ export default function EmailView() {
     setDeliveryStartedAt(Date.now());
     setDeliveryCompletedAt(null);
     setSendingState({ sending: true, processed: 0, total: sendItems.length, current: '' });
-
-    const updatedItems: EmailQueueItem[] = [];
-    const failed: EmailQueueItem[] = [];
-
-    for (let index = 0; index < sendItems.length; index++) {
-      const item = sendItems[index];
-      setSendingState((previous) => ({ ...previous, processed: index, current: item.recipient }));
-
-      try {
-        const certificate = getCertificateForRow(item.rowId);
-        if (!certificate?.pdf) throw new Error('No certificate PDF found for this recipient');
-        await emailService.sendEmailWithAttachment({
-          recipient: item.recipient,
-          subject: item.subject,
-          body: item.body,
-          certificate: certificate.pdf,
-        });
-        const sentItem: EmailQueueItem = { ...item, status: 'sent', updatedAt: Date.now(), sentAt: Date.now() };
-        updatedItems.push(sentItem);
-      } catch (error: any) {
-        const failItem: EmailQueueItem = { ...item, status: 'failed', updatedAt: Date.now(), error: error?.message || String(error) };
-        updatedItems.push(failItem);
-        failed.push(failItem);
-      }
-
-      setSendItems((previous) => {
-        const copy = [...previous];
-        copy[index] = updatedItems[index];
-        return copy;
-      });
-      setFailedItems([...failed]);
-    }
-
-    setSending(false);
-    setSendingState({ sending: false, processed: sendItems.length, total: sendItems.length, current: '' });
-    setDeliveryCompletedAt(Date.now());
-
-    const sentCount = updatedItems.filter((item) => item.status === 'sent').length;
-    trackEvent(
-      {
-        event: 'certificate_emailed',
-        certificates_count: sendItems.length,
-        sent_count: sentCount,
-        failed_count: failed.length,
-        user_plan: 'free',
-      },
-      { dedupeKey: `${sessionId}-email-${sendItems.length}` }
-    );
-
-    await persistEmailQueueItems(updatedItems);
-    await updateSession(sessionId, {
-      workflowStage: 'COMPLETED',
-      emailStatus: failed.length === 0 ? 'complete' : 'partial',
-    });
     await touchActivity(sessionId);
-    setMessage({ type: 'success', text: `Processing complete. ${sendItems.length - failed.length} sent, ${failed.length} failed.` });
+    await queueRef.current.startProcessing();
   };
 
   const retryFailedItems = async () => {
-    if (!failedItems.length) return;
+    if (!failedItems.length || !queueRef.current) return;
 
     setMessage(null);
     setSending(true);
     setDeliveryStartedAt(deliveryStartedAt ?? Date.now());
     setSendingState({ sending: true, processed: sentCount, total: totalCount, current: failedItems[0]?.recipient || '' });
+    await updateSession(sessionId, { workflowStage: 'SENDING' });
+    await queueRef.current.retryItems(['failed']);
+  };
 
-    const retriedItems: EmailQueueItem[] = [];
-    for (const item of failedItems) {
-      try {
-        const certificate = getCertificateForRow(item.rowId);
-        if (!certificate?.pdf) throw new Error('No certificate PDF found for this recipient');
-        await emailService.sendEmailWithAttachment({
-          recipient: item.recipient,
-          subject: item.subject,
-          body: item.body,
-          certificate: certificate.pdf,
-        });
-        retriedItems.push({ ...item, status: 'sent', updatedAt: Date.now(), sentAt: Date.now() });
-      } catch (error: any) {
-        retriedItems.push({ ...item, status: 'failed', updatedAt: Date.now(), error: error?.message || String(error) });
-      }
-    }
+  const resumeCampaign = async () => {
+    if (!queueRef.current) return;
+    setResumePromptVisible(false);
+    setMessage(null);
+    setSending(true);
+    setDeliveryStartedAt(Date.now());
+    await updateSession(sessionId, { workflowStage: 'SENDING' });
+    await touchActivity(sessionId);
+    await queueRef.current.retryItems(['interrupted']);
+  };
 
-    const nextFailed = retriedItems.filter((item) => item.status === 'failed');
-    setSendItems((previous) => previous.map((item) => retriedItems.find((retryItem) => retryItem.id === item.id) ?? item));
-    setFailedItems(nextFailed);
+  const discardCampaign = async () => {
+    if (!queueRef.current) return;
+    queueRef.current.stopProcessing();
+    await queueRef.current.clearQueue();
+    setSendItems([]);
+    setFailedItems([]);
+    setResumePromptVisible(false);
     setSending(false);
-    setSendingState({ sending: false, processed: sentCount + retriedItems.filter((item) => item.status === 'sent').length, total: totalCount, current: '' });
-
-    if (nextFailed.length === 0) {
-      setDeliveryCompletedAt(Date.now());
-    }
+    setSendingState({ sending: false, processed: 0, total: 0, current: '' });
+    setDeliveryStartedAt(null);
+    setDeliveryCompletedAt(null);
+    await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP', emailStatus: 'none' });
+    await touchActivity(sessionId);
+    setMessage({ type: 'success', text: 'The saved email campaign was discarded.' });
   };
 
   const handleStartNewBatch = async () => {
@@ -472,6 +519,29 @@ export default function EmailView() {
           >
             {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
             <span>{message.text}</span>
+          </div>
+        )}
+
+        {resumePromptVisible && authStatus.authenticated && (
+          <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-5 py-4 text-amber-950">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Previous email campaign detected.</p>
+                <p className="mt-1 text-sm leading-6 text-amber-900">
+                  {sentCount} sent, {failedCount} failed, {interruptedCount} interrupted,{' '}
+                  {Math.max(0, totalCount - sentCount - failedCount - interruptedCount)} remaining.
+                  Interrupted emails may already have reached Gmail, so resuming can resend those recipients.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                <Button variant="primary" size="sm" onClick={resumeCampaign}>
+                  Resume sending
+                </Button>
+                <Button variant="outline" size="sm" onClick={discardCampaign}>
+                  Discard campaign
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 

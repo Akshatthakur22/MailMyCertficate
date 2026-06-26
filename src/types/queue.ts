@@ -1,3 +1,5 @@
+export type QueueItemStatus = 'pending' | 'sending' | 'sent' | 'failed' | 'retry' | 'interrupted';
+
 export interface EmailQueueItem {
   id: string;
   sessionId: string;
@@ -7,7 +9,7 @@ export interface EmailQueueItem {
   displayName?: string;
   subject: string;
   body: string;
-  status: 'pending' | 'sending' | 'sent' | 'failed' | 'retry';
+  status: QueueItemStatus;
   attempts: number;
   maxAttempts: number;
   error?: string;
@@ -28,6 +30,7 @@ export interface EmailQueueState {
     failed: number;
     pending: number;
     retry: number;
+    interrupted: number;
   };
   startedAt?: number;
   completedAt?: number;

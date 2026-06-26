@@ -28,6 +28,8 @@ export function SendProgressTable({ items, currentSendingIds, compact = false }:
         return <XCircle className="w-4 h-4 text-red-500" />;
       case 'retry':
         return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+      case 'interrupted':
+        return <AlertTriangle className="w-4 h-4 text-rose-500" />;
       case 'pending':
         return <Clock className="w-4 h-4 text-gray-300" />;
       default:
@@ -47,6 +49,8 @@ export function SendProgressTable({ items, currentSendingIds, compact = false }:
         return item.errorType === 'permanent' ? 'Failed' : 'Failed (Retry)';
       case 'retry':
         return `Retry (${item.attempts}/${item.maxAttempts})`;
+      case 'interrupted':
+        return 'Interrupted';
       case 'pending':
         return 'Pending';
       default:
@@ -66,6 +70,8 @@ export function SendProgressTable({ items, currentSendingIds, compact = false }:
         return item.errorType === 'permanent' ? 'text-red-700 bg-red-50' : 'text-amber-700 bg-amber-50';
       case 'retry':
         return 'text-amber-700 bg-amber-50';
+      case 'interrupted':
+        return 'text-rose-700 bg-rose-50';
       case 'pending':
         return 'text-gray-500 bg-gray-50';
       default:

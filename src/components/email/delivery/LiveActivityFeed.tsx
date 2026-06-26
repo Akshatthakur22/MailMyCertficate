@@ -37,10 +37,10 @@ export function LiveActivityFeed({ items, currentSendingIds }: { items: EmailQue
         ) : (
           feed.map((item) => {
             const active = currentSendingIds.includes(item.id);
-            const tone = item.status === 'sent' ? 'sent' : item.status === 'failed' ? 'failed' : active ? 'sending' : 'retry';
+            const tone = item.status === 'sent' ? 'sent' : item.status === 'failed' ? 'failed' : item.status === 'interrupted' ? 'interrupted' : active ? 'sending' : 'retry';
             const icon = tone === 'sent' ? (
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            ) : tone === 'failed' ? (
+            ) : tone === 'failed' || tone === 'interrupted' ? (
               <AlertTriangle className="h-4 w-4 text-rose-500" />
             ) : (
               <Loader2 className="h-4 w-4 animate-spin text-sky-600" />
@@ -57,7 +57,7 @@ export function LiveActivityFeed({ items, currentSendingIds }: { items: EmailQue
                   {icon}
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium text-gray-900">{item.recipient}</div>
-                    <div className="truncate text-xs text-gray-500">{tone === 'sent' ? `Sent to ${getName(item)}` : tone === 'failed' ? `Needs attention for ${getName(item)}` : active ? `Sending to ${getName(item)}` : `Retry queued for ${getName(item)}`}</div>
+                    <div className="truncate text-xs text-gray-500">{tone === 'sent' ? `Sent to ${getName(item)}` : tone === 'failed' ? `Needs attention for ${getName(item)}` : tone === 'interrupted' ? `Interrupted for ${getName(item)}` : active ? `Sending to ${getName(item)}` : `Retry queued for ${getName(item)}`}</div>
                   </div>
                 </div>
                 <div className="shrink-0 text-xs font-medium text-gray-500">{new Date(item.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>

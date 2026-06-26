@@ -39,14 +39,18 @@ export async function cleanupQueueData(options: CleanupOptions = {}) {
         .toArray();
 
       if (oldCompletedItems.length > 0) {
-        oldCompletedItemsCount = oldCompletedItems.length;
         const oldSessionIds = [...new Set(oldCompletedItems.map(item => item.sessionId))];
-        
+
         for (const oldSessionId of oldSessionIds) {
-          await db.queueItems.where({ sessionId: oldSessionId }).delete();
+          const sessionItems = await db.queueItems.where({ sessionId: oldSessionId }).toArray();
+          const completed = sessionItems.length > 0 && sessionItems.every(item => item.status === 'sent' || item.status === 'failed');
+          if (completed) {
+            oldCompletedItemsCount += sessionItems.length;
+            await db.queueItems.where({ sessionId: oldSessionId }).delete();
+          }
         }
-        
-        console.log(`✅ Cleaned up ${oldCompletedItems.length} old completed queue items from ${oldSessionIds.length} sessions`);
+
+        console.log(`✅ Cleaned up ${oldCompletedItemsCount} old completed queue items`);
       }
     }
 
@@ -61,7 +65,7 @@ export async function cleanupQueueData(options: CleanupOptions = {}) {
       console.log(`✅ Cleaned up ${orphanedItems.length} orphaned queue items`);
     }
 
-    // 3. Clean up stuck "sending" items (older than 30 minutes)
+    // 3. Mark stale "sending" items as interrupted so users can explicitly resume.
     const THIRTY_MINUTES = 30 * 60 * 1000;
     const stuckSendingItems = await db.queueItems
       .where('status')
@@ -70,8 +74,16 @@ export async function cleanupQueueData(options: CleanupOptions = {}) {
       .toArray();
 
     if (stuckSendingItems.length > 0) {
-      await db.queueItems.bulkDelete(stuckSendingItems.map(item => item.id));
-      console.log(`✅ Cleaned up ${stuckSendingItems.length} stuck sending items`);
+      const now = Date.now();
+      for (const item of stuckSendingItems) {
+        await db.queueItems.update(item.id, {
+          status: 'interrupted',
+          error: 'Sending was interrupted before the browser received Gmail confirmation.',
+          errorType: 'network',
+          updatedAt: now,
+        });
+      }
+      console.log(`✅ Marked ${stuckSendingItems.length} stuck sending items as interrupted`);
     }
 
     console.log('🎉 Queue cleanup completed successfully!');
@@ -118,7 +130,7 @@ export async function getQueueStats() {
  */
 export async function hasActiveQueueItems(sessionId?: string) {
   try {
-    const activeStatuses = ['pending', 'sending', 'retry'];
+    const activeStatuses = ['pending', 'sending', 'retry', 'interrupted'];
     
     let query = db.queueItems.where('status').anyOf(activeStatuses);
     
@@ -137,7 +149,7 @@ export async function hasActiveQueueItems(sessionId?: string) {
 /**
  * Safe cleanup for new campaign start
  */
-export async function prepareForNewCampaign(_newSessionId: string) {
+export async function prepareForNewCampaign() {
   const { startNewBatch } = await import('@/core/session/sessionManager');
   await startNewBatch();
 }

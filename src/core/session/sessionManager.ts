@@ -127,10 +127,10 @@ export async function inferWorkflowStage(sessionId: string): Promise<WorkflowSta
 
   const zustandStep = useAppStore.getState().currentStep;
 
-  if (queueItems.some((item) => item.status === 'sending' || item.status === 'pending')) {
+  if (queueItems.some((item) => ['sending', 'pending', 'retry', 'interrupted'].includes(item.status))) {
     return 'SENDING';
   }
-  if (record?.emailStatus === 'complete' || queueItems.every((i) => i.status === 'sent')) {
+  if (record?.emailStatus === 'complete' || (queueItems.length > 0 && queueItems.every((i) => i.status === 'sent'))) {
     return 'COMPLETED';
   }
   if (record?.zipDownloadedAt) return 'DOWNLOAD';
@@ -354,28 +354,6 @@ export function scheduleAutoCleanup(
 
 export async function cancelAutoCleanup(sessionId: string): Promise<void> {
   await updateSession(sessionId, { keepSessionAfterEmail: true });
-}
-
-export async function persistEmailQueueItems(
-  items: Array<{
-    id: string;
-    sessionId: string;
-    rowId: number;
-    recipient: string;
-    subject: string;
-    body: string;
-    status: 'pending' | 'sending' | 'sent' | 'failed' | 'retry';
-    attempts: number;
-    maxAttempts: number;
-    error?: string;
-    errorType?: 'temporary' | 'permanent' | 'network';
-    createdAt: number;
-    updatedAt: number;
-    sentAt?: number;
-  }>
-): Promise<void> {
-  if (items.length === 0) return;
-  await db.queueItems.bulkPut(items);
 }
 
 export function subscribeSessionSync(

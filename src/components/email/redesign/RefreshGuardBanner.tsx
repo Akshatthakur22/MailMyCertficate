@@ -13,8 +13,8 @@ export function RefreshGuardBanner({ active }: { active: boolean }) {
         <div>
           <p className="font-semibold">Sending in progress — please don&apos;t refresh or close this tab.</p>
           <p className="mt-0.5 leading-6 text-amber-800/90">
-            Delivery is running live from this page. Refreshing will stop it, and it cannot be resumed
-            automatically. You can safely refresh once every certificate has been sent.
+            Delivery is saved locally as it runs. If this page closes, you can return and choose whether to
+            resume, but any email interrupted while Gmail was responding may need review.
           </p>
         </div>
       </div>
@@ -26,7 +26,7 @@ export function RefreshGuardBanner({ active }: { active: boolean }) {
       <ShieldCheck className="h-5 w-5 shrink-0 text-accent" />
       <p className="leading-relaxed">
         <span className="font-medium text-foreground">Keep this tab open while sending.</span>{' '}
-        Don&apos;t refresh until delivery completes.
+        Progress is saved locally so an interrupted campaign can be reviewed before resuming.
       </p>
     </div>
   );
