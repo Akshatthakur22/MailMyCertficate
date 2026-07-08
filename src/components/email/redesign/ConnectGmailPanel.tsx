@@ -19,8 +19,8 @@ export function ConnectGmailPanel({
   const trustPoints = [
     {
       icon: Lock,
-      title: 'Your password is never shared',
-      body: 'You sign in with Google directly. We only get permission to send on your behalf.',
+      title: 'Only send—never read or store',
+      body: 'We only send emails. We never read your inbox, store emails, or access Gmail data after sending.',
     },
     {
       icon: Eye,
@@ -29,8 +29,8 @@ export function ConnectGmailPanel({
     },
     {
       icon: ShieldCheck,
-      title: 'Processed in your browser',
-      body: 'Certificates and participant data stay on your device. Nothing is stored on a server.',
+      title: 'Your Gmail account sends it',
+      body: 'Emails appear from you, not from a third party. Complete control over what goes out.',
     },
   ];
 

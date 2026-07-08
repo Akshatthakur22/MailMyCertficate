@@ -25,6 +25,7 @@ export function Navbar() {
             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
             <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
+             <Link href="/settings" className="hover:text-accent transition-colors">Settings</Link>
           </div>
           <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
             <Link

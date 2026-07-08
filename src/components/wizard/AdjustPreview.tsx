@@ -4,12 +4,14 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useStore } from 'zustand';
 import { useAppStore } from '@/store/useAppStore';
 import { DraggableField } from '@/components/wizard/DraggableField';
+import { EditorOnboarding } from '@/components/wizard/EditorOnboarding';
+import { EditorEmptyState } from '@/components/wizard/EditorEmptyState';
+import { FieldList } from '@/components/wizard/FieldList';
 import { Button } from '@/components/ui/Button';
 import {
     AlignLeft,
     AlignCenter,
     AlignRight,
-    Plus,
     Trash2,
     ZoomIn,
     ZoomOut,
@@ -49,6 +51,7 @@ export function AdjustPreview() {
     const [isPanning, setIsPanning] = useState(false);
     const [leftPanelOpen, setLeftPanelOpen] = useState(true);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
+    const [showOnboarding] = useState(true);
 
     useEffect(() => {
         const fitToScreen = () => {
@@ -309,44 +312,45 @@ export function AdjustPreview() {
                 {leftPanelOpen && (
                     <aside className="w-52 shrink-0 border-r border-border/60 flex flex-col bg-muted/20">
                         <div className="p-3 border-b border-border/40">
-                            <p className="text-xs font-medium text-foreground">Add fields</p>
-                            <p className="text-[11px] text-secondary mt-0.5">From your CSV columns</p>
+                            <p className="text-xs font-medium text-foreground">Build your certificate</p>
+                            <p className="text-[11px] text-secondary mt-0.5">
+                                {fields.length === 0 ? 'Add fields from your CSV' : 'Add or manage fields'}
+                            </p>
                         </div>
-                        <div className="p-2 flex-1 overflow-y-auto space-y-1">
-                            {csvHeaders.map((header) => (
-                                <button
-                                    key={header}
-                                    type="button"
-                                    onClick={() => handleAddField(header)}
-                                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm border border-transparent hover:border-border hover:bg-white transition-colors text-left"
-                                >
-                                    <span className="truncate font-medium">{header}</span>
-                                    <Plus size={14} className="shrink-0 text-accent" />
-                                </button>
-                            ))}
+                        <div className="flex-1 overflow-y-auto">
+                            <FieldList
+                                headers={csvHeaders}
+                                onAddField={handleAddField}
+                                fieldsCount={fields.length}
+                            />
                         </div>
 
                         {fields.length > 0 && (
-                            <div className="border-t border-border/40 p-2 max-h-40 overflow-y-auto">
-                                <p className="text-[11px] font-medium text-secondary px-1 mb-1.5">On certificate</p>
-                                {fields.map((field) => (
-                                    <button
-                                        key={field.id}
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedFieldId(field.id);
-                                            setRightPanelOpen(true);
-                                        }}
-                                        className={cn(
-                                            'w-full text-left px-2 py-1.5 rounded-md text-xs truncate transition-colors',
-                                            selectedFieldId === field.id
-                                                ? 'bg-accent/10 text-accent font-medium'
-                                                : 'hover:bg-white text-foreground',
-                                        )}
-                                    >
-                                        {field.columnName}
-                                    </button>
-                                ))}
+                            <div className="border-t border-border/40 p-3 max-h-40 overflow-y-auto">
+                                <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary mb-2">
+                                  On certificate
+                                </p>
+                                <div className="space-y-1.5">
+                                    {fields.map((field) => (
+                                        <button
+                                            key={field.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedFieldId(field.id);
+                                                setRightPanelOpen(true);
+                                            }}
+                                            className={cn(
+                                                'w-full text-left px-3 py-2 rounded-lg text-xs font-medium truncate transition-all border',
+                                                selectedFieldId === field.id
+                                                    ? 'bg-accent text-white border-accent shadow-sm'
+                                                    : 'border-border/40 text-foreground hover:border-accent/40 hover:bg-white',
+                                            )}
+                                            title={field.columnName}
+                                        >
+                                            {field.columnName}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </aside>
@@ -380,6 +384,13 @@ export function AdjustPreview() {
                                 }}
                             >
                                 <img src={template} alt="Template" className="w-full h-full pointer-events-none select-none" />
+                                
+                                {/* Empty State — shown when no fields placed yet */}
+                                {fields.length === 0 && (
+                                  <EditorEmptyState templateDimensions={templateDimensions} />
+                                )}
+                                
+                                {/* Fields */}
                                 {fields.map((field) => (
                                     <DraggableField
                                         key={field.id}
@@ -506,17 +517,35 @@ export function AdjustPreview() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-center px-2 py-8">
+                                <div className="h-full flex flex-col items-center justify-center text-center px-2 py-8 space-y-4">
                                     <p className="text-sm text-secondary leading-relaxed">
                                         {fields.length === 0
                                             ? 'Add a field from the left panel to get started.'
                                             : 'Click a field on the certificate to edit its style.'}
                                     </p>
+                                    
+                                    {/* Tips section */}
+                                    <div className="mt-6 pt-6 border-t border-border/40 w-full text-left space-y-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">💡 Tips</p>
+                                        <ul className="text-[11px] text-secondary/70 space-y-2 list-disc list-inside">
+                                            <li>Drag fields to move them on the certificate</li>
+                                            <li>Resize by dragging the corner handles</li>
+                                            <li>Use Ctrl+Z to undo changes</li>
+                                            <li>Leave space between fields so text doesn't overlap</li>
+                                            <li>Preview before generating to catch positioning issues</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </aside>
                 )}
+
+                {/* Onboarding Overlay — First-time user guidance */}
+                <EditorOnboarding
+                  fieldsCount={fields.length}
+                  show={showOnboarding}
+                />
             </div>
         </div>
     );

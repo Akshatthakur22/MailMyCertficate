@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/Button';
 import { RevealSection } from '@/components/layout/RevealSection';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import { 
     Upload,
     FileSpreadsheet,
@@ -62,7 +63,6 @@ export default function Guide() {
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
                             <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
-                            <Link href="/guide#local-data" className="hover:text-accent transition-colors">Your data</Link>
                             <Link href="/settings" className="hover:text-accent transition-colors">Settings</Link>
                         </div>
                         <div className="flex items-center gap-3">
@@ -845,6 +845,8 @@ export default function Guide() {
                 <CTASection />
             </RevealSection>
         </main>
+
+        <ProductFooter />
     </div>
 );
 }

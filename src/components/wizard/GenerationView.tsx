@@ -13,6 +13,7 @@ import { ZipDownloadSuccessPanel } from '@/components/session/ZipDownloadSuccess
 import { GitHubStarPrompt } from '@/components/github/GitHubStarPrompt';
 import { trackEvent } from '@/lib/analytics';
 import type { GitHubStarPromptTrigger } from '@/lib/analytics';
+import { OpenSourceSupportCard } from '@/components/product/OpenSourceSupportCard';
 
 export function GenerationView() {
     const router = useRouter();
@@ -287,7 +288,7 @@ export function GenerationView() {
                         {totalCount.toLocaleString()} certificate{totalCount !== 1 ? 's' : ''} ready
                     </h2>
                     <p className="text-sm text-secondary mb-8 max-w-xs mx-auto leading-relaxed">
-                        Download your ZIP or send them by email — everything stays in your browser.
+                        Download your ZIP locally or connect Gmail when you are ready to send.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
@@ -331,6 +332,9 @@ export function GenerationView() {
                                 trigger={starPromptTrigger}
                                 certificatesCount={completedCount}
                             />
+                        )}
+                        {zipDownloaded && (
+                            <OpenSourceSupportCard context="success" certificatesCount={completedCount} />
                         )}
                     </div>
                 </div>

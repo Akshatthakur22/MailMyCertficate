@@ -1,4 +1,5 @@
 import os
+import os
 import json
 import importlib.util
 import base64
@@ -70,14 +71,17 @@ CLIENT_SECRET = CLIENT_SECRETS['web']['client_secret']
 # Redirect URI is resolved per request in get_flow() (see site_config.py)
 
 # Session configuration for serverless - using Flask session cookies
-app.config['SESSION_COOKIE_SECURE'] = is_production()
+app.config['SESSION_COOKIE_SECURE'] = is_production()  # False for localhost, True for production
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 # Production-safe session settings
 app.config['SESSION_COOKIE_DOMAIN'] = None  # Auto-detect
 app.config['SESSION_COOKIE_PATH'] = '/'
-# Flask session will be used instead of in-memory storage
+
+# Debug: Log session config
+if os.environ.get('FLASK_DEBUG') == '1':
+    print(f"[SESSION CONFIG] SECURE={app.config['SESSION_COOKIE_SECURE']}, HTTPONLY={app.config['SESSION_COOKIE_HTTPONLY']}, SAMESITE={app.config['SESSION_COOKIE_SAMESITE']}")
 
 # Helper functions for production-safe credential management
 def get_frontend_url():
@@ -165,6 +169,42 @@ def index():
     return jsonify({"status": "Gmail API Backend is running"})
 
 
+@app.route('/api/debug/env')
+def debug_env():
+    """DEBUG ENDPOINT: Show environment configuration (only in development)"""
+    if os.environ.get('FLASK_DEBUG') != '1':
+        return jsonify({"error": "Not available in production"}), 403
+    
+    return jsonify({
+        "NODE_ENV": os.environ.get('NODE_ENV'),
+        "FLASK_DEBUG": os.environ.get('FLASK_DEBUG'),
+        "APP_URL": os.environ.get('APP_URL'),
+        "NEXT_PUBLIC_APP_URL": os.environ.get('NEXT_PUBLIC_APP_URL'),
+        "VERCEL_ENV": os.environ.get('VERCEL_ENV'),
+        "get_app_url()": get_app_url(),
+        "get_oauth_redirect_uri()": get_oauth_redirect_uri(),
+        "is_production()": is_production(),
+        "SESSION_COOKIE_SECURE": app.config['SESSION_COOKIE_SECURE'],
+        "session_cookie_samesite": app.config['SESSION_COOKIE_SAMESITE'],
+    })
+
+
+@app.route('/api/debug/session')
+def debug_session():
+    """DEBUG ENDPOINT: Show current session state (only in development)"""
+    if os.environ.get('FLASK_DEBUG') != '1':
+        return jsonify({"error": "Not available in production"}), 403
+    
+    return jsonify({
+        "has_state": 'state' in session,
+        "state_value": session.get('state', 'NOT SET'),
+        "has_credentials": 'credentials' in session,
+        "has_email": 'email' in session,
+        "email": session.get('email', 'NOT SET'),
+        "session_keys": list(session.keys()),
+    })
+
+
 # Alias routes for compatibility with frontend requests lacking /api prefix
 @app.route('/auth/login')
 def auth_login_alias():
@@ -193,11 +233,24 @@ def auth_logout_alias():
 def auth_login():
     """Initiate standard OAuth login flow (no PKCE)"""
     try:
+        # Debug: Log environment and redirect URI
+        debug = os.environ.get('FLASK_DEBUG') == '1'
+        if debug:
+            print(f"\n=== AUTH LOGIN REQUEST ===")
+            print(f"APP_URL={os.environ.get('APP_URL')}")
+            print(f"NEXT_PUBLIC_APP_URL={os.environ.get('NEXT_PUBLIC_APP_URL')}")
+            print(f"NODE_ENV={os.environ.get('NODE_ENV')}")
+            print(f"FLASK_DEBUG={os.environ.get('FLASK_DEBUG')}")
+        
         # Validate credentials are properly loaded
         if not GOOGLE_CREDENTIALS_JSON:
             return sanitize_error_response("GOOGLE_CREDENTIALS_JSON environment variable not set", include_details=True)
         
         flow = get_flow()
+        redirect_uri_used = flow.redirect_uri
+        if debug:
+            print(f"Redirect URI being used: {redirect_uri_used}")
+        
         # Standard OAuth authorization URL without PKCE
         authorization_url, state = flow.authorization_url(
             access_type='offline',
@@ -205,6 +258,11 @@ def auth_login():
             prompt='consent'
             # No code_challenge or code_verifier for standard OAuth
         )
+        
+        if debug:
+            print(f"Authorization URL: {authorization_url}")
+            print(f"State: {state}")
+            print(f"=== END AUTH LOGIN ===\n")
         
         # Store state and CSRF token directly in Flask session
         session['state'] = state
@@ -227,9 +285,17 @@ def auth_login():
 def auth_callback():
     """Handle standard OAuth callback (no PKCE)"""
     try:
+        debug = os.environ.get('FLASK_DEBUG') == '1'
+        if debug:
+            print(f"\n=== AUTH CALLBACK REQUEST ===")
+            print(f"Query params: error={request.args.get('error')}, state={request.args.get('state')}, code={request.args.get('code')}")
+        
         error = request.args.get('error')
         if error:
             frontend_url = get_frontend_url()
+            if debug:
+                print(f"OAuth error received: {error}")
+                print(f"Redirecting to: {frontend_url}?error={error}")
             return redirect(f'{frontend_url}?error={error}')
         
         state = request.args.get('state')
@@ -237,12 +303,22 @@ def auth_callback():
         
         if not state or not code:
             frontend_url = get_frontend_url()
+            if debug:
+                print(f"Missing state or code")
             return redirect(f'{frontend_url}?error=missing_parameters')
         
         # Verify state from Flask session
         stored_state = session.get('state')
+        if debug:
+            print(f"Stored state in session: {stored_state}")
+            print(f"State from callback: {state}")
+            print(f"Match: {stored_state == state}")
+        
         if stored_state != state:
             frontend_url = get_frontend_url()
+            if debug:
+                print(f"STATE MISMATCH! Redirecting to: {frontend_url}?error=invalid_state")
+                print(f"=== END AUTH CALLBACK ===\n")
             return redirect(f'{frontend_url}?error=invalid_state')
         
         # Exchange code for tokens using standard OAuth flow (no PKCE)
@@ -259,6 +335,8 @@ def auth_callback():
             oauth2_service = build('oauth2', 'v2', credentials=credentials)
             user_info = oauth2_service.userinfo().get().execute()
             session['email'] = user_info.get('email')
+            if debug:
+                print(f"User email: {session['email']}")
         except Exception as e:
             print(f"Could not fetch email: {e}")
             session['email'] = None
@@ -269,11 +347,17 @@ def auth_callback():
         session.permanent = True
             
         frontend_url = get_frontend_url()
+        redirect_url = f'{frontend_url}/email?auth_success=true&csrf_token={session["csrf_token"]}'
+        if debug:
+            print(f"Auth successful, redirecting to: {redirect_url}")
+            print(f"=== END AUTH CALLBACK ===\n")
         # Include new CSRF token in redirect for frontend to capture
-        return redirect(f'{frontend_url}/email?auth_success=true&csrf_token={session["csrf_token"]}')
+        return redirect(redirect_url)
     
     except Exception as e:
         print(f"OAuth callback error: {e}")
+        import traceback
+        print(traceback.format_exc())
         frontend_url = get_frontend_url()
         return redirect(f'{frontend_url}?error=authentication_failed')
 
@@ -494,9 +578,10 @@ def sheets_import():
 
         sheet_url = data['url'].strip()
 
-        # Parse sheet ID from URL
+        # ✅ SANITIZE: Never log the raw sheet URL (contains potential sensitive identifiers)
         sheet_id = _extract_sheet_id(sheet_url)
         if not sheet_id:
+            # Return generic error without echoing URL
             return jsonify({"error": "Invalid Google Sheets URL. Expected a link like: docs.google.com/spreadsheets/d/..."}), 400
 
         # Extract gid if present (specific sheet tab)
@@ -507,6 +592,9 @@ def sheets_import():
         if gid is not None:
             export_url += f"&gid={gid}"
 
+        # ✅ SANITIZE: Log sheet_id only (not full URL)
+        print(f"[Sheets Import] Fetching sheet: {sheet_id} (anonymized)")
+
         # Fetch CSV data from Google
         try:
             req = urllib.request.Request(export_url, headers={
@@ -516,15 +604,21 @@ def sheets_import():
                 csv_content = response.read().decode('utf-8')
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                return jsonify({"error": "Sheet not found. Make sure the URL is correct."}), 404
+                # ✅ SANITIZE: Generic error (don't reveal sheet existence)
+                return jsonify({"error": "Sheet not found. Ensure the URL is correct and publicly shareable."}), 404
             elif e.code == 403:
-                return jsonify({"error": "Sheet is not publicly accessible. Set sharing to 'Anyone with the link can view'."}), 403
+                return jsonify({"error": "Sheet access denied. Verify sharing settings are set to 'Anyone with link'."}), 403
             else:
-                return jsonify({"error": f"Failed to fetch sheet (HTTP {e.code})"}), 502
-        except urllib.error.URLError:
-            return jsonify({"error": "Could not connect to Google Sheets. Please check your connection and try again."}), 502
-        except Exception:
-            return jsonify({"error": "Failed to fetch sheet data."}), 502
+                # ✅ SANITIZE: Never include HTTP error details in production
+                error_msg = f"Failed to fetch sheet" if is_production() else f"HTTP {e.code} error"
+                return jsonify({"error": error_msg}), 502
+        except urllib.error.URLError as e:
+            return jsonify({"error": "Connection error. Check your internet and try again."}), 502
+        except Exception as e:
+            # ✅ SANITIZE: Sanitize exception in production
+            error_msg = "Failed to fetch sheet data" if is_production() else str(e)
+            print(f"[Sheets Import ERROR] {error_msg}")
+            return jsonify({"error": error_msg}), 502
 
         # Detect private sheet redirect (Google returns HTML login page)
         stripped = csv_content.strip()
@@ -550,6 +644,9 @@ def sheets_import():
 
         if len(rows) == 0:
             return jsonify({"error": "Sheet has headers but no data rows."}), 400
+
+        # ✅ SUCCESS: Log sheet import (anonymized)
+        print(f"[Sheets Import SUCCESS] {len(rows)} rows imported from sheet")
 
         # Sanitize headers and data keys
         sanitized_headers = []
@@ -577,8 +674,9 @@ def sheets_import():
         })
 
     except Exception as e:
-        print(f"Sheets import error: {e}")
-        return sanitize_error_response(e)
+        # ✅ SANITIZE: Catch-all for unexpected errors
+        print(f"[Sheets Import ERROR - Unhandled] {str(e)}")
+        return sanitize_error_response(e, include_details=is_production() is False)
 
 
 # Vercel serverless function handler

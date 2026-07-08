@@ -4,6 +4,7 @@ import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { buttonVariants } from '@/components/ui/Button';
 import { RevealSection } from '@/components/layout/RevealSection';
 import { TimeCalculator } from '@/components/landing/TimeCalculator';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import { PRODUCTION_APP_URL } from '@/config/site';
 import {
     ArrowRight,
@@ -573,56 +574,7 @@ then rebuilt it properly for everyone else.&quot;</p>
                 </div>
             </section>
 
-            <footer className="border-t border-border py-16 bg-background relative overflow-hidden">
-                <div className="absolute inset-0 hero-grid opacity-[0.2] pointer-events-none" />
-                <div className="container-width relative z-10">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-                        <div className="col-span-1 md:col-span-2 space-y-6">
-                            <Link href="/" className="brand-text block">
-                                <span>Mail</span><span>My</span><span>Certificate</span>
-                            </Link>
-                            <p className="text-sm text-secondary max-w-sm leading-relaxed font-medium">
-                                The privacy-first bulk certificate generator for hackathons, workshops, webinars, bootcamps, and events.
-                            </p>
-                        </div>
-                        <div className="space-y-6">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Product</h4>
-                            <ul className="space-y-4 text-sm font-bold text-secondary">
-                                <li><Link href="/tool" className="hover:text-accent transition-colors">Start Generating</Link></li>
-                                <li><Link href="/about" className="hover:text-accent transition-colors">About Project</Link></li>
-                                <li><Link href="/guide" className="hover:text-accent transition-colors">User Guide</Link></li>
-                                <li><Link href="/google-sheets-certificate-generator" className="hover:text-accent transition-colors">Google Sheets</Link></li>
-                                <li><Link href="/google-forms-to-certificates" className="hover:text-accent transition-colors">Google Forms</Link></li>
-                                <li><Link href="/send-certificates-gmail-bulk" className="hover:text-accent transition-colors">Gmail Bulk Send</Link></li>
-                                <li><Link href="/hackathon-certificate-generator" className="hover:text-accent transition-colors">Hackathons</Link></li>
-                                <li><Link href="/canva-certificate-alternative" className="hover:text-accent transition-colors">Canva Alternative</Link></li>
-                                <li><Link href="/vs/certifier" className="hover:text-accent transition-colors">vs Certifier</Link></li>
-                                <li><Link href="/llms.txt" className="hover:text-accent transition-colors">LLM Overview</Link></li>
-                                <li><Link href="https://github.com/akshatthakur22/MailMyCertficate" target="_blank" className="hover:text-accent transition-colors">Source Code</Link></li>
-                            </ul>
-                        </div>
-                        <div className="space-y-6">
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Legal & Support</h4>
-                            <ul className="space-y-4 text-sm font-bold text-secondary">
-                                <li><Link href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link></li>
-                                <li><Link href="/terms-of-service" className="hover:text-accent transition-colors">Terms of Service</Link></li>
-                                <li><Link href="/contact" className="hover:text-accent transition-colors">Contact Us</Link></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="pt-8 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex flex-col items-center md:items-start gap-1">
-                            <p className="text-xs text-secondary font-medium">
-                                Built with 💙 by <Link href="https://www.linkedin.com/in/akshatthakur22/" className="hover:text-accent underline underline-offset-4 decoration-accent/30 font-bold">Akshat Thakur</Link>
-                            </p>
-                        </div>
-                        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40">
-                            © {new Date().getFullYear()} · MIT License · Production v1.0
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            <ProductFooter />
 
         </div>
     );

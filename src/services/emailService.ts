@@ -1,3 +1,6 @@
+import { USER_PLAN } from '@/config/analytics';
+import type { AnalyticsEvent, UserPlan } from '@/lib/analytics/types';
+
 export interface EmailRequest {
   recipient: string;
   subject: string;
@@ -28,35 +31,29 @@ export interface AuthLoginResponse {
   error?: string;
 }
 
-// Persist CSRF token across refreshes
-let csrfToken: string | null =
-  typeof window !== 'undefined'
-    ? localStorage.getItem('csrf_token')
-    : null;
-
-// Update CSRF token (for OAuth callback refresh)
+// ✅ CSRF tokens MUST come from server-set HTTPOnly cookies, NOT localStorage
+// Never store security tokens in accessible storage
 export const updateCsrfToken = (newToken: string) => {
-  csrfToken = newToken;
+  // Server manages CSRF token in HTTPOnly cookie
+  // Frontend acknowledges receipt but does NOT store it
+  console.debug('[Auth] Server provided CSRF token in secure cookie');
 };
 
 export const emailService = {
   // Authentication endpoints
   async login(): Promise<AuthLoginResponse> {
     try {
-      const response = await fetch('/api/auth/login', { credentials: 'include' });
+      const response = await fetch('/api/auth/login', { 
+        credentials: 'include' // Automatically includes HTTPOnly cookies
+      });
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Store CSRF token
-      csrfToken = data.csrf_token;
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('csrf_token', data.csrf_token);
-      }
-
+      // ✅ Trust server-set HTTPOnly cookie for CSRF
+      // Do NOT manually store the token
       return data;
     } catch (error) {
       throw new Error(
@@ -67,18 +64,13 @@ export const emailService = {
 
   async getStatus(): Promise<AuthStatusResponse> {
     try {
-      const response = await fetch('/api/auth/status', { credentials: 'include' });
+      const response = await fetch('/api/auth/status', { 
+        credentials: 'include'
+      });
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Status check failed');
-      }
-
-      if (data.csrf_token) {
-        updateCsrfToken(data.csrf_token);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('csrf_token', data.csrf_token);
-        }
       }
 
       return data;
@@ -91,19 +83,14 @@ export const emailService = {
 
   async logout(): Promise<{ success: boolean }> {
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Attach CSRF token
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
-      }
-
+      // ✅ Send POST to logout endpoint
+      // Server will clear HTTPOnly cookie
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
-        headers,
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include HTTPOnly cookie
       });
 
       const data = await response.json();
@@ -112,13 +99,7 @@ export const emailService = {
         throw new Error(data.error || 'Logout failed');
       }
 
-      // Clear token after logout
-      csrfToken = null;
-
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('csrf_token');
-      }
-
+      // ✅ Server handles cleanup; client doesn't need to do anything
       return data;
     } catch (error) {
       throw new Error(
@@ -130,19 +111,14 @@ export const emailService = {
   // Email sending endpoint
   async sendEmail(emailRequest: EmailRequest): Promise<EmailResponse> {
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      // Attach CSRF token
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
-      }
-
+      // ✅ CSRF token sent via HTTPOnly cookie automatically
+      // No manual header insertion needed
       const response = await fetch('/api/send-email', {
         method: 'POST',
-        headers,
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Browser automatically includes HTTPOnly cookies
         body: JSON.stringify(emailRequest),
       });
 
@@ -177,16 +153,9 @@ export const emailService = {
       const pdfBlob = new Blob([uint8Array], { type: 'application/pdf' });
       formData.append('attachment', pdfBlob, 'certificate.pdf');
 
-      const headers: Record<string, string> = {};
-
-      // Attach CSRF token
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
-      }
-
+      // ✅ HTTPOnly cookie sent automatically by browser
       const response = await fetch('/api/send-email', {
         method: 'POST',
-        headers,
         credentials: 'include',
         body: formData,
       });

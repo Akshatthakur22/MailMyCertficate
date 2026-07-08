@@ -8,6 +8,7 @@ import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
 import { updateSession, touchActivity } from '@/core/session/sessionManager';
 import { hasActivated, markActivated, trackEvent } from '@/lib/analytics';
+import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 
 export function UploadTemplate() {
     const setTemplate = useAppStore((state) => state.setTemplate);
@@ -108,6 +109,10 @@ export function UploadTemplate() {
                 Upload your certificate design. Recipient names are added in the next step.
             </p>
 
+            <div className="mb-5 text-left">
+                <TrustBoundaryNotice variant="upload" />
+            </div>
+
             <div
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
@@ -156,6 +161,22 @@ export function UploadTemplate() {
             <p className="mt-6 text-xs text-secondary/60">
                 Tip: use at least 2000px width for crisp print quality.
             </p>
+
+            <div className="mt-8 p-5 bg-muted/30 rounded-xl border border-border/50">
+                <p className="text-sm font-medium text-foreground mb-3">Getting started?</p>
+                <p className="text-sm text-secondary mb-4">
+                    Design your certificate in Canva, Figma, or any design tool. Save as PNG or JPG.
+                </p>
+                <ul className="text-sm text-secondary space-y-2 mb-4 list-disc list-inside">
+                    <li>Leave space at top/center for recipient names</li>
+                    <li>Use fonts that look professional when personalized</li>
+                    <li>Landscape orientation works best (e.g., 1920×1080)</li>
+                    <li>Test with a preview before sending</li>
+                </ul>
+                <p className="text-xs text-secondary/60 italic">
+                    No PDF templates? Convert your PDF to PNG first in Canva or another tool.
+                </p>
+            </div>
         </div>
     );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createPageMetadata } from '@/lib/metadata';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import {
     Scale,
     Shield,
@@ -495,6 +496,8 @@ export default function TermsPage() {
                     </div>
                 </section>
             </main>
+
+            <ProductFooter />
         </div>
     );
 }

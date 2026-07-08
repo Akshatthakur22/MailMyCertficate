@@ -86,7 +86,7 @@ export function detectSyncChanges(
     const existingByFingerprint = new Map<string, { id: number; data: CSVRow }>();
 
     existingRows.forEach(row => {
-        const rowIndex = (row.data as any).__rowIndex;
+        const rowIndex = row.data.__rowIndex;
         if (typeof rowIndex === 'number') {
             existingByIndex.set(rowIndex, row);
         }

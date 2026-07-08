@@ -13,9 +13,13 @@ import { SendReadinessPanel } from '@/components/email/redesign/SendReadinessPan
 import { SendingTracker } from '@/components/email/redesign/SendingTracker';
 import { CompletionPanel } from '@/components/email/redesign/CompletionPanel';
 import { RefreshGuardBanner } from '@/components/email/redesign/RefreshGuardBanner';
+import { EmailSkeleton } from '@/components/email/redesign/EmailSkeleton';
 import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
 import { Button } from '@/components/ui/Button';
-import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
+import { OpenSourceSupportCard } from '@/components/product/OpenSourceSupportCard';
+import { CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import {
   buildTemplateText,
   detectEmailColumn,
@@ -26,6 +30,7 @@ import {
   summarizeRecipientValidation,
 } from '@/utils/recipientColumn';
 import {
+  getSessionRecord,
   startNewBatch,
   touchActivity,
   updateSession,
@@ -40,6 +45,16 @@ interface AuthStatus {
 interface EmailFormState {
   subject: string;
   body: string;
+}
+
+interface MessageState {
+  type: 'success' | 'error';
+  text: string;
+  details?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export default function EmailView() {
@@ -63,7 +78,7 @@ export default function EmailView() {
   const [previewIndex, setPreviewIndex] = useState(0);
   const [deliveryStartedAt, setDeliveryStartedAt] = useState<number | null>(null);
   const [deliveryCompletedAt, setDeliveryCompletedAt] = useState<number | null>(null);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<MessageState | null>(null);
   const [sendingState, setSendingState] = useState({ sending: false, processed: 0, total: 0, current: '' });
   const [sendItems, setSendItems] = useState<EmailQueueItem[]>([]);
   const [failedItems, setFailedItems] = useState<EmailQueueItem[]>([]);
@@ -170,7 +185,10 @@ export default function EmailView() {
       setCsvRows(rows);
       setCertificates(certs);
       await touchActivity(sessionId);
-      await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
+      const session = await getSessionRecord(sessionId);
+      if (session?.workflowStage !== 'SENDING') {
+        await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
+      }
     };
     fetchData();
   }, [sessionId]);
@@ -317,8 +335,12 @@ export default function EmailView() {
     try {
       const status = await emailService.getStatus();
       setAuthStatus(status);
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to check authentication status' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Could not load Gmail status.',
+        details: 'Refresh the page or try connecting again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -329,8 +351,12 @@ export default function EmailView() {
     try {
       const loginData = await emailService.login();
       window.location.href = loginData.authorization_url;
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to initiate login' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Could not open Gmail login.',
+        details: 'Check your internet connection and try again.'
+      });
       setAuthenticating(false);
     }
   };
@@ -339,9 +365,13 @@ export default function EmailView() {
     try {
       await emailService.logout();
       setAuthStatus({ authenticated: false, email: null });
-      setMessage({ type: 'success', text: 'Disconnected securely.' });
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to logout' });
+      setMessage({ type: 'success', text: 'Disconnected from Gmail.' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Failed to disconnect.',
+        details: 'Your session may have already expired. Try refreshing the page.'
+      });
     }
   };
 
@@ -350,16 +380,32 @@ export default function EmailView() {
     if (!emailColumn) {
       setMessage({
         type: 'error',
-        text: 'Could not find an email column in your participant data. Add a column with valid email addresses.',
+        text: 'No email column detected.',
+        details: `Please select which column contains email addresses. Available columns: ${csvHeaders.join(', ')}.`,
       });
       return;
     }
     if (!csvRows.length) {
-      setMessage({ type: 'error', text: 'No CSV data loaded.' });
+      setMessage({ 
+        type: 'error', 
+        text: 'No participant data loaded.',
+        details: 'Please go back to the tool and generate certificates first.'
+      });
       return;
     }
     if (recipientValidation.valid === 0) {
-      setMessage({ type: 'error', text: 'None of your rows have a valid email address in the detected column.' });
+      setMessage({ 
+        type: 'error', 
+        text: 'No valid email addresses found.',
+        details: `Checked ${csvRows.length} rows in the "${emailColumn}" column. Make sure email addresses are formatted correctly.`,
+        action: {
+          label: 'Try different column',
+          onClick: () => {
+            // Highlight or allow column selection
+            console.log('Open column selector');
+          }
+        }
+      });
       return;
     }
 
@@ -458,13 +504,7 @@ export default function EmailView() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background px-6 py-16">
-        <div className="mx-auto flex min-h-64 max-w-3xl items-center justify-center rounded-2xl border border-border bg-muted">
-          <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-        </div>
-      </div>
-    );
+    return <EmailSkeleton />;
   }
 
   const phase: 'connect' | 'sending' | 'complete' | 'compose' = !authStatus.authenticated
@@ -511,14 +551,33 @@ export default function EmailView() {
 
         {message && (
           <div
-            className={`mb-5 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${
+            className={`mb-5 flex flex-col gap-2 rounded-xl border px-4 py-3 text-sm ${
               message.type === 'success'
                 ? 'border-green-200 bg-green-50 text-green-800'
                 : 'border-rose-200 bg-rose-50 text-rose-800'
             }`}
           >
-            {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-            <span>{message.text}</span>
+            <div className="flex items-start gap-3">
+              {message.type === 'success' ? <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" /> : <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />}
+              <div className="flex-1">
+                <p className="font-medium">{message.text}</p>
+                {message.details && (
+                  <p className="mt-1 text-xs opacity-90">{message.details}</p>
+                )}
+              </div>
+            </div>
+            {message.action && (
+              <div className="ml-8">
+                <button
+                  onClick={message.action.onClick}
+                  className={`text-xs font-medium underline transition-opacity hover:opacity-75 ${
+                    message.type === 'success' ? 'text-green-700' : 'text-rose-700'
+                  }`}
+                >
+                  {message.action.label}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -545,7 +604,19 @@ export default function EmailView() {
           </div>
         )}
 
-        {phase === 'connect' && (
+        {certificates.length === 0 && phase === 'connect' && (
+          <EmptyState
+            icon={<FileText className="h-12 w-12" />}
+            title="No certificates yet"
+            description="Generate certificates first in the tool, then come back to send them via email."
+            action={{
+              label: 'Go to certificate tool',
+              href: '/tool',
+            }}
+          />
+        )}
+
+        {phase === 'connect' && certificates.length > 0 && (
           <ConnectGmailPanel
             recipientCount={validRecipients || csvRows.length}
             certificateCount={certificates.length}
@@ -557,7 +628,10 @@ export default function EmailView() {
         {phase === 'compose' && (
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:items-stretch">
             <div className="min-w-0 lg:col-span-2 lg:col-start-1 lg:row-start-1">
-              <RefreshGuardBanner active={false} />
+              <div className="grid gap-3 md:grid-cols-2">
+                <RefreshGuardBanner active={false} />
+                <TrustBoundaryNotice variant="email" />
+              </div>
             </div>
             <div className="min-w-0 lg:col-start-1 lg:row-start-2">
               <GmailComposer
@@ -620,21 +694,24 @@ export default function EmailView() {
         )}
 
         {phase === 'complete' && (
-          <CompletionPanel
-            sent={sentCount}
-            failed={failedCount}
-            total={totalCount}
-            totalTime={totalElapsed}
-            failedItems={failedItems}
-            isRetrying={isSending}
-            onRetryFailed={retryFailedItems}
-            onDownloadReport={downloadDeliveryReport}
-            onDownloadFailed={downloadFailureReport}
-            onSendAnother={() => router.push('/tool')}
-            onStartNewBatch={handleStartNewBatch}
-            onKeepSession={handleKeepSession}
-            showAutoCleanup={failedCount === 0 && !keepSession}
-          />
+          <div className="space-y-5">
+            <CompletionPanel
+              sent={sentCount}
+              failed={failedCount}
+              total={totalCount}
+              totalTime={totalElapsed}
+              failedItems={failedItems}
+              isRetrying={isSending}
+              onRetryFailed={retryFailedItems}
+              onDownloadReport={downloadDeliveryReport}
+              onDownloadFailed={downloadFailureReport}
+              onSendAnother={() => router.push('/tool')}
+              onStartNewBatch={handleStartNewBatch}
+              onKeepSession={handleKeepSession}
+              showAutoCleanup={failedCount === 0 && !keepSession}
+            />
+            <OpenSourceSupportCard context="success" certificatesCount={sentCount} />
+          </div>
         )}
       </div>
     </div>

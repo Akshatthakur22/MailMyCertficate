@@ -3,6 +3,7 @@ import { ArrowRight, Mail, Shield, Zap } from 'lucide-react';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { FAQSection } from '@/components/guide/FAQSection';
 import { Navbar } from '@/components/layout/Navbar';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import { buttonVariants } from '@/components/ui/Button';
 import {
   GMAIL_BULK_HOW_TO_STEPS,
@@ -155,18 +156,7 @@ export default function SendCertificatesGmailBulkPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border py-8 bg-background">
-        <div className="container-width text-center text-sm text-secondary">
-          <p>
-            Related:{' '}
-            <Link href="/google-sheets-certificate-generator" className="text-accent hover:underline">Google Sheets</Link>
-            {' · '}
-            <Link href="/guide" className="text-accent hover:underline">OAuth guide</Link>
-            {' · '}
-            <Link href="/privacy-policy" className="text-accent hover:underline">Privacy</Link>
-          </p>
-        </div>
-      </footer>
+      <ProductFooter />
     </div>
   );
 }

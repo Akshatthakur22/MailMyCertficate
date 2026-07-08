@@ -1,6 +1,7 @@
 import { Github, Mail, Twitter, Linkedin, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { ContactChannelLink } from '@/components/analytics/ContactChannelLink';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import { buttonVariants } from '@/components/ui/Button';
 
 /* ————————————————————————————————————————————————————
@@ -39,6 +40,7 @@ export default function Contact() {
                             <Link href="/about" className="hover:text-accent transition-colors">About</Link>
                             <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
                             <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
+                             <Link href="/settings" className="hover:text-accent transition-colors">Settings</Link>
                         </div>
                         <div className="flex items-center gap-3">
                             <Link
@@ -217,6 +219,8 @@ export default function Contact() {
                     </div>
                 </section>
             </main>
+
+            <ProductFooter />
         </div>
     );
 }

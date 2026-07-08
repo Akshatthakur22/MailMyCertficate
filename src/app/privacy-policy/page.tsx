@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createPageMetadata } from '@/lib/metadata';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import {
     Shield,
     Database,
@@ -32,10 +33,10 @@ function Section({
 }) {
     return (
         <section className="py-12 border-t border-border/40 first:border-t-0 first:pt-0">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6 text-foreground">
                 {title}
             </h2>
-            <div className="space-y-5 text-secondary leading-relaxed text-[15px] md:text-base">
+            <div className="space-y-5 text-foreground/80 leading-relaxed text-base md:text-[16px]">
                 {children}
             </div>
         </section>
@@ -195,7 +196,7 @@ export default function PrivacyPolicy() {
                         <div className="max-w-4xl mx-auto">
                             {/* Intro Note */}
                             <div className="mb-16 p-6 rounded-2xl bg-accent/5 border border-accent/10">
-                                <p className="text-sm leading-relaxed text-secondary">
+                                <p className="text-base leading-relaxed text-foreground/85">
                                     This Privacy Policy explains how
                                     MailMyCertificate handles data when you use the
                                     application. By using the platform, you agree to the
@@ -204,13 +205,13 @@ export default function PrivacyPolicy() {
                             </div>
 
                             {/* Section 1 */}
-                            <Section title="1. Local-First Processing">
+                            <Section title="1. Local-First Processing & Data Sovereignty">
                                 <p>
-                                    MailMyCertificate follows a local-first
-                                    architecture. Certificate templates, participant
-                                    data, generated PDFs, and workflow progress are
-                                    processed directly inside your browser whenever
-                                    possible.
+                                    MailMyCertificate is developed by Akshat Thakur and
+                                    follows a local-first architecture. Certificate
+                                    templates, participant data, generated PDFs, and
+                                    workflow progress are processed directly inside your
+                                    browser whenever possible.
                                 </p>
 
                                 <p>
@@ -220,22 +221,53 @@ export default function PrivacyPolicy() {
                                     certificate generation workflows.
                                 </p>
 
-                                <ul className="space-y-3 pl-5 list-disc marker:text-accent">
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Complete Local Processing
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
                                         Certificate templates are stored locally inside
                                         your browser storage.
                                     </li>
                                     <li>
-                                        CSV and Google Sheets imports are processed on
-                                        the client side.
+                                        CSV and Google Sheets imports are processed 100%
+                                        on the client side.
                                     </li>
                                     <li>
-                                        PDF generation occurs locally using browser
-                                        processing capabilities.
+                                        PDF generation occurs exclusively within your
+                                        browser using client-side processing.
                                     </li>
                                     <li>
-                                        Generated certificates are not permanently stored
-                                        on MailMyCertificate servers.
+                                        Generated certificates remain on your device until
+                                        you manually send them.
+                                    </li>
+                                    <li>
+                                        All data is deleted immediately when your browser
+                                        tab closes.
+                                    </li>
+                                </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    What We Do Not Do
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        We never upload participant data to external
+                                        servers.
+                                    </li>
+                                    <li>
+                                        We never permanently store certificate generation
+                                        logs.
+                                    </li>
+                                    <li>
+                                        We never access or cache your Google Sheets or
+                                        Gmail after the immediate operation.
+                                    </li>
+                                    <li>
+                                        We never use Workspace API data for any analytics
+                                        or secondary purposes.
                                     </li>
                                 </ul>
                             </Section>
@@ -253,7 +285,7 @@ export default function PrivacyPolicy() {
                                     including:
                                 </p>
 
-                                <ul className="space-y-3 pl-5 list-disc marker:text-accent">
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>Browser type and version</li>
                                     <li>Device information</li>
                                     <li>Error logs and crash diagnostics</li>
@@ -278,7 +310,7 @@ export default function PrivacyPolicy() {
 
                                 <p>This may include:</p>
 
-                                <ul className="space-y-3 pl-5 list-disc marker:text-accent">
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>Uploaded certificate templates</li>
                                     <li>Participant lists</li>
                                     <li>Generated certificate references</li>
@@ -293,33 +325,88 @@ export default function PrivacyPolicy() {
                             </Section>
 
                             {/* Section 4 */}
-                            <Section title="4. Email Sending & Third-Party Providers">
+                            <Section title="4. Google Workspace API Usage & Guaranteed Data Handling">
                                 <p>
-                                    If you use email functionality,
-                                    MailMyCertificate may connect directly to external
-                                    email providers such as Gmail or other SMTP-based
-                                    services.
+                                    MailMyCertificate uses the following Google APIs to
+                                    deliver its core functionality.
                                 </p>
 
-                                <p>
-                                    Certificate delivery is handled through the provider
-                                    you authorize. MailMyCertificate does not claim
-                                    ownership over your email credentials, participant
-                                    data, or outgoing communication content.
-                                </p>
+                                <h3 className="font-semibold text-lg mt-6 mb-4 text-foreground">
+                                    Gmail API (gmail.send scope)
+                                </h3>
 
-                                <div className="mt-6 p-5 rounded-xl bg-muted/30 border border-border/50">
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Purpose:</strong> Send personalized
+                                        certificates directly through your Gmail account
+                                        to event participants.
+                                    </li>
+                                    <li>
+                                        <strong>Data Accessed:</strong> Only recipient
+                                        email addresses and certificate content.
+                                    </li>
+                                    <li>
+                                        <strong>Data Handling:</strong> Emails are sent
+                                        through your Gmail account only; MailMyCertificate
+                                        does not store, read, or retain emails, inbox
+                                        data, or any Gmail account information.
+                                    </li>
+                                    <li>
+                                        <strong>No Inbox Access:</strong> This application
+                                        never reads, modifies, or stores any existing
+                                        emails in your Gmail inbox.
+                                    </li>
+                                </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-4 text-foreground">
+                                    Google Sheets API (spreadsheets.readonly scope)
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Purpose:</strong> Import participant data
+                                        (names, emails, custom fields) from your Google
+                                        Sheets to personalize certificates.
+                                    </li>
+                                    <li>
+                                        <strong>Data Accessed:</strong> Only the columns
+                                        and rows you explicitly select during import.
+                                    </li>
+                                    <li>
+                                        <strong>Data Handling:</strong> Sheet data is read
+                                        once, processed entirely on your device, and never
+                                        stored on MailMyCertificate servers.
+                                    </li>
+                                    <li>
+                                        <strong>No Modifications:</strong> This application
+                                        never modifies, edits, or deletes any content in
+                                        your Google Sheets.
+                                    </li>
+                                </ul>
+
+                                <div className="mt-8 p-6 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700">
                                     <div className="flex items-start gap-3">
-                                        <Mail
+                                        <Lock
                                             size={18}
-                                            className="text-accent mt-0.5"
+                                            className="text-red-700 dark:text-red-600 mt-0.5"
                                         />
-                                        <p className="text-sm text-secondary leading-relaxed">
-                                            Depending on implementation details and future
-                                            integrations, some email operations may rely
-                                            on third-party APIs or authentication systems
-                                            such as Google OAuth.
-                                        </p>
+                                        <div>
+                                            <p className="text-base font-bold uppercase tracking-[0.15em] text-black dark:text-black mb-2">
+                                                AI/ML & Foundational Model Compliance
+                                                (2026 Mandate)
+                                            </p>
+                                            <p className="text-base text-black dark:text-black leading-relaxed">
+                                                <strong>Critical Guarantee:</strong> Data
+                                                accessed from Google Workspace APIs (Gmail,
+                                                Google Sheets) will never be used, transferred,
+                                                or sold to train, improve, or create any
+                                                foundational, generative, or large language
+                                                models, or any other machine learning or
+                                                artificial intelligence systems. We are
+                                                prohibited from using your data for any AI
+                                                training purposes.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </Section>
@@ -346,8 +433,94 @@ export default function PrivacyPolicy() {
                                 </p>
                             </Section>
 
+                            {/* Section 5.5 - Analytics & GTM */}
+                            <Section title="5.5 Analytics & Google Tag Manager">
+                                <p>
+                                    MailMyCertificate uses Google Tag Manager (GTM) and
+                                    Google Analytics (GA4) to track anonymous usage
+                                    metrics and improve the platform.
+                                </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Critical: Workspace Data Exclusion
+                                </h3>
+
+                                <p>
+                                    <strong>GUARANTEED:</strong> No data accessed from Google
+                                    Workspace APIs (Gmail, Google Sheets, participant
+                                    information, certificate content, or email addresses) is
+                                    ever sent to Google Analytics, Google Tag Manager, or any
+                                    third-party analytics service.
+                                </p>
+
+                                <p>Analytics data collected is limited to:</p>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        Anonymous visitor ID (locally generated, never linked
+                                        to email or identity)
+                                    </li>
+                                    <li>
+                                        Page path and navigation flow (no personal data)
+                                    </li>
+                                    <li>
+                                        Feature usage (e.g., "template_uploaded",
+                                        "certificate_generated") with aggregate counts only
+                                    </li>
+                                    <li>
+                                        Browser type and device category (non-identifying)
+                                    </li>
+                                    <li>
+                                        Error events (no PII or sensitive data included)
+                                    </li>
+                                </ul>
+
+                                <p className="mt-4">
+                                    Participant rosters, certificate content, email
+                                    addresses, and all data accessed from Workspace APIs are
+                                    processed locally in your browser and never transmitted to
+                                    analytics services.
+                                </p>
+                            </Section>
+
                             {/* Section 6 */}
-                            <Section title="6. Open Source Transparency">
+                            <Section title="6. Data Retention & Instant Deletion">
+                                <p>
+                                    Your data is handled with the highest level of
+                                    transience and minimal retention.
+                                </p>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Certificate Generation:</strong> All PDF
+                                        generation occurs exclusively in your browser.
+                                    </li>
+                                    <li>
+                                        <strong>Participant Data:</strong> Your participant
+                                        lists are never transmitted to or stored on
+                                        MailMyCertificate servers.
+                                    </li>
+                                    <li>
+                                        <strong>Session Deletion:</strong> When you close
+                                        your browser tab, all temporary workflow data is
+                                        automatically deleted from local browser storage.
+                                    </li>
+                                    <li>
+                                        <strong>No Server Logs:</strong> Participant data
+                                        and certificate content are not logged on
+                                        MailMyCertificate infrastructure.
+                                    </li>
+                                    <li>
+                                        <strong>Email Content:</strong> Certificate emails
+                                        are sent through <em>your</em> Gmail account;
+                                        MailMyCertificate retains no copy of sent emails
+                                        or their recipients.
+                                    </li>
+                                </ul>
+                            </Section>
+
+                            {/* Section 7 */}
+                            <Section title="7. Open Source Transparency">
                                 <p>
                                     MailMyCertificate is an open-source project.
                                 </p>
@@ -370,8 +543,8 @@ export default function PrivacyPolicy() {
                                 </Link>
                             </Section>
 
-                            {/* Section 7 */}
-                            <Section title="7. Policy Updates">
+                            {/* Section 8 */}
+                            <Section title="8. Policy Updates">
                                 <p>
                                     This Privacy Policy may be updated from time to time
                                     to reflect technical improvements, legal
@@ -393,18 +566,18 @@ export default function PrivacyPolicy() {
                                     />
 
                                     <div>
-                                        <p className="text-sm font-bold uppercase tracking-[0.18em] text-accent mb-3">
+                                        <p className="text-base font-bold uppercase tracking-[0.18em] text-accent mb-3">
                                             Engineering Commitment
                                         </p>
 
-                                        <p className="text-secondary leading-relaxed">
+                                        <p className="text-foreground/85 leading-relaxed text-base">
                                             MailMyCertificate was originally built to
                                             solve a real organizer workflow problem
                                             without forcing users to trust unknown servers
                                             with participant data.
                                         </p>
 
-                                        <p className="text-secondary leading-relaxed mt-4">
+                                        <p className="text-foreground/85 leading-relaxed mt-4 text-base">
                                             The goal is simple:
                                             generate and send certificates with as little
                                             unnecessary data exposure as possible.
@@ -421,6 +594,8 @@ export default function PrivacyPolicy() {
                     </div>
                 </section>
             </main>
+
+            <ProductFooter />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { RevealSection } from '@/components/layout/RevealSection';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import { buttonVariants } from '@/components/ui/Button';
 import {
   ArrowRight,
@@ -252,6 +253,8 @@ attach_pdf("john_certificate.pdf")`}
           </div>
         </section>
       </main>
+
+      <ProductFooter />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { ArrowRight, Check, X } from 'lucide-react';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { FAQSection } from '@/components/guide/FAQSection';
 import { Navbar } from '@/components/layout/Navbar';
+import { ProductFooter } from '@/components/product/ProductFooter';
 import { buttonVariants } from '@/components/ui/Button';
 import {
   GOOGLE_SHEETS_HOW_TO_STEPS,
@@ -264,24 +265,7 @@ export default function GoogleSheetsCertificateGeneratorPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border py-8 bg-background">
-        <div className="container-width text-center text-sm text-secondary">
-          <p>
-            Related:{' '}
-            <Link href="/guide" className="text-accent hover:underline">
-              User guide
-            </Link>
-            {' · '}
-            <Link href="/" className="text-accent hover:underline">
-              Homepage
-            </Link>
-            {' · '}
-            <Link href="/llms.txt" className="text-accent hover:underline">
-              LLM overview
-            </Link>
-          </p>
-        </div>
-      </footer>
+      <ProductFooter />
     </div>
   );
 }

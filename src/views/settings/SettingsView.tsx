@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, RotateCcw, Shield, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PrivacyNotice } from '@/components/session/PrivacyNotice';
+import { ProductNav } from '@/components/product/ProductNav';
+import { ProductFooter } from '@/components/product/ProductFooter';
+import { ArchitectureDiagram } from '@/components/product/ArchitectureDiagram';
 import {
   buildSessionSummary,
   deleteAllLocalData,
@@ -29,7 +32,7 @@ export default function SettingsView() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const next = await buildSessionSummary(sessionId);
@@ -37,11 +40,11 @@ export default function SettingsView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId]);
 
   useEffect(() => {
     refresh();
-  }, [sessionId]);
+  }, [refresh]);
 
   const runAction = async (action: () => Promise<void>, redirect?: string) => {
     setBusy(true);
@@ -56,25 +59,22 @@ export default function SettingsView() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
-          <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
-            <span>Mail</span><span>My</span><span>Certificate</span>
-          </Link>
-          <Link href="/tool" className="text-sm font-medium text-secondary hover:text-accent">
+      <ProductNav active="settings" compact />
+
+      <main className="container-width max-w-5xl py-8 sm:py-10">
+        <div className="max-w-2xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Local Data &amp; Privacy</h1>
+          <p className="mt-3 text-sm leading-6 text-secondary">
+            MailMyCertificate stores working data in this browser so you can recover sessions without an account.
+            This page shows what exists locally and gives you control over cleanup.
+          </p>
+          <Link href="/tool" className="mt-4 inline-flex text-sm font-medium text-accent hover:text-accent/80">
             Back to tool
           </Link>
         </div>
-      </header>
 
-      <main className="container-width max-w-2xl py-8 sm:py-10">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Session &amp; privacy</h1>
-        <p className="mt-2 text-sm text-secondary leading-relaxed">
-          All certificate and recipient data is stored in <strong className="text-foreground">this browser only</strong>.
-          Use the options below to continue, start over, or remove data.
-        </p>
-
-        <section className="mt-8 space-y-6">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="space-y-6">
           <PrivacyNotice />
 
           <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
@@ -95,6 +95,8 @@ export default function SettingsView() {
                 <Row label="Session ID" value={summary.sessionId} mono />
                 <Row label="Created" value={formatDateTime(summary.createdAt)} />
                 <Row label="Last activity" value={formatDateTime(summary.lastActivity)} />
+                <Row label="Template" value={summary.hasTemplate ? 'Stored locally' : 'Not stored'} />
+                <Row label="CSV rows" value={summary.hasCsv ? `${summary.recipientsCount} stored locally` : 'Not stored'} />
                 <Row label="Certificates" value={String(summary.certificatesCount)} />
                 <Row label="Recipients" value={String(summary.recipientsCount)} />
                 <Row label="Stage" value={summary.workflowStageLabel} />
@@ -145,17 +147,22 @@ export default function SettingsView() {
               />
             </div>
           </div>
+          </div>
 
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-secondary leading-relaxed">
+          <div className="space-y-6">
+            <ArchitectureDiagram />
+            <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-xs text-secondary leading-relaxed">
             <p className="font-medium text-foreground mb-1">Other places you may see these options</p>
             <ul className="list-disc pl-4 space-y-1">
               <li>When you reopen the site — &quot;Previous session found&quot; (continue or start new)</li>
               <li>After downloading a ZIP — &quot;Start new batch&quot;</li>
               <li>After sending emails — &quot;Start new batch&quot; or optional auto-cleanup countdown</li>
             </ul>
+            </div>
           </div>
         </section>
       </main>
+      <ProductFooter />
     </div>
   );
 }

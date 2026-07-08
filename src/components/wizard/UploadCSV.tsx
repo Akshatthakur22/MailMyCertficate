@@ -7,10 +7,11 @@ import { importFromGoogleSheets, isValidSheetUrl, detectSyncChanges } from '@/se
 import { Button } from '@/components/ui/Button';
 import { FileSpreadsheet, AlertCircle, AlertTriangle, ArrowRight, Trash2, Link2, Loader2, RefreshCw, CheckCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { db } from '@/core/db/schema';
+import { db, type CSVRowData } from '@/core/db/schema';
 import { touchActivity, updateSession } from '@/core/session/sessionManager';
 import type { CSVRow } from '@/types/csv';
 import { trackEvent } from '@/lib/analytics';
+import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 
 type ImportSource = 'csv' | 'sheets';
 type ImportMode = 'csv' | 'sheets';
@@ -105,11 +106,11 @@ export function UploadCSV() {
                 await db.certificates.where({ sessionId }).delete();
             }
 
-            const rowRecords = data.map((row, index) => ({
+            const rowRecords: Array<Omit<CSVRowData, 'id'>> = data.map((row, index) => ({
                 sessionId,
                 data: { ...row, __rowIndex: startIndex + index }
             }));
-            await db.rows.bulkAdd(rowRecords as any);
+            await db.rows.bulkAdd(rowRecords as unknown as CSVRowData[]);
 
             // 3. Update Zustand
             const allHeaders = Array.from(new Set([...csvHeaders, ...headers]));
@@ -137,8 +138,8 @@ export function UploadCSV() {
                 },
                 { dedupeKey: `${sessionId}-csv-${allData.length}` }
             );
-        } catch (err: any) {
-            setError(err.message || 'Failed to import data.');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to import data.');
         }
     };
 
@@ -162,11 +163,11 @@ export function UploadCSV() {
             await db.certificates.where({ sessionId }).delete();
 
             // Store new data
-            const rowRecords = data.map((row, index) => ({
+            const rowRecords: Array<Omit<CSVRowData, 'id'>> = data.map((row, index) => ({
                 sessionId,
                 data: { ...row, __rowIndex: index }
             }));
-            await db.rows.bulkAdd(rowRecords as any);
+            await db.rows.bulkAdd(rowRecords as unknown as CSVRowData[]);
 
             // Update Zustand
             setCsvHeaders(headers);
@@ -220,7 +221,7 @@ export function UploadCSV() {
             const existingRows = await db.rows.where({ sessionId }).toArray();
 
             // Detect new and updated rows via sync intelligence
-            const { newRows, updatedRows } = detectSyncChanges(importedData, existingRows as any);
+            const { newRows, updatedRows } = detectSyncChanges(importedData, existingRows);
 
             if (newRows.length > 0 || updatedRows.length > 0) {
                 // Validate total count
@@ -240,8 +241,8 @@ export function UploadCSV() {
 
                 // Handle new rows
                 if (newRows.length > 0) {
-                    const newRecords = newRows.map(row => ({ sessionId, data: row }));
-                    await db.rows.bulkAdd(newRecords as any);
+                    const newRecords: Array<Omit<CSVRowData, 'id'>> = newRows.map(row => ({ sessionId, data: row }));
+                    await db.rows.bulkAdd(newRecords as unknown as CSVRowData[]);
                 }
 
                 // Update Zustand with latest snapshot from IDB
@@ -442,6 +443,10 @@ export function UploadCSV() {
             <p className="text-secondary text-sm mb-6 max-w-sm mx-auto leading-relaxed">
                 Upload a CSV or import from Google Sheets. Data is matched to your design next.
             </p>
+
+            <div className="mb-5 text-left">
+                <TrustBoundaryNotice variant="csv" />
+            </div>
 
             <div className="inline-flex p-1 rounded-lg bg-muted/60 border border-border/50 mb-6">
                 <button
