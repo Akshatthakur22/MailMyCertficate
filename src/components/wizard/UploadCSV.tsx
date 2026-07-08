@@ -12,6 +12,7 @@ import { touchActivity, updateSession } from '@/core/session/sessionManager';
 import type { CSVRow } from '@/types/csv';
 import { trackEvent } from '@/lib/analytics';
 import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
+import { detectEmailColumn, detectNameColumn } from '@/utils/recipientColumn';
 
 type ImportSource = 'csv' | 'sheets';
 type ImportMode = 'csv' | 'sheets';
@@ -319,118 +320,166 @@ export function UploadCSV() {
     // PARSED STATE — Data Preview
     // ————————————————————————————————————————
     if (parsed) {
+        const emailDetection = detectEmailColumn(csvHeaders, csvData);
+        const emailColumn = emailDetection.column;
+        const nameColumn = detectNameColumn(csvHeaders);
+        
         return (
-            <div>
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-                    <p className="text-secondary text-sm">
-                        <span className="font-semibold text-foreground">{rowCount.toLocaleString()}</span> recipients
-                        {' · '}
-                        {csvHeaders.length} columns
-                    </p>
-                    <div className="flex items-center gap-2 shrink-0">
-                        {importSource === 'sheets' && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleSyncSheets}
-                                disabled={isSyncing}
-                                className="rounded-lg"
-                            >
-                                {isSyncing ? (
-                                    <Loader2 size={14} className="mr-1.5 animate-spin" />
-                                ) : (
-                                    <RefreshCw size={14} className="mr-1.5" />
+            <div className="space-y-5">
+                    {/* Summary header */}
+                    <div className="pb-4 border-b border-border/40">
+                        <p className="text-sm font-semibold text-foreground mb-3">
+                            <span className="text-accent font-bold">{rowCount}</span> recipients · <span className="text-accent font-bold">{csvHeaders.length}</span> columns
+                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex flex-wrap gap-1.5">
+                                {nameColumn && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
+                                        ✓ Name
+                                    </span>
                                 )}
-                                {isSyncing ? 'Syncing…' : 'Sync'}
-                            </Button>
-                        )}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleReset}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
-                        >
-                            <Trash2 size={14} className="mr-1.5" />
-                            Replace
-                        </Button>
+                                {emailColumn && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
+                                        ✓ Email
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                {importSource === 'sheets' && (
+                                    <button
+                                        onClick={handleSyncSheets}
+                                        disabled={isSyncing}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
+                                    >
+                                        {isSyncing ? (
+                                            <Loader2 size={13} className="animate-spin" />
+                                        ) : (
+                                            <RefreshCw size={13} />
+                                        )}
+                                        Sync
+                                    </button>
+                                )}
+                                <button
+                                    onClick={handleReset}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium text-red-600 hover:bg-red-50/50 transition-colors"
+                                >
+                                    <Trash2 size={12} />
+                                    Replace
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {syncResult && (
-                    <div
-                        className={cn(
-                            'flex items-center gap-2 px-4 py-3 rounded-lg border mb-5 text-sm',
-                            syncResult.newRows > 0
-                                ? 'bg-green-50 text-green-800 border-green-100'
-                                : 'bg-blue-50 text-blue-800 border-blue-100',
-                        )}
-                    >
-                        <CheckCircle size={16} />
-                        <span>
-                            {syncResult.newRows > 0 || syncResult.updatedRows > 0
-                                ? `${syncResult.newRows > 0 ? `${syncResult.newRows} new row${syncResult.newRows !== 1 ? 's' : ''}` : ''}${syncResult.newRows > 0 && syncResult.updatedRows > 0 ? ' and ' : ''}${syncResult.updatedRows > 0 ? `${syncResult.updatedRows} row${syncResult.updatedRows !== 1 ? 's' : ''}` : ''} updated`
-                                : 'Already up to date'}
-                        </span>
-                    </div>
-                )}
-
-                {showWarning && (
-                    <div className="flex items-start gap-3 bg-amber-50 text-amber-900 px-4 py-3 rounded-lg border border-amber-100 mb-5 text-sm">
-                        <AlertTriangle className="shrink-0 mt-0.5" size={16} />
-                        <p>Processing {rowCount} certificates may take a bit longer.</p>
-                    </div>
-                )}
-
-                <div className="rounded-lg border border-border overflow-hidden mb-6">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-secondary uppercase tracking-wide bg-muted/50 border-b border-border">
-                                <tr>
-                                    <th className="px-4 py-3 w-12 font-medium">#</th>
-                                    {csvHeaders.map((header) => (
-                                        <th key={header} className="px-4 py-3 font-medium">
-                                            {header}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {previewRows.map((row, idx) => (
-                                    <tr key={idx} className="border-b border-border/60 last:border-0">
-                                        <td className="px-4 py-3 text-secondary/50 font-mono text-xs">{idx + 1}</td>
-                                        {csvHeaders.map((header) => (
-                                            <td key={`${idx}-${header}`} className="px-4 py-3 max-w-[200px] truncate">
-                                                {row[header]}
-                                            </td>
+                    {/* Preview table */}
+                    {rowCount > 0 && (
+                        <div className="rounded-lg border border-border overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead className="text-xs text-secondary uppercase tracking-wide bg-muted/40 border-b border-border">
+                                        <tr>
+                                            <th className="px-3 py-2 w-8 font-medium text-left">#</th>
+                                            {csvHeaders.slice(0, 4).map((header) => (
+                                                <th 
+                                                    key={header} 
+                                                    className={cn(
+                                                        'px-3 py-2 font-medium text-left',
+                                                        (header === nameColumn || header === emailColumn) && 'bg-accent/5'
+                                                    )}
+                                                >
+                                                    {header.length > 12 ? header.slice(0, 10) + '…' : header}
+                                                </th>
+                                            ))}
+                                            {csvHeaders.length > 4 && (
+                                                <th className="px-3 py-2 font-medium text-secondary/50">+{csvHeaders.length - 4}</th>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {previewRows.slice(0, 3).map((row, idx) => (
+                                            <tr key={idx} className="border-b border-border/50 last:border-0 text-sm">
+                                                <td className="px-3 py-2 text-secondary/40 font-mono text-xs">{idx + 1}</td>
+                                                {csvHeaders.slice(0, 4).map((header) => (
+                                                    <td 
+                                                        key={`${idx}-${header}`} 
+                                                        className={cn(
+                                                            'px-3 py-2 max-w-[120px] truncate',
+                                                            (header === nameColumn || header === emailColumn) && 'bg-accent/3 font-medium'
+                                                        )}
+                                                    >
+                                                        {String(row[header]).slice(0, 20)}
+                                                    </td>
+                                                ))}
+                                                {csvHeaders.length > 4 && (
+                                                    <td className="px-3 py-2 text-secondary/30">…</td>
+                                                )}
+                                            </tr>
                                         ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    {rowCount > 5 && (
-                        <div className="px-4 py-2.5 text-xs text-secondary text-center bg-muted/30 border-t border-border/60">
-                            + {rowCount - 5} more recipients
+                                    </tbody>
+                                </table>
+                            </div>
+                            {rowCount > 3 && (
+                                <div className="px-3 py-2 text-xs text-secondary/50 bg-muted/20 border-t border-border/50">
+                                    + {rowCount - 3} more
+                                </div>
+                            )}
                         </div>
                     )}
-                </div>
 
-                {error && (
-                    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-100 mb-5 text-sm">
-                        <AlertCircle size={16} />
-                        <span>{error}</span>
+                    {/* Sync result */}
+                    {syncResult && (
+                        <div
+                            className={cn(
+                                'flex items-center gap-2 px-3 py-2.5 rounded text-xs',
+                                syncResult.newRows > 0
+                                    ? 'bg-green-50 text-green-800 border border-green-100'
+                                    : 'bg-blue-50 text-blue-800 border border-blue-100',
+                            )}
+                        >
+                            <CheckCircle size={16} className="shrink-0" />
+                            <span>
+                                {syncResult.newRows > 0 || syncResult.updatedRows > 0
+                                    ? `${syncResult.newRows > 0 ? `${syncResult.newRows} new` : ''}${syncResult.newRows > 0 && syncResult.updatedRows > 0 ? ' + ' : ''}${syncResult.updatedRows > 0 ? `${syncResult.updatedRows} updated` : ''}`
+                                    : 'Up to date'}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Large row warning */}
+                    {showWarning && (
+                        <div className="flex items-start gap-2.5 bg-amber-50 text-amber-900 px-3 py-2.5 rounded border border-amber-100 text-xs">
+                            <AlertTriangle className="shrink-0 mt-0.5" size={16} />
+                            <p>Large batch may take longer.</p>
+                        </div>
+                    )}
+
+                    {/* Trust signal */}
+                    <div className="text-xs text-green-700 bg-green-50 border border-green-100/60 rounded px-3 py-2.5">
+                        🛡 Saved locally • Ready to design
                     </div>
-                )}
 
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                    <Button variant="outline" onClick={() => setCurrentStep(1)} className="rounded-lg">
-                        Back
-                    </Button>
-                    <Button onClick={() => setCurrentStep(3)} className="rounded-lg">
-                        Continue
-                        <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                </div>
+                    {error && (
+                        <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2.5 rounded border border-red-100 text-xs">
+                            <AlertCircle size={16} className="shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    {/* Navigation */}
+                    <div className="flex gap-2 pt-2">
+                        <button 
+                            onClick={() => setCurrentStep(1)} 
+                            className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                        >
+                            Back
+                        </button>
+                        <button 
+                            onClick={() => setCurrentStep(3)} 
+                            className="flex-1 px-4 py-3 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                            Design
+                            <ArrowRight size={16} />
+                        </button>
+                    </div>
             </div>
         );
     }
@@ -441,10 +490,10 @@ export function UploadCSV() {
     return (
         <div className="text-center">
             <p className="text-secondary text-sm mb-6 max-w-sm mx-auto leading-relaxed">
-                Upload a CSV or import from Google Sheets. Data is matched to your design next.
+                Upload your participant data. Names, emails, and other details will be personalized into each certificate.
             </p>
 
-            <div className="mb-5 text-left">
+            <div className="mb-6 text-left">
                 <TrustBoundaryNotice variant="csv" />
             </div>
 
@@ -507,7 +556,7 @@ export function UploadCSV() {
                             </div>
                             <div>
                                 <p className="font-medium text-foreground">
-                                    {dragging ? 'Drop to upload' : 'Drop your CSV here'}
+                                    {dragging ? 'Drop to upload' : 'Drop your participant list here'}
                                 </p>
                                 <p className="text-sm text-secondary mt-1">or click to browse</p>
                             </div>

@@ -18,19 +18,19 @@ export function ConnectGmailPanel({
 }: ConnectGmailPanelProps) {
   const trustPoints = [
     {
+      icon: ShieldCheck,
+      title: 'Your Gmail account sends',
+      body: 'Emails come from you, not a third party. You stay in complete control of what goes out.',
+    },
+    {
       icon: Lock,
-      title: 'Only send—never read or store',
-      body: 'We only send emails. We never read your inbox, store emails, or access Gmail data after sending.',
+      title: 'We only send—nothing else',
+      body: 'We cannot read your inbox, modify settings, or access any Gmail data. Sending only.',
     },
     {
       icon: Eye,
-      title: 'Review everything before sending',
-      body: 'You will see recipients, the message, and a live preview before a single email goes out.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Your Gmail account sends it',
-      body: 'Emails appear from you, not from a third party. Complete control over what goes out.',
+      title: 'Review before committing',
+      body: 'You will see all recipients, your message, and a preview. Nothing sends without your approval.',
     },
   ];
 
@@ -42,12 +42,11 @@ export function ConnectGmailPanel({
             <Mail className="h-6 w-6 text-accent" />
           </div>
           <h2 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">
-            Connect Gmail to send your certificates
+            You're ready to send
           </h2>
           <p className="mt-2 max-w-md text-sm leading-6 text-secondary">
-            You have {certificateCount} {certificateCount === 1 ? 'certificate' : 'certificates'} ready for{' '}
-            {recipientCount} {recipientCount === 1 ? 'recipient' : 'recipients'}. Connect your Gmail account to
-            deliver them as personalized emails.
+            {certificateCount} {certificateCount === 1 ? 'certificate' : 'certificates'} for {' '}
+            {recipientCount} {recipientCount === 1 ? 'person' : 'people'}. Connect your Gmail account and we'll deliver them as personalized emails from you.
           </p>
 
           <div className="mt-7">
@@ -70,12 +69,12 @@ export function ConnectGmailPanel({
                 </>
               )}
             </Button>
-            <p className="mt-3 text-xs text-secondary">Secure sign-in via Google OAuth.</p>
+            <p className="mt-3 text-xs text-secondary">You can disconnect anytime from settings.</p>
           </div>
         </div>
 
         <div className="border-t border-border bg-muted p-8 lg:border-l lg:border-t-0 lg:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">Why this is safe</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">How it works</p>
           <ul className="mt-4 space-y-5">
             {trustPoints.map(({ icon: Icon, title, body }) => (
               <li key={title} className="flex gap-3">

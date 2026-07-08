@@ -239,104 +239,126 @@ export function GenerationView() {
                     </div>
                 </div>
             ) : !isDone ? (
-                <div className="py-4">
-                    <div className="relative mx-auto mb-6 w-fit">
-                        <div className="absolute inset-0 rounded-full bg-accent/15 blur-2xl scale-[2]" />
-                        <Loader2 className="relative w-10 h-10 text-accent animate-spin" />
+                <div className="py-3">
+                    <div className="relative mx-auto mb-4 w-fit">
+                        <Loader2 className="w-8 h-8 text-accent animate-spin" />
                     </div>
 
-                    <h2 className="text-lg font-semibold text-foreground mb-1">Generating certificates</h2>
-                    <p className="text-sm text-secondary mb-8">
+                    <h2 className="text-base font-semibold text-foreground mb-1">Creating certificates</h2>
+                    <p className="text-xs text-secondary mb-4">
                         {completedCount > 0 ? (
                             <>
-                                <span className="font-medium text-foreground">{completedCount}</span> of{' '}
-                                <span className="font-medium text-foreground">{totalCount}</span> complete
+                                <span className="font-medium text-foreground">{completedCount}</span> of <span className="font-medium text-foreground">{totalCount}</span> complete · Stored locally
                             </>
                         ) : (
-                            <>Preparing {totalCount} PDFs…</>
+                            <>Preparing {totalCount} PDFs locally…</>
                         )}
                     </p>
 
-                    <div className="max-w-sm mx-auto">
-                        <div className="h-2.5 bg-muted/80 rounded-full overflow-hidden ring-1 ring-border/40">
+                    <div className="max-w-xs mx-auto">
+                        <div className="h-2 bg-muted/80 rounded-full overflow-hidden ring-1 ring-border/40">
                             <div
-                                className="h-full bg-gradient-to-r from-accent/80 to-accent transition-all duration-500 ease-out rounded-full"
+                                className="h-full bg-gradient-to-r from-accent/80 to-accent transition-all duration-500 ease-out"
                                 style={{ width: `${Math.max(displayProgress, 2)}%` }}
                             />
                         </div>
-                        <div className="flex justify-between items-center mt-2.5 text-xs text-secondary">
+                        <div className="flex justify-between items-center mt-2 text-xs text-secondary">
                             <span>{displayProgress}%</span>
                             {etaText && <span>{etaText}</span>}
                         </div>
                     </div>
+
+                    {/* Compact trust signals */}
+                    <div className="mt-3 space-y-1 max-w-xs mx-auto text-xs">
+                        <div className="text-green-700 bg-green-50 border border-green-100/60 rounded px-2 py-1">
+                            🛡 Generating locally
+                        </div>
+                        <div className="text-blue-700 bg-blue-50 border border-blue-100/60 rounded px-2 py-1">
+                            💾 Safe to close · Progress saved
+                        </div>
+                    </div>
                 </div>
             ) : (
-                <div className="py-2">
-                    <div className="relative mx-auto mb-6 w-fit">
-                        <div className="absolute inset-0 rounded-2xl bg-emerald-400/25 blur-2xl scale-[1.8]" />
-                        <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30">
-                            <CheckCircle size={36} strokeWidth={2} />
+                <div className="py-8 flex flex-col items-center">
+                    {/* Success icon — balanced, not oversized */}
+                    <div className="mb-6">
+                        <div className="relative flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg">
+                            <CheckCircle size={32} strokeWidth={1.5} />
                         </div>
                     </div>
 
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/15 mb-3">
-                        <Sparkles size={12} />
-                        All done
-                    </div>
-
-                    <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2">
-                        {totalCount.toLocaleString()} certificate{totalCount !== 1 ? 's' : ''} ready
+                    {/* Title and summary */}
+                    <h2 className="text-2xl font-semibold text-foreground mb-1">
+                        {totalCount} certificate{totalCount !== 1 ? 's' : ''} ready
                     </h2>
-                    <p className="text-sm text-secondary mb-8 max-w-xs mx-auto leading-relaxed">
-                        Download your ZIP locally or connect Gmail when you are ready to send.
+                    <p className="text-sm text-secondary mb-6">
+                        All saved locally. Download or send via email.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-                        <Button
+                    {/* Session summary — balanced card */}
+                    <div className="w-full max-w-sm rounded-lg border border-border bg-muted/20 p-4 mb-8 text-sm space-y-2 text-left">
+                        <div className="flex justify-between">
+                            <span className="text-secondary">Certificates created:</span>
+                            <span className="font-medium text-foreground">{totalCount.toLocaleString()}</span>
+                        </div>
+                        <div className="border-t border-border/40" />
+                        <div className="flex justify-between">
+                            <span className="text-secondary">Storage:</span>
+                            <span className="font-medium text-foreground">Browser (local)</span>
+                        </div>
+                        <div className="border-t border-border/40" />
+                        <div className="flex justify-between">
+                            <span className="text-secondary">Recovery:</span>
+                            <span className="font-medium text-foreground">Automatic</span>
+                        </div>
+                    </div>
+
+                    {/* Primary CTAs */}
+                    <div className="flex gap-3 w-full max-w-sm mb-8">
+                        <button
                             onClick={handleDownload}
                             disabled={isZipping}
-                            className="rounded-lg flex-1 shadow-sm shadow-accent/15 h-11"
+                            className="flex-1 px-4 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             {isZipping ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="h-4 w-4" />
                             )}
-                            {isZipping ? 'Preparing ZIP…' : 'Download ZIP'}
-                        </Button>
-                        <Button
+                            Download
+                        </button>
+                        <button
                             onClick={async () => {
                                 markRecoveryDecided();
                                 await updateSession(sessionId, { workflowStage: 'EMAIL_SETUP' });
                                 router.push('/email');
                             }}
-                            variant="outline"
-                            className="rounded-lg flex-1 h-11 bg-white hover:bg-muted/30"
+                            className="flex-1 px-4 py-3 rounded-lg border border-border text-foreground font-medium hover:bg-muted/50 transition-colors flex items-center justify-center gap-2"
                         >
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send email
-                        </Button>
+                            <Mail className="h-4 w-4" />
+                            Email
+                        </button>
                     </div>
 
-                    <div className="mt-8 space-y-4">
-                        {zipDownloaded && (
+                    {/* Post-download section — only shown after download, clean composition */}
+                    {zipDownloaded && (
+                        <div className="w-full max-w-sm space-y-4">
                             <ZipDownloadSuccessPanel
                                 onGenerateAgain={handleGenerateAgain}
                                 onStartNewBatch={handleStartNewBatch}
                                 busy={batchBusy}
                             />
-                        )}
-
-                        {starPromptTrigger && (
-                            <GitHubStarPrompt
-                                trigger={starPromptTrigger}
-                                certificatesCount={completedCount}
-                            />
-                        )}
-                        {zipDownloaded && (
-                            <OpenSourceSupportCard context="success" certificatesCount={completedCount} />
-                        )}
-                    </div>
+                            {starPromptTrigger && (
+                                <GitHubStarPrompt
+                                    trigger={starPromptTrigger}
+                                    certificatesCount={completedCount}
+                                />
+                            )}
+                            {zipDownloaded && (
+                                <OpenSourceSupportCard context="success" certificatesCount={completedCount} />
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

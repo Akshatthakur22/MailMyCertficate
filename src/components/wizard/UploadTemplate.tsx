@@ -3,7 +3,7 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { loadTemplate } from '@/services/templateService';
-import { UploadCloud, AlertCircle } from 'lucide-react';
+import { UploadCloud, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
 import { updateSession, touchActivity } from '@/core/session/sessionManager';
@@ -13,8 +13,12 @@ import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 export function UploadTemplate() {
     const setTemplate = useAppStore((state) => state.setTemplate);
     const setCurrentStep = useAppStore((state) => state.setCurrentStep);
+    const template = useAppStore((state) => state.template);
+    const templateDimensions = useAppStore((state) => state.templateDimensions);
     const [dragging, setDragging] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fileSize, setFileSize] = useState<string | null>(null);
+    const [showHelp, setShowHelp] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const sessionId = useAppStore((state) => state.sessionId);
@@ -30,6 +34,10 @@ export function UploadTemplate() {
             if (file.size > 5 * 1024 * 1024) {
                 throw new Error('File too large. Maximum size is 5MB.');
             }
+
+            // Format file size for display
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            setFileSize(`${sizeMB} MB`);
 
             const { base64, width, height } = await loadTemplate(file);
 
@@ -105,78 +113,128 @@ export function UploadTemplate() {
 
     return (
         <div className="text-center">
-            <p className="text-secondary text-sm mb-6 max-w-sm mx-auto leading-relaxed">
-                Upload your certificate design. Recipient names are added in the next step.
-            </p>
+            {/* Success state — show after upload */}
+            {template && templateDimensions ? (
+                <div className="space-y-4">
+                    {/* Success summary */}
+                    <div className="flex items-center justify-center gap-2 text-sm">
+                        <CheckCircle size={20} className="text-green-600 shrink-0" />
+                        <span className="font-semibold text-foreground">Certificate ready</span>
+                        <span className="text-secondary/50">•</span>
+                        <span className="text-xs text-secondary">{templateDimensions.width}×{templateDimensions.height}px</span>
+                        <span className="text-secondary/50">•</span>
+                        <span className="text-xs text-secondary">{fileSize || '...'}</span>
+                    </div>
 
-            <div className="mb-5 text-left">
-                <TrustBoundaryNotice variant="upload" />
-            </div>
+                    {/* Trust indicator */}
+                    <div className="text-xs text-green-700 bg-green-50 border border-green-100/60 rounded-lg px-3 py-2.5">
+                        🛡 Saved locally • Never uploaded
+                    </div>
 
-            <div
-                onDragOver={onDragOver}
-                onDragLeave={onDragLeave}
-                onDrop={onDrop}
-                onClick={() => inputRef.current?.click()}
-                className={cn(
-                    'border-2 border-dashed rounded-xl p-10 md:p-12 transition-colors cursor-pointer group',
-                    dragging ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/40 hover:bg-muted/30',
-                    error && 'border-red-300 bg-red-50/50',
-                )}
-            >
-                <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/png, image/jpeg"
-                    className="hidden"
-                    onChange={onFileChange}
-                />
+                    {/* Navigation buttons */}
+                    <div className="flex gap-2 pt-2">
+                        <button
+                            onClick={() => {
+                                setTemplate(null, null);
+                                setFileSize(null);
+                                setError(null);
+                            }}
+                            className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                        >
+                            Change
+                        </button>
+                        <button
+                            onClick={() => setCurrentStep(2)}
+                            className="flex-1 px-4 py-3 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                            Continue
+                            <ArrowRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {/* Upload form — initial state */}
+                    <p className="text-secondary text-sm mb-5 max-w-sm mx-auto">
+                        Your design will be personalized with each recipient's data.
+                    </p>
 
-                <div className="flex flex-col items-center gap-4">
+                    <div className="mb-4 text-left">
+                        <TrustBoundaryNotice variant="upload" />
+                    </div>
+
                     <div
+                        onDragOver={onDragOver}
+                        onDragLeave={onDragLeave}
+                        onDrop={onDrop}
+                        onClick={() => inputRef.current?.click()}
                         className={cn(
-                            'w-14 h-14 rounded-xl flex items-center justify-center transition-colors',
-                            dragging ? 'bg-accent text-white' : 'bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white',
+                            'border-2 border-dashed rounded-xl p-10 transition-colors cursor-pointer group',
+                            dragging ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/40 hover:bg-muted/20',
+                            error && 'border-red-300 bg-red-50/50',
                         )}
                     >
-                        <UploadCloud size={28} strokeWidth={1.5} />
-                    </div>
-                    <div>
-                        <p className="font-medium text-foreground">
-                            {dragging ? 'Drop to upload' : 'Drop your template here'}
-                        </p>
-                        <p className="text-sm text-secondary mt-1">or click to browse</p>
-                    </div>
-                    <p className="text-xs text-secondary/70">PNG or JPG · max 5 MB</p>
-                </div>
-            </div>
+                        <input
+                            ref={inputRef}
+                            type="file"
+                            accept="image/png, image/jpeg"
+                            className="hidden"
+                            onChange={onFileChange}
+                        />
 
-            {error && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg border border-red-100 text-sm">
-                    <AlertCircle size={16} />
-                    <span>{error}</span>
-                </div>
+                        <div className="flex flex-col items-center gap-3">
+                            <div
+                                className={cn(
+                                    'w-12 h-12 rounded-lg flex items-center justify-center transition-colors',
+                                    dragging ? 'bg-accent text-white' : 'bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white',
+                                )}
+                            >
+                                <UploadCloud size={24} strokeWidth={1.5} />
+                            </div>
+                            <div>
+                                <p className="font-medium text-foreground text-sm">
+                                    {dragging ? 'Drop to upload' : 'Drop certificate here'}
+                                </p>
+                                <p className="text-xs text-secondary">PNG/JPG · max 5 MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="mt-3 flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2.5 rounded-lg border border-red-100 text-xs">
+                            <AlertCircle size={16} className="shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    {/* Collapsed help section */}
+                    {!showHelp && (
+                        <button
+                            onClick={() => setShowHelp(true)}
+                            className="mt-4 text-xs text-secondary hover:text-foreground transition-colors"
+                        >
+                            Need help? →
+                        </button>
+                    )}
+
+                    {showHelp && (
+                        <div className="mt-4 p-4 bg-muted/40 rounded-lg border border-border/60 text-left text-xs space-y-2">
+                            <p className="font-medium text-foreground">Design tips:</p>
+                            <ul className="text-secondary space-y-1 list-disc list-inside">
+                                <li>Landscape (e.g., 1920×1080)</li>
+                                <li>Min 2000px width for print</li>
+                                <li>Space for recipient names</li>
+                            </ul>
+                            <button
+                                onClick={() => setShowHelp(false)}
+                                className="text-secondary/60 hover:text-secondary mt-2 text-xs"
+                            >
+                                Hide
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
-
-            <p className="mt-6 text-xs text-secondary/60">
-                Tip: use at least 2000px width for crisp print quality.
-            </p>
-
-            <div className="mt-8 p-5 bg-muted/30 rounded-xl border border-border/50">
-                <p className="text-sm font-medium text-foreground mb-3">Getting started?</p>
-                <p className="text-sm text-secondary mb-4">
-                    Design your certificate in Canva, Figma, or any design tool. Save as PNG or JPG.
-                </p>
-                <ul className="text-sm text-secondary space-y-2 mb-4 list-disc list-inside">
-                    <li>Leave space at top/center for recipient names</li>
-                    <li>Use fonts that look professional when personalized</li>
-                    <li>Landscape orientation works best (e.g., 1920×1080)</li>
-                    <li>Test with a preview before sending</li>
-                </ul>
-                <p className="text-xs text-secondary/60 italic">
-                    No PDF templates? Convert your PDF to PNG first in Canva or another tool.
-                </p>
-            </div>
         </div>
     );
 }

@@ -2,6 +2,7 @@
 
 import { useAppStore } from '@/store/useAppStore';
 import { StepIndicator } from '@/components/wizard/StepIndicator';
+import { SessionStatus } from '@/components/wizard/SessionStatus';
 import { UploadTemplate } from '@/components/wizard/UploadTemplate';
 import { UploadCSV } from '@/components/wizard/UploadCSV';
 import { AdjustPreview } from '@/components/wizard/AdjustPreview';
@@ -13,7 +14,7 @@ import { DesktopOnlyGuard } from '@/components/guard/DesktopOnlyGuard';
 import { PrivacyNotice } from '@/components/session/PrivacyNotice';
 import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
 
-const STEPS = ['Upload Template', 'Upload CSV', 'Adjust & Preview', 'Generate'];
+const STEPS = ['Certificate', 'Participants', 'Design', 'Create'];
 
 export default function ToolWizardView() {
     const currentStep = useAppStore((state) => state.currentStep);
@@ -36,11 +37,16 @@ export default function ToolWizardView() {
             )}
         >
             <header className="border-b border-border/50 py-3.5 bg-white/80 backdrop-blur-md shrink-0 z-50 sticky top-0">
-                <div className="container-width flex items-center justify-between">
-                    <Link href="/" className="brand-text hover:opacity-80 transition-opacity">
+                <div className="container-width flex items-center justify-between gap-4">
+                    <Link href="/" className="brand-text hover:opacity-80 transition-opacity shrink-0">
                         <span>Mail</span><span>My</span><span>Certificate</span>
                     </Link>
-                    <ManageLocalDataMenu variant="header" />
+                    <div className="flex-1 min-w-0">
+                        <SessionStatus variant="compact" className="justify-center" />
+                    </div>
+                    <div className="shrink-0">
+                        <ManageLocalDataMenu variant="header" />
+                    </div>
                 </div>
             </header>
 
@@ -49,7 +55,7 @@ export default function ToolWizardView() {
                     'container-width relative z-10 mx-auto w-full',
                     isEditorStep
                         ? 'flex-1 min-h-0 flex flex-col py-4'
-                        : 'py-8 md:py-12',
+                        : 'py-6 md:py-8',
                     !isEditorStep && contentMaxWidth,
                 )}
             >
@@ -79,7 +85,7 @@ export default function ToolWizardView() {
                             />
                         </div>
 
-                        <div className="px-6 md:px-8 py-8 md:py-10">
+                        <div className="px-6 md:px-8 py-6 md:py-8">
                             {currentStep === 1 && <UploadTemplate />}
                             {currentStep === 2 && <UploadCSV />}
                             {currentStep === 4 && <GenerationView />}

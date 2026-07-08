@@ -52,6 +52,13 @@ export function StepIndicator({ currentStep, steps, onStepClick, variant = 'defa
                     <h1 className="text-xl font-semibold text-foreground tracking-tight truncate">
                         {currentLabel}
                     </h1>
+                    {/* Context subtitle based on step */}
+                    <p className="text-sm text-secondary/70 mt-1">
+                        {currentStep === 1 && "Upload your certificate design"}
+                        {currentStep === 2 && "Upload your participant list"}
+                        {currentStep === 3 && "Position fields on your certificate"}
+                        {currentStep === 4 && "Generate your certificates"}
+                    </p>
                 </div>
             </div>
 

@@ -308,7 +308,7 @@ export default function EmailView() {
     return getDisplayName(row.data, nameColumn);
   };
 
-  const previewRows = csvRows.slice(0, 3);
+  const previewRows = csvRows.slice(0, 5);
   const currentPreviewRow = previewRows[previewIndex] || previewRows[0];
   const currentPreviewData = (currentPreviewRow?.data ?? {}) as Record<string, unknown>;
   const currentPreviewName = currentPreviewRow ? getDisplayName(currentPreviewData, nameColumn) : 'First participant';
@@ -539,14 +539,24 @@ export default function EmailView() {
 
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <div className="mb-5">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Send certificates by email</h1>
-          <p className="mt-1 text-sm text-secondary">
-            {phase === 'sending'
-              ? 'Delivery is running — keep this tab open.'
-              : phase === 'complete'
-                ? 'Your delivery is finished.'
-                : 'Write your message, review the recipients, and send personalized certificates through Gmail.'}
-          </p>
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Send certificates by email</h1>
+              <p className="mt-1 text-sm text-secondary">
+                {phase === 'sending'
+                  ? 'Delivery is running — keep this tab open.'
+                  : phase === 'complete'
+                    ? `${sentCount} ${sentCount === 1 ? 'certificate' : 'certificates'} delivered.${failedCount > 0 ? ` ${failedCount} need follow-up.` : ''}`
+                    : 'Write your message, review the recipients, and send personalized certificates through Gmail.'}
+              </p>
+            </div>
+            {certificates.length > 0 && phase !== 'sending' && (
+              <div className="shrink-0 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-right">
+                <p className="text-xs font-semibold text-green-700">READY</p>
+                <p className="mt-0.5 text-sm font-semibold text-green-900">{certificates.length}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {message && (
@@ -663,6 +673,7 @@ export default function EmailView() {
                   validRecipients={validRecipients}
                   totalRows={csvRows.length}
                   invalidRecipients={recipientValidation.invalid}
+                  invalidExamples={recipientValidation.invalidExamples}
                   certificateCount={certificates.length}
                   sampleRecipients={sampleRecipients}
                   canSend={canSend}

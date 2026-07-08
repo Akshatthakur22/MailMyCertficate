@@ -56,12 +56,14 @@ export function CompletionPanel({
             )}
           </span>
           <h2 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-            {allDelivered ? 'All certificates delivered' : 'Delivery finished — a few need attention'}
+            {allDelivered 
+              ? '🎉 All certificates delivered' 
+              : `${sent} delivered — ${failed} to follow up`}
           </h2>
           <p className="mt-2 max-w-md text-sm leading-6 text-secondary">
             {sent} / {total} {total === 1 ? 'email was' : 'emails were'} sent successfully
-            {totalTime !== '—' ? ` in ${totalTime}` : ''}. Your certificate and recipient data is still stored
-            locally in this browser.
+            {totalTime !== '—' ? ` in ${totalTime}` : ''}. 
+            {failed > 0 ? ` Here's how to handle the ${failed}.` : ' Your data is saved locally in this browser.'}
           </p>
         </div>
 
@@ -126,17 +128,27 @@ export function CompletionPanel({
         <div className="rounded-2xl border border-border bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-border px-5 py-4">
             <XCircle className="h-4 w-4 text-rose-500" />
-            <h3 className="text-sm font-semibold text-foreground">Failed recipients ({failed})</h3>
+            <h3 className="text-sm font-semibold text-foreground">Couldn't reach {failed} {failed === 1 ? 'recipient' : 'recipients'}</h3>
           </div>
           <ul className="max-h-72 divide-y divide-border overflow-y-auto">
             {failedItems.map((item) => (
               <li key={item.id} className="px-5 py-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">{item.recipient}</p>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-rose-600">
-                      {item.error || 'Delivery failed'}
+                    <p className="mt-0.5 text-xs text-secondary">
+                      {item.errorType === 'permanent'
+                        ? 'Invalid email address'
+                        : item.errorType === 'network'
+                          ? 'Network timeout (temporary)'
+                          : item.error || 'Delivery failed'}
                     </p>
+                    {item.errorType === 'permanent' && (
+                      <p className="mt-1 text-xs text-amber-600">Fix in your data and resend, or contact manually.</p>
+                    )}
+                    {item.errorType === 'network' && (
+                      <p className="mt-1 text-xs text-green-600">Try retry above—usually works on second attempt.</p>
+                    )}
                   </div>
                 </div>
               </li>

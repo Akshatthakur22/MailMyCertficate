@@ -58,6 +58,9 @@ export function SendingTracker({
               style={{ width: `${percent}%` }}
             />
           </div>
+          <p className="mt-2 text-xs text-secondary">
+            Sending steadily to avoid Gmail rate limits. Keep this tab open.
+          </p>
         </div>
 
         {/* Stat tiles */}

@@ -13,6 +13,7 @@ interface SendReadinessPanelProps {
   validRecipients: number;
   totalRows: number;
   invalidRecipients: number;
+  invalidExamples?: string[];
   certificateCount: number;
   sampleRecipients: SampleRecipient[];
   canSend: boolean;
@@ -29,6 +30,7 @@ export function SendReadinessPanel({
   validRecipients,
   totalRows,
   invalidRecipients,
+  invalidExamples = [],
   certificateCount,
   sampleRecipients,
   canSend,
@@ -84,20 +86,31 @@ export function SendReadinessPanel({
       {/* Verification */}
       <div className="border-b border-border px-4 py-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">Verification</p>
-        <div className="mt-1.5 space-y-1 text-xs">
+        <div className="mt-1.5 space-y-2 text-xs">
           <div className="flex items-center gap-2 text-foreground">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             {validRecipients} valid email {validRecipients === 1 ? 'address' : 'addresses'}
           </div>
           {invalidRecipients > 0 ? (
-            <div className="flex items-center gap-2 text-amber-700">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              {invalidRecipients} invalid {invalidRecipients === 1 ? 'row' : 'rows'} will be skipped
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-amber-700">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                {invalidRecipients} won't receive (invalid)
+              </div>
+              {invalidExamples.length > 0 && (
+                <div className="ml-6 space-y-0.5 rounded border border-amber-200 bg-amber-50 px-2 py-1.5">
+                  {invalidExamples.map((ex, i) => (
+                    <p key={i} className="text-[11px] text-amber-700 font-mono">
+                      {ex}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2 text-secondary">
               <ShieldCheck className="h-4 w-4 text-green-600" />
-              No invalid addresses found
+              All addresses valid
             </div>
           )}
         </div>
