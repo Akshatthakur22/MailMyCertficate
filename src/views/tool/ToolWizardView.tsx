@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { StepIndicator } from '@/components/wizard/StepIndicator';
 import { SessionStatus } from '@/components/wizard/SessionStatus';
@@ -7,6 +8,7 @@ import { UploadTemplate } from '@/components/wizard/UploadTemplate';
 import { UploadCSV } from '@/components/wizard/UploadCSV';
 import { AdjustPreview } from '@/components/wizard/AdjustPreview';
 import { GenerationView } from '@/components/wizard/GenerationView';
+import { ToolSkeleton } from '@/components/wizard/ToolSkeleton';
 import Link from 'next/link';
 
 import { cn } from '@/utils/cn';
@@ -18,7 +20,13 @@ const STEPS = ['Certificate', 'Participants', 'Design', 'Create'];
 
 export default function ToolWizardView() {
     const currentStep = useAppStore((state) => state.currentStep);
+    const sessionHydrationVersion = useAppStore((state) => state.sessionHydrationVersion);
     const setCurrentStep = useAppStore((state) => state.setCurrentStep);
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    useEffect(() => {
+        setIsHydrated(true);
+    }, []);
 
     const handleStepClick = (step: number) => {
         if (step < currentStep) {
@@ -28,6 +36,11 @@ export default function ToolWizardView() {
 
     const isEditorStep = currentStep === 3;
     const contentMaxWidth = currentStep === 2 ? 'max-w-3xl' : 'max-w-2xl';
+
+    // Show skeleton until IndexedDB queries complete and Zustand hydrates
+    if (!isHydrated || !sessionHydrationVersion) {
+        return <ToolSkeleton />;
+    }
 
     return (
         <div
