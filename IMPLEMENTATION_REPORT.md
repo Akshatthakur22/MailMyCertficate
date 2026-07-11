@@ -35,21 +35,23 @@ All audit findings have been implemented in dependency order. Here's what change
 
 ---
 
-### Phase 2: Retention — Session Save/Resume (3+ hours) ✅
+### Phase 2: Session Convenience (Same-Device Resume Only) ⚠️ PARTIAL
 
 | Change | File | Impact | Verified |
 |--------|------|--------|----------|
-| Add `savedSessions` DB table | `src/core/db/schema.ts` | Enables cross-session user recognition (email → session ID mapping) | ✅ Dexie table added to version 3 schema with indexes on `email` and `[email+sessionId]` |
+| Add `savedSessions` DB table | `src/core/db/schema.ts` | Enables same-device session recovery (email → IndexedDB lookup only) | ✅ Dexie table added to version 3 schema with indexes on `email` and `[email+sessionId]` |
 | Create session service layer | `src/core/session/sessionSaveService.ts` (new) | Abstracts save/resume logic, handles cleanup, fires GA4 events | ✅ 6 functions: save, lookup, resume, delete, cleanup old, all async/safe |
 | Build save session UI modal | `src/components/session/SaveSessionModal.tsx` (new) | Low-friction opt-in after generation completes (email field only) | ✅ Modal shows after 1.5s delay (UX feels less jarring), email validation, error handling |
 | Integrate modal into GenerationView | `src/components/wizard/GenerationView.tsx` | Triggers modal once per generation (after certs ready, before ZIP download) | ✅ `saveModalShownRef` prevents duplicate shows on re-renders, fires `session_saved` GA4 event |
-| Add GA4 events for retention | `src/lib/analytics/types.ts` | Track `session_saved` and `session_resumed` to measure return rate | ✅ Events typed, include `email_domain` (privacy: not full email) and `days_since_creation` |
+| Add GA4 events for retention | `src/lib/analytics/types.ts` | Track opt-in and same-device resume only (NOT cross-device retention) | ✅ Events typed, include `email_domain` (privacy: not full email) and `days_since_creation` |
 
-**Workflow:**
+**Workflow (Same-Device Only):**
 1. User generates 50 certificates → modal appears
-2. User enters email → saved to IndexedDB (no server required)
-3. On next visit, email recognized → can resume saved session
-4. GA4 fires `session_saved` (tracks opt-in rate) and `session_resumed` (tracks retention)
+2. User enters email → saved to browser's IndexedDB
+3. On same browser/device, reload page → email recognized, session can resume
+4. GA4 fires `session_saved` (opt-in rate) and `session_resumed` (same-device recover rate)
+
+**Limitation:** Cross-device recognition NOT implemented. User on Device A → save email → user on Device B → email not recognized (different client ID in GA4). To enable true cross-device retention, you'd need: backend database, magic-link tokens, email verification. See Future Work section.
 
 **Privacy Note:** Email domain only (e.g., "gmail.com"), full email never tracked. Saved sessions stored in browser IndexedDB, never sent to server.
 
@@ -220,7 +222,31 @@ c6740a2 docs: add FAQ schema to /about page for LLM citation
 
 ---
 
-## Next Steps (Out of Scope for This PR)
+## Future Work: True Cross-Device Retention
+
+**What's missing:** The current session save feature only works same-device because it uses IndexedDB (browser-local storage). GA4 tracks returning users by client ID/cookies, not by email, so a user on Device A who saves their email won't appear as "returning" when they visit from Device B.
+
+**To enable cross-device retention:**
+1. Add server-side persistent database (PostgreSQL, SQLite, or managed DB service)
+2. Build backend endpoint: `POST /api/session/save-and-send-link`
+   - Accept `{email, session_id}`
+   - Generate time-limited token (7-day expiry, signed JWT or random)
+   - Store in DB: `saved_sessions(email, session_id, token, created_at, expires_at)`
+   - Send transactional email with magic link (reuse existing Gmail OAuth + Gmail API)
+3. Build verification route: `GET /api/session/verify?token={token}`
+   - Validate token signature + expiry
+   - Return matching session_id if valid
+4. Update homepage: check URL for token on load
+   - If present and valid, redirect to `/tool?resume={session_id}`
+   - Restore session in Zustand/IndexedDB
+5. Keep existing `SaveSessionModal` UI but point submit to new backend endpoint
+6. Keep GA4 events (`session_saved`, `session_resumed`) — they'll start measuring true cross-device retention
+
+**Estimated effort:** 6-8 hours (backend + email + token validation + homepage flow)
+
+**Blocker for now:** No server-side database exists in this repo. Would need to be added.
+
+---
 
 1. **Enable Backend Magic-Link Emails:**
    - Add `/api/send-magic-link` endpoint (Flask)
@@ -253,7 +279,7 @@ c6740a2 docs: add FAQ schema to /about page for LLM citation
 | 0.3 | /guide SEO title | ✅ | 5 min | HIGH | `src/app/guide/layout.tsx` |
 | 0.4 | Homepage guide link | ✅ | 5 min | LOW-MED | `src/views/landing/LandingPage.tsx` |
 | 1 | Mobile skeleton | ✅ | 30 min | MED | `src/components/wizard/ToolSkeleton.tsx` |
-| 2 | Session save/resume | ✅ | 3-4 hours | HIGH | `src/core/session/sessionSaveService.ts` |
+| 2 | Session convenience (same-device) | ⚠️ PARTIAL | 3-4 hours | LOW (same-device only) | `src/core/session/sessionSaveService.ts` |
 | 3 | FAQ schema /about | ✅ | 1 hour | LOW-MED | `src/data/aboutFaqs.ts` |
 
 **Total Time:** ~5 hours  
