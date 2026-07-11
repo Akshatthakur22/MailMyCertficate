@@ -4,9 +4,9 @@ import { SEO_KEYWORDS } from '@/lib/seo-keywords';
 import { GuideStructuredData } from '@/components/seo/GuideStructuredData';
 
 export const metadata: Metadata = createPageMetadata({
-  title: 'User Guide — Bulk Certificates from CSV & Google Sheets',
+  title: 'How to Generate Bulk Certificates from CSV & Google Sheets — MailMyCertificate',
   description:
-    'Complete guide: upload a certificate template, import CSV or Google Sheets, generate personalized PDFs in your browser, and send bulk certificates with Gmail. Free and privacy-first.',
+    'Step-by-step guide to generate personalized PDF certificates from CSV or Google Sheets, customize fields, and bulk email via Gmail. Privacy-first, runs locally in your browser.',
   path: '/guide',
   keywords: [...SEO_KEYWORDS.guide, ...SEO_KEYWORDS.home.slice(0, 4)],
 });

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /tool
+Disallow: /email
+Disallow: /settings
+
+Sitemap: https://mailmycertificate.tech/sitemap.xml

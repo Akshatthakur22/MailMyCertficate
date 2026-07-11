@@ -198,6 +198,12 @@ export default function LandingPage() {
                             ))}
                         </div>
 
+                        <div className="text-center text-sm text-secondary/60 mb-8">
+                            <Link href="/guide" className="text-accent hover:underline font-medium">
+                                View the complete guide →
+                            </Link>
+                        </div>
+
                         <div className="hidden lg:block absolute left-1/2 -bottom-10 -translate-x-full ml-40">
                             <HandwrittenArrow rotation={120} className="text-accent/30" />
                             <span className="absolute top-12 left-12 text-xs font-serif text-accent/40 -rotate-3 italic">Try it out!</span>

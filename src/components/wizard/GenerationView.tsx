@@ -30,6 +30,7 @@ export function GenerationView() {
     const [completedCount, setCompletedCount] = useState(0);
     const [etaText, setEtaText] = useState<string | null>(null);
     const startTsRef = useRef<number | null>(null);
+    const generationStartEventFiredRef = useRef(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -52,6 +53,15 @@ export function GenerationView() {
 
             const partial = done > 0 && done < count;
             if (partial) return;
+
+            if (!generationStartEventFiredRef.current) {
+                trackEvent({
+                    event: 'certificate_generation_started',
+                    certificates_count: count,
+                    generation_method: done > 0 ? 'resume' : 'fresh',
+                });
+                generationStartEventFiredRef.current = true;
+            }
 
             startGeneration(sessionId, false);
         };

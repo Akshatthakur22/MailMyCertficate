@@ -87,6 +87,12 @@ export interface CertificateGenerationStartedEvent extends AnalyticsBasePayload 
   generation_method: GenerationMethod;
 }
 
+export interface CertificateGenerationStartedEvent extends AnalyticsBasePayload {
+  event: 'certificate_generation_started';
+  certificates_count: number;
+  generation_method: GenerationMethod;
+}
+
 export interface CertificateGeneratedEvent extends AnalyticsBasePayload {
   event: 'certificate_generated';
   certificates_count: number;
