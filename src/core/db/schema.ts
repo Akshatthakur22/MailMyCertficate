@@ -56,12 +56,21 @@ export interface QueueItem {
     sentAt?: number;
 }
 
+export interface SavedSession {
+    id: string; // email-based token or UUID
+    email: string;
+    sessionId: string;
+    createdAt: number;
+    lastAccessedAt: number;
+}
+
 export class MailMyDB extends Dexie {
     sessions!: Table<Session>;
     files!: Table<FileData>;
     rows!: Table<CSVRowData>;
     certificates!: Table<CertificateResult>;
     queueItems!: Table<QueueItem>;
+    savedSessions!: Table<SavedSession>;
 
     constructor() {
         super('MailMyCertificateDB');
@@ -83,7 +92,8 @@ export class MailMyDB extends Dexie {
             files: 'id, sessionId, type',
             rows: '++id, sessionId',
             certificates: '[sessionId+rowId], sessionId, status',
-            queueItems: 'id, sessionId, status, [sessionId+status]'
+            queueItems: 'id, sessionId, status, [sessionId+status]',
+            savedSessions: 'id, email, [email+sessionId]'
         }).upgrade(async (tx) => {
             const now = Date.now();
             await tx.table('sessions').toCollection().modify((session: Session) => {

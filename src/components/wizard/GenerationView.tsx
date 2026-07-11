@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { updateSession, touchActivity, startNewBatch, markRecoveryDecided } from '@/core/session/sessionManager';
 import { ZipDownloadSuccessPanel } from '@/components/session/ZipDownloadSuccessPanel';
 import { GitHubStarPrompt } from '@/components/github/GitHubStarPrompt';
+import { SaveSessionModal } from '@/components/session/SaveSessionModal';
 import { trackEvent } from '@/lib/analytics';
 import type { GitHubStarPromptTrigger } from '@/lib/analytics';
 import { OpenSourceSupportCard } from '@/components/product/OpenSourceSupportCard';
@@ -29,8 +30,10 @@ export function GenerationView() {
     const [totalCount, setTotalCount] = useState(0);
     const [completedCount, setCompletedCount] = useState(0);
     const [etaText, setEtaText] = useState<string | null>(null);
+    const [showSaveModal, setShowSaveModal] = useState(false);
     const startTsRef = useRef<number | null>(null);
     const generationStartEventFiredRef = useRef(false);
+    const saveModalShownRef = useRef(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -222,6 +225,17 @@ export function GenerationView() {
         ? Math.round((completedCount / totalCount) * 100)
         : progress;
 
+    // Show save modal once after generation completes (not after ZIP download)
+    useEffect(() => {
+        if (isDone && completedCount > 0 && !zipDownloaded && !saveModalShownRef.current) {
+            saveModalShownRef.current = true;
+            const timer = setTimeout(() => {
+                setShowSaveModal(true);
+            }, 1500); // Delay slightly so UX feels less jarring
+            return () => clearTimeout(timer);
+        }
+    }, [isDone, completedCount, zipDownloaded]);
+
     return (
         <div className="text-center">
             {hasPartialProgress ? (
@@ -371,6 +385,14 @@ export function GenerationView() {
                     )}
                 </div>
             )}
+
+            {/* Session save modal */}
+            <SaveSessionModal
+                sessionId={sessionId}
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                certificateCount={completedCount}
+            />
         </div>
     );
 }

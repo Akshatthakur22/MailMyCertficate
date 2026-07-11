@@ -132,6 +132,17 @@ export interface PurchaseCompletedEvent extends AnalyticsBasePayload {
 
 // ——— Retention ———
 
+export interface SessionSavedEvent extends AnalyticsBasePayload {
+  event: 'session_saved';
+  email_domain: string;
+}
+
+export interface SessionResumedEvent extends AnalyticsBasePayload {
+  event: 'session_resumed';
+  email_domain: string;
+  days_since_creation: number;
+}
+
 export interface ReturningDashboardVisitEvent extends AnalyticsBasePayload {
   event: 'returning_dashboard_visit';
   visit_count: number;
@@ -193,6 +204,8 @@ export type AnalyticsEvent =
   | CertificateEmailedEvent
   | CheckoutStartedEvent
   | PurchaseCompletedEvent
+  | SessionSavedEvent
+  | SessionResumedEvent
   | ReturningDashboardVisitEvent
   | RepeatCertificateGenerationEvent
   | GitHubStarPromptShownEvent
