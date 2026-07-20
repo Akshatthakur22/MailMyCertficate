@@ -18,32 +18,36 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: getRootMetadataBase(),
   title: {
-    default: "MailMyCertificate | Free Bulk Certificate Generator & Gmail Sender",
+    default: "MailMyCertificate | Free Bulk Certificate Generator",
     template: "%s | MailMyCertificate"
   },
-  description: "Generate and email hundreds of personalized certificates in minutes. Upload a template + CSV, create PDFs locally in your browser, send via Gmail. Free, private, open source.",
+  description: "Generate and email hundreds of personalized certificates in minutes. Built by Akshat Thakur. Upload template + CSV, create PDFs locally in your browser, send via Gmail. Free, open source, privacy-first.",
   keywords: [...SEO_KEYWORDS.home],
   verification: getGoogleSiteVerification(),
-  authors: [{ name: "Akshat Thakur", url: "https://github.com/akshatthakur22" }],
+  authors: [
+    { name: "Akshat Thakur", url: "https://github.com/akshatthakur22" },
+    { name: "MailMyCertificate Team" }
+  ],
   creator: "Akshat Thakur",
+  publisher: "Akshat Thakur",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: absoluteUrl('/'),
     title: "MailMyCertificate | Free Bulk Certificate Automation",
-    description: "Generate and send professional certificates in bulk. Local-first, private, and lightning fast.",
+    description: "Generate and send professional certificates in bulk. Local-first, private, and lightning fast. Created by Akshat Thakur.",
     siteName: "MailMyCertificate",
     images: [{
       url: "/og-image.png",
       width: 1200,
       height: 630,
-      alt: "MailMyCertificate - Bulk Certificate Generator"
+      alt: "MailMyCertificate - Bulk Certificate Generator | Created by Akshat Thakur"
     }],
   },
   twitter: {
     card: "summary_large_image",
     title: "MailMyCertificate | Bulk Certificate Generator",
-    description: "Generate personalized certificates in bulk directly in your browser. Privacy-first, open-source.",
+    description: "Generate personalized certificates in bulk directly in your browser. Privacy-first, open-source. By Akshat Thakur.",
     images: ["/og-image.png"],
     creator: "@akshatt66612958",
   },
@@ -58,7 +62,12 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "/",
-  }
+  },
+  formatDetection: {
+    email: true,
+    address: false,
+    telephone: true,
+  },
 };
 
 

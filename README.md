@@ -42,6 +42,20 @@ Production: **[mailmycertificate.tech](https://mailmycertificate.tech)**
 
 ---
 
+## Built by Akshat Thakur
+
+**Created by [Akshat Thakur](https://github.com/akshatthakur22)**, a software developer building web applications and tools that solve real problems.
+
+If you like MailMyCertificate, you might also find these useful:
+
+- **[SafeExam](https://safexam.in)** — Online examination platform
+- **[Calcuzy](https://calcuzy.app)** — Productivity and calculation tool
+- **[Priya Sarv Utthan](https://priyasarvutthan.org)** — Platform for a non-profit organization
+
+Connect on [GitHub](https://github.com/akshatthakur22) • [LinkedIn](https://www.linkedin.com/in/akshatthakur22/) • [Twitter/X](https://twitter.com/akshatt66612958)
+
+---
+
 ## ✨ Features
 
 ### Certificate wizard (`/tool`)
@@ -297,8 +311,13 @@ MIT License — see [LICENSE](LICENSE) if present in the repo root.
 
 ## 🙏 Acknowledgements
 
+Built with dedication by Akshat Thakur using:
+
 - [pdf-lib](https://pdf-lib.js.org/) · [PapaParse](https://www.papaparse.com/) · [JSZip](https://stuk.github.io/jszip/)
 - [Zustand](https://github.com/pmndrs/zustand) · [Dexie](https://dexie.org/) · [Next.js](https://nextjs.org/) · [Flask](https://flask.palletsprojects.com/)
+- [Tailwind CSS](https://tailwindcss.com/) · [TypeScript](https://www.typescriptlang.org/) · [React](https://react.dev/)
+
+Thanks to the open-source community for tools that make this possible.
 
 ---
 

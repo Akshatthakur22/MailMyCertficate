@@ -567,18 +567,17 @@ export default function PrivacyPolicy() {
 
                                     <div>
                                         <p className="text-base font-bold uppercase tracking-[0.18em] text-accent mb-3">
-                                            Engineering Commitment
+                                            Our Commitment
                                         </p>
 
                                         <p className="text-foreground/85 leading-relaxed text-base">
-                                            MailMyCertificate was originally built to
-                                            solve a real organizer workflow problem
+                                            MailMyCertificate was built to solve a real organizer workflow problem
                                             without forcing users to trust unknown servers
                                             with participant data.
                                         </p>
 
                                         <p className="text-foreground/85 leading-relaxed mt-4 text-base">
-                                            The goal is simple:
+                                            We keep it simple:
                                             generate and send certificates with as little
                                             unnecessary data exposure as possible.
                                         </p>

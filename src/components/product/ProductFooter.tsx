@@ -1,11 +1,16 @@
 import Link from 'next/link';
-import { Github } from 'lucide-react';
+import { Github, Shield } from 'lucide-react';
+import { CreatorProfile } from '@/components/product/CreatorProfile';
 import { GITHUB_REPO_URL } from '@/config/github';
 
 export function ProductFooter() {
   return (
     <footer className="border-t border-border bg-background">
       <div className="container-width py-12">
+        {/* Creator Section */}
+       
+
+        {/* Main Footer Grid */}
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" className="brand-text">
@@ -54,20 +59,47 @@ export function ProductFooter() {
           />
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-border/60 pt-6 text-xs text-secondary sm:flex-row sm:items-center sm:justify-between">
-          <p>Built by Akshat Thakur for real certificate workflows.</p>
-          <p>Generate locally. Send intentionally. Own your data.</p>
+        {/* Privacy & Other Projects */}
+        <div className="mt-10 pt-10 border-t border-border/40 space-y-4">
+          {/* Data Privacy */}
+          <div className="flex items-start gap-3 text-xs text-secondary">
+            <Shield size={16} className="text-accent mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="leading-relaxed">
+                Data from Google Workspace APIs is processed locally in your browser and{' '}
+                <Link href="/privacy-policy" className="text-accent hover:underline font-medium">
+                  never used for AI training or sold.
+                </Link>
+              </p>
+            </div>
+          </div>
+
+          {/* Other Projects */}
+          <div className="text-xs text-secondary/60">
+            Other projects:{' '}
+            <Link href="https://safexam.in" target="_blank" className="text-accent hover:underline">
+              SafeExam
+            </Link>
+            {' '} • {' '}
+            <Link href="https://calcuzy.app" target="_blank" className="text-accent hover:underline">
+              Calcuzy
+            </Link>
+            {' '} • {' '}
+            <Link href="https://priyasarvutthan.org" target="_blank" className="text-accent hover:underline">
+              Priya Sarv Utthan
+            </Link>
+          </div>
         </div>
 
-        {/* Data & AI Compliance */}
-        <div className="mt-8 pt-8 border-t border-border/40">
-          <div className="text-xs text-secondary/70 space-y-2">
-            <p className="font-medium text-foreground text-xs">Data & AI Compliance</p>
-            <p>
-              Data from Google Workspace APIs is processed locally in your browser and never used for AI training or sold.
-              <Link href="/privacy-policy" className="text-accent hover:underline ml-1">Learn more</Link>
-            </p>
-          </div>
+        <br />
+
+        <div className="mb-12 pb-10 border-b border-border/40 flex justify-end">
+         <div>
+           <p className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
+            Created by
+           </p>
+           <CreatorProfile variant="compact" showLinks={true} />
+         </div>
         </div>
       </div>
     </footer>

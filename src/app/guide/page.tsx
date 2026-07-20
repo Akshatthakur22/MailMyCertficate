@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/Button';
 import { RevealSection } from '@/components/layout/RevealSection';
 import { ProductFooter } from '@/components/product/ProductFooter';
+import { GuideStructuredData } from '@/components/guide/GuideStructuredData';
 import { 
     Upload,
     FileSpreadsheet,
@@ -46,6 +47,7 @@ import { GUIDE_FAQS } from '@/data/guideFaqs';
 export default function Guide() {
     return (
         <div className="flex flex-col min-h-screen bg-background font-sans">
+            <GuideStructuredData />
             {/* ======================================
                 NAVIGATION
                ====================================== */}

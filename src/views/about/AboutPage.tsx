@@ -85,7 +85,7 @@ export default function AboutPage() {
               <p className="text-sm text-secondary/70 max-w-2xl">
                 Started as a Python automation script during a college event.
                 <br />
-                Built because I genuinely needed it.
+                Built because it genuinely solved a real problem.
               </p>
             </RevealSection>
           </div>
@@ -95,14 +95,13 @@ export default function AboutPage() {
           <div className="container-width">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 max-w-5xl mx-auto">
               <RevealSection className="space-y-6">
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">The Real Story</h2>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">The Story</h2>
                 <div className="space-y-4 text-secondary leading-relaxed">
                   <p>
-                    I was Technical Lead for a GeeksForGeeks college club event. We had 300+
-                    participants who needed certificates.
+                    During a college club event, there were 300+ participants who needed certificates.
                   </p>
                   <p>
-                    Google Forms gave us messy spreadsheet data. Names, emails, timestamps — plus
+                    Google Forms gave messy spreadsheet data. Names, emails, timestamps — plus
                     plenty of unnecessary fields.
                   </p>
                   <p>
@@ -110,16 +109,16 @@ export default function AboutPage() {
                     uploading participant data or charged per certificate.
                   </p>
                   <p>
-                    So I built a Python script overnight. It uploaded blank certificate templates,
-                    let me position text with X/Y coordinates, and imported CSV files.
+                    So a Python script was built overnight. It uploaded blank certificate templates,
+                    let you position text with X/Y coordinates, and imported CSV files.
                   </p>
                   <p>
-                    Generated PDFs locally. Then learned SMTP automation to send emails with Gmail
+                    Generated PDFs locally. Then SMTP automation to send emails with Gmail
                     app passwords.
                   </p>
                   <p>
-                    Realized every organizer faces this same problem. That eventually became
-                    MailMyCertificate.
+                    Realized every organizer faces this same problem. That's how
+                    MailMyCertificate came to be — rebuilt as open source, free, and privacy-first.
                   </p>
                 </div>
               </RevealSection>

@@ -24,6 +24,7 @@ export const SEO_KEYWORDS = {
     'open source certificate generator',
     'mail my certificate about',
     'privacy first event tools',
+    'Akshat Thakur',
   ],
   contact: ['mail my certificate contact', 'certificate tool support'],
   privacy: ['mail my certificate privacy policy', 'local first certificate data'],

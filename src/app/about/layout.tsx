@@ -3,11 +3,11 @@ import { createPageMetadata } from '@/lib/metadata';
 import { SEO_KEYWORDS } from '@/lib/seo-keywords';
 
 export const metadata: Metadata = createPageMetadata({
-  title: 'About — Open Source Certificate Automation',
+  title: 'About MailMyCertificate',
   description:
-    'MailMyCertificate is a free, privacy-first, open-source tool built by an event organizer to generate and email bulk certificates locally in your browser.',
+    'MailMyCertificate is a free, privacy-first, open-source certificate generator built by Akshat Thakur from a real event organizer workflow.',
   path: '/about',
-  keywords: [...SEO_KEYWORDS.about, 'bulk certificate generator'],
+  keywords: [...SEO_KEYWORDS.about, 'Akshat Thakur'],
 });
 
 export default function AboutLayout({ children }: { children: React.ReactNode }) {
