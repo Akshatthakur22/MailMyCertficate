@@ -88,15 +88,7 @@ export function ProductFooter() {
           </div>
         </div>
 
-        {/* Creator */}
-        <div className="mt-10 pt-10 border-t border-border/60 flex justify-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
-              Created by
-            </p>
-            <CreatorProfile variant="compact" showLinks={true} />
-          </div>
-        </div>
+       
       </div>
     </footer>
   );
