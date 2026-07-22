@@ -178,6 +178,21 @@ export function GenerationView() {
         }
     };
 
+    const allCertificatesReady =
+        countsReady && totalCount > 0 && completedCount >= totalCount;
+    const isDone = allCertificatesReady || (progress === 100 && !isGenerating);
+
+    // Show save modal once after generation completes (not after ZIP download)
+    useEffect(() => {
+        if (isDone && completedCount > 0 && !zipDownloaded && !saveModalShownRef.current) {
+            saveModalShownRef.current = true;
+            const timer = setTimeout(() => {
+                setShowSaveModal(true);
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [isDone, completedCount, zipDownloaded]);
+
     if (!countsReady && !error) {
         return (
             <div className="py-12 flex flex-col items-center justify-center">
@@ -205,9 +220,6 @@ export function GenerationView() {
         );
     }
 
-    const allCertificatesReady =
-        countsReady && totalCount > 0 && completedCount >= totalCount;
-    const isDone = allCertificatesReady || (progress === 100 && !isGenerating);
     const hasPartialProgress =
         countsReady &&
         completedCount > 0 &&
@@ -224,17 +236,6 @@ export function GenerationView() {
     const displayProgress = isGenerating && totalCount > 0
         ? Math.round((completedCount / totalCount) * 100)
         : progress;
-
-    // Show save modal once after generation completes (not after ZIP download)
-    useEffect(() => {
-        if (isDone && completedCount > 0 && !zipDownloaded && !saveModalShownRef.current) {
-            saveModalShownRef.current = true;
-            const timer = setTimeout(() => {
-                setShowSaveModal(true);
-            }, 1500); // Delay slightly so UX feels less jarring
-            return () => clearTimeout(timer);
-        }
-    }, [isDone, completedCount, zipDownloaded]);
 
     return (
         <div className="text-center">

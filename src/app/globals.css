@@ -265,7 +265,7 @@ body {
 }
 
 .brand-text {
-  @apply font-semibold tracking-tight text-foreground;
+  @apply font-semibold tracking-tight text-foreground inline-flex items-center;
   font-size: 1.125rem;
 }
 

@@ -48,6 +48,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           if (recoverable.sessionId === currentId && onWorkflowPage && midFlow) {
             markRecoveryDecided();
             await hydrateSessionFromIDB(currentId).catch(() => {});
+            useAppStore.getState().bumpSessionHydration();
             setSummary(null);
             return;
           }
@@ -59,6 +60,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       const sessionId = useAppStore.getState().sessionId;
       await hydrateSessionFromIDB(sessionId).catch(() => {});
+      useAppStore.getState().bumpSessionHydration();
       if (mounted) setSummary(null);
     };
 

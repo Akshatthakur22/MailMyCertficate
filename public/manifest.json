@@ -4,8 +4,8 @@
   "description": "Bulk certificate generation tool, locally in your browser.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1F4ED8",
+  "background_color": "#FAFAF7",
+  "theme_color": "#2D6A4F",
   "icons": [
     {
       "src": "/favicon-48.png",
