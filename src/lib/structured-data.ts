@@ -170,6 +170,16 @@ export function buildEntityGraphJsonLd() {
         mainEntity: { '@id': `${appUrl}/#organization` },
         url: absoluteUrl('/about'),
       },
+      // ProfilePage for Akshat Thakur — helps search engines associate the person with the product
+      {
+        '@type': 'ProfilePage',
+        '@id': `${appUrl}/about#profile`,
+        name: 'Akshat Thakur — Software Developer',
+        description:
+          'Akshat Thakur is a software developer who builds open-source tools, web applications, and educational platforms. Creator of MailMyCertificate, SafeExam, and Calcuzy.',
+        mainEntity: { '@id': `${appUrl}/#creator` },
+        url: absoluteUrl('/about'),
+      },
     ],
   };
 }

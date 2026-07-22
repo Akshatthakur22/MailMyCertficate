@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { RevealSection } from '@/components/layout/RevealSection';
 import { ProductFooter } from '@/components/product/ProductFooter';
+import { FloatingStarWidget } from '@/components/github/FloatingStarWidget';
 import { GITHUB_REPO_URL } from '@/config/github';
 import { ArrowRight, Github, Check } from 'lucide-react';
 import {
@@ -616,6 +617,8 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Floating GitHub star widget — appears after 50% scroll */}
+        <FloatingStarWidget />
       </main>
 
       <ProductFooter />

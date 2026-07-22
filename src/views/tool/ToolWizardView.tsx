@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { StepIndicator } from '@/components/wizard/StepIndicator';
 import { SessionStatus } from '@/components/wizard/SessionStatus';
+import { GitHubStarBanner } from '@/components/github/GitHubStarBanner';
 import { UploadTemplate } from '@/components/wizard/UploadTemplate';
 import { UploadCSV } from '@/components/wizard/UploadCSV';
 import { AdjustPreview } from '@/components/wizard/AdjustPreview';
@@ -110,6 +111,13 @@ export default function ToolWizardView() {
                                 className="text-center text-secondary/60 text-[11px] leading-relaxed"
                             />
                         </div>
+                    </div>
+                )}
+
+                {/* GitHub star CTA — shown after step 2+ when user has invested time */}
+                {!isEditorStep && currentStep >= 2 && (
+                    <div className="mt-4">
+                        <GitHubStarBanner placement="post_csv" variant="inline" />
                     </div>
                 )}
             </main>
