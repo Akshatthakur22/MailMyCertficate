@@ -5,16 +5,13 @@ import { GITHUB_REPO_URL } from '@/config/github';
 
 export function ProductFooter() {
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="border-t border-border bg-muted">
       <div className="container-width py-12">
-        {/* Creator Section */}
-       
-
         {/* Main Footer Grid */}
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" className="brand-text">
-              <span>Mail</span><span>My</span><span>Certificate</span>
+            <Link href="/" className="text-lg font-semibold tracking-tight text-foreground hover:opacity-70 transition-opacity">
+              MailMyCertificate
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-6 text-secondary">
               The browser-first certificate platform for organizers who need fast generation,
@@ -23,7 +20,7 @@ export function ProductFooter() {
             <Link
               href={GITHUB_REPO_URL}
               target="_blank"
-              className="mt-5 inline-flex items-center gap-2 rounded-md border border-border bg-white px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent"
             >
               <Github size={15} />
               View source on GitHub
@@ -60,7 +57,7 @@ export function ProductFooter() {
         </div>
 
         {/* Privacy & Other Projects */}
-        <div className="mt-10 pt-10 border-t border-border/40 space-y-4">
+        <div className="mt-10 pt-10 border-t border-border/60 space-y-4">
           {/* Data Privacy */}
           <div className="flex items-start gap-3 text-xs text-secondary">
             <Shield size={16} className="text-accent mt-0.5 flex-shrink-0" />
@@ -80,26 +77,24 @@ export function ProductFooter() {
             <Link href="https://safexam.in" target="_blank" className="text-accent hover:underline">
               SafeExam
             </Link>
-            {' '} • {' '}
+            {' '}&middot;{' '}
             <Link href="https://calcuzy.app" target="_blank" className="text-accent hover:underline">
               Calcuzy
             </Link>
-            {' '} • {' '}
+            {' '}&middot;{' '}
             <Link href="https://priyasarvutthan.org" target="_blank" className="text-accent hover:underline">
               Priya Sarv Utthan
             </Link>
           </div>
         </div>
-
-        <br />
-
-        <div className="mb-12 pb-10 border-b border-border/40 flex justify-end">
-         <div>
-           <p className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
-            Created by
-           </p>
-           <CreatorProfile variant="compact" showLinks={true} />
-         </div>
+        {/* Creator */}
+        <div className="mt-10 pt-10 border-t border-border/60 flex justify-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-secondary mb-4">
+              Created by
+            </p>
+            <CreatorProfile variant="compact" showLinks={true} />
+          </div>
         </div>
       </div>
     </footer>

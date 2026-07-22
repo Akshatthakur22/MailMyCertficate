@@ -80,7 +80,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1F4ED8" />
+        <meta name="theme-color" content="#2D6A4F" />
         <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
         <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
       </head>

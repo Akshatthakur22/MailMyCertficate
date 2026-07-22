@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --accent: #1F4ED8;
-  --accent-light: #EEF2FF;
-  --secondary: #6B7280;
-  --border: #E5E7EB;
-  --muted: #F9FAFB;
+  --background: #FAFAF7;
+  --foreground: #1A1A1A;
+  --accent: #2D6A4F;
+  --accent-light: #EAF3EE;
+  --secondary: #6B6860;
+  --border: #E8E4DC;
+  --muted: #F0EDE6;
 }
 
 @theme inline {
@@ -56,8 +56,8 @@ body {
 
 .hero-gradient {
   background: radial-gradient(ellipse 80% 70% at 50% 40%,
-      rgba(31, 78, 216, 0.08) 0%,
-      rgba(31, 78, 216, 0.03) 50%,
+      rgba(45, 106, 79, 0.06) 0%,
+      rgba(45, 106, 79, 0.02) 50%,
       transparent 100%);
 }
 
@@ -253,7 +253,7 @@ body {
 }
 
 .glow-on-hover:hover {
-  box-shadow: 0 0 30px 10px rgba(31, 78, 216, 0.15);
+  box-shadow: 0 0 30px 10px rgba(45, 106, 79, 0.12);
 }
 
 .glass-card {
@@ -265,20 +265,20 @@ body {
 }
 
 .brand-text {
-  @apply font-bold tracking-tight text-foreground flex items-center;
-  font-size: 1.25rem;
+  @apply font-semibold tracking-tight text-foreground;
+  font-size: 1.125rem;
 }
 
 .brand-text span:first-child {
-  @apply text-accent font-extrabold;
+  @apply text-foreground font-semibold;
 }
 
 .brand-text span:nth-child(2) {
-  @apply text-foreground font-bold;
+  @apply text-foreground font-semibold;
 }
 
 .brand-text span:last-child {
-  @apply text-secondary font-medium;
+  @apply text-foreground font-semibold;
 }
 
 .handwritten-arrow {
@@ -361,4 +361,124 @@ input[type='range'].custom-slider::-webkit-slider-thumb {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--secondary);
+}
+
+
+/* ════════════════════════════════════════════════════════
+   LANDING PAGE — Warm Editorial Identity Layer
+   ════════════════════════════════════════════════════════ */
+
+.landing-page {
+  --landing-bg: var(--background);
+  --landing-surface: var(--muted);
+  --landing-ink: var(--foreground);
+  --landing-secondary: var(--secondary);
+  --landing-rule: var(--border);
+  --landing-accent: var(--accent);
+  --landing-accent-light: var(--accent-light);
+
+  background: var(--landing-bg);
+  color: var(--landing-ink);
+}
+
+/* ── Typography helpers ────────────────────────────────── */
+.landing-page .font-serif {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.landing-label {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--landing-secondary);
+}
+
+/* ── Color utility classes ─────────────────────────────── */
+.text-landing-ink { color: var(--landing-ink); }
+.text-landing-secondary { color: var(--landing-secondary); }
+.bg-landing-surface { background: var(--landing-surface); }
+.border-landing-rule { border-color: var(--landing-rule); }
+
+/* ── Navigation ────────────────────────────────────────── */
+.landing-nav {
+  background: color-mix(in srgb, var(--landing-bg) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--landing-rule);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.landing-btn-primary {
+  background: var(--landing-accent);
+  color: white;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.landing-btn-primary:hover {
+  opacity: 0.88;
+}
+.landing-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.landing-btn-secondary {
+  background: var(--landing-surface);
+  color: var(--landing-ink);
+  border: 1px solid var(--landing-rule);
+  transition: background 0.2s, border-color 0.2s;
+}
+.landing-btn-secondary:hover {
+  background: var(--landing-rule);
+  border-color: var(--landing-secondary);
+}
+
+/* ── Cards & surfaces ──────────────────────────────────── */
+.landing-annotation-card {
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-rule);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.landing-section-alt {
+  background: color-mix(in srgb, var(--landing-surface) 40%, var(--landing-bg));
+}
+
+.landing-browser-chrome {
+  background: var(--landing-surface);
+  border: 1.5px solid var(--landing-rule);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.landing-feature-pill {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 99px;
+  border: 1px solid var(--landing-rule);
+  background: var(--landing-bg);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--landing-secondary);
+  transition: border-color 0.2s;
+}
+.landing-feature-pill:hover {
+  border-color: var(--landing-accent);
+}
+
+/* ── Motion ────────────────────────────────────────────── */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-gentle {
+    animation: none;
+  }
 }

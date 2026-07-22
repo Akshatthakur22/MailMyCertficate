@@ -1,46 +1,53 @@
 import Link from 'next/link';
-import { Github, Star } from 'lucide-react';
+import { Github } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/Button';
+import { GITHUB_REPO_URL } from '@/config/github';
 
 /**
  * Server Component — Global Navigation
+ * Warm, minimal, editorial — matches the unified design identity.
  */
 export function Navbar() {
   return (
     <nav
-      className="fixed top-0 w-full z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl"
+      className="fixed top-0 w-full z-50 border-b border-border bg-background/85 backdrop-blur-sm"
       aria-label="Main navigation"
     >
-      <div className="container-width flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
+      <div className="container-width h-16 flex items-center justify-between">
         <Link
           href="/"
-          className="brand-text hover:opacity-80 transition-opacity"
+          className="text-lg font-semibold tracking-tight text-foreground hover:opacity-70 transition-opacity"
           aria-label="MailMyCertificate — Go to homepage"
         >
-          <span>Mail</span><span>My</span><span>Certificate</span>
+          MailMyCertificate
         </Link>
 
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end sm:justify-end">
-          <div className="hidden md:flex items-center gap-6 text-sm font-bold text-secondary">
-            <Link href="/about" className="hover:text-accent transition-colors">About</Link>
-            <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
-            <Link href="/guide" className="hover:text-accent transition-colors">Guide</Link>
-             <Link href="/settings" className="hover:text-accent transition-colors">Settings</Link>
+        <div className="flex items-center gap-6 md:gap-8">
+          <div className="hidden md:flex items-center gap-7 text-[13px] font-medium text-secondary">
+            <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+            <Link href="/guide" className="hover:text-foreground transition-colors">Guide</Link>
+            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            <Link href="/settings" className="hover:text-foreground transition-colors">Settings</Link>
           </div>
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+          <div className="flex items-center gap-3">
+            <Link
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              className="text-[13px] font-medium text-secondary hover:text-foreground transition-colors flex items-center gap-1.5"
+            >
+              <Github size={15} />
+              <span className="hidden sm:inline">Star</span>
+            </Link>
             <Link
               href="/tool"
-              className={buttonVariants({ variant: 'primary', size: 'sm', className: 'w-full shadow-sm sm:w-auto' })}
+              className={buttonVariants({ variant: 'primary', size: 'sm' })}
             >
               Open Tool
             </Link>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-secondary md:hidden">
-            <Link href="/about" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">About</Link>
-            <Link href="/guide" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">Guide</Link>
-            <Link href="/contact" className="rounded-full border border-border bg-white px-3 py-1.5 hover:border-accent hover:text-accent transition-colors">Contact</Link>
-          </div>
         </div>
+
+        {/* Mobile nav links — visible only on small screens when needed */}
       </div>
     </nav>
   );
