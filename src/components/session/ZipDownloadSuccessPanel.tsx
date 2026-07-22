@@ -1,7 +1,6 @@
 'use client';
 
-import { Download, RotateCcw, RefreshCw, CheckCircle2, Lock, Archive } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { RotateCcw, RefreshCw, CheckCircle2, Lock, Archive } from 'lucide-react';
 
 interface ZipDownloadSuccessPanelProps {
   onGenerateAgain: () => void;

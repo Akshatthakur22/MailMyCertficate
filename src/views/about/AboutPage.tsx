@@ -117,7 +117,7 @@ export default function AboutPage() {
                     app passwords.
                   </p>
                   <p>
-                    Realized every organizer faces this same problem. That's how
+                    Realized every organizer faces this same problem. That&apos;s how
                     MailMyCertificate came to be — rebuilt as open source, free, and privacy-first.
                   </p>
                 </div>

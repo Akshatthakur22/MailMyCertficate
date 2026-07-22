@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { X } from 'lucide-react';
-import { renderSingleCertificate } from '@/services/certificateService/renderSingle';
 
 interface PreviewModalProps {
     isOpen: boolean;
@@ -20,11 +19,55 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
     const [isGenerating, setIsGenerating] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
 
+    const generatePreview = useCallback(async () => {
+        if (!template || !templateDimensions || fields.length === 0 || csvData.length === 0) {
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const recipientData = csvData[0];
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            canvas.width = templateDimensions.width;
+            canvas.height = templateDimensions.height;
+
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, templateDimensions.width, templateDimensions.height);
+
+                for (const field of fields) {
+                    const value = recipientData[field.columnName] || '';
+                    if (!value) continue;
+
+                    ctx.font = `${field.fontSize}px ${field.fontFamily}`;
+                    ctx.fillStyle = field.color;
+                    ctx.textAlign = field.align as CanvasTextAlign;
+
+                    const x = field.align === 'center' ? field.x : field.align === 'right' ? field.width - field.x : field.x;
+                    ctx.fillText(String(value), x, field.y);
+                }
+
+                const dataUrl = canvas.toDataURL('image/png');
+                setPreviewImage(dataUrl);
+                setIsGenerating(false);
+            };
+            img.src = template;
+            
+        } catch (error) {
+            console.error('Preview generation failed:', error);
+            setIsGenerating(false);
+        }
+    }, [template, templateDimensions, fields, csvData]);
+
     useEffect(() => {
         if (isOpen && csvData.length > 0) {
             generatePreview();
         }
-    }, [isOpen]);
+    }, [isOpen, csvData.length, generatePreview]);
 
     // Close modal when clicking outside
     useEffect(() => {
@@ -66,55 +109,6 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
             setPreviewImage(null);
         }
     }, [isOpen]);
-
-    const generatePreview = async () => {
-        if (!template || !templateDimensions || fields.length === 0 || csvData.length === 0) {
-            return;
-        }
-
-        setIsGenerating(true);
-        try {
-            // Use the first recipient for preview
-            const recipientData = csvData[0];
-            
-            // Create a canvas to render the certificate directly
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            canvas.width = templateDimensions.width;
-            canvas.height = templateDimensions.height;
-
-            // Draw template background
-            const img = new Image();
-            img.onload = () => {
-                ctx.drawImage(img, 0, 0, templateDimensions.width, templateDimensions.height);
-
-                // Render text fields
-                for (const field of fields) {
-                    const value = recipientData[field.columnName] || '';
-                    if (!value) continue;
-
-                    ctx.font = `${field.fontSize}px ${field.fontFamily}`;
-                    ctx.fillStyle = field.color;
-                    ctx.textAlign = field.align as CanvasTextAlign;
-
-                    const x = field.align === 'center' ? field.x : field.align === 'right' ? field.width - field.x : field.x;
-                    ctx.fillText(String(value), x, field.y);
-                }
-
-                // Convert canvas to image URL
-                const dataUrl = canvas.toDataURL('image/png');
-                setPreviewImage(dataUrl);
-                setIsGenerating(false);
-            };
-            img.src = template;
-            
-        } catch (error) {
-            console.error('Preview generation failed:', error);
-            setIsGenerating(false);
-        }
-    };
 
     if (!isOpen) return null;
 

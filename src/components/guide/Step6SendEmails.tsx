@@ -16,7 +16,7 @@ export function Step6SendEmails() {
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold text-foreground">Step 6: Send Emails</h2>
                 <p className="mt-2 text-secondary text-sm md:text-base">
-                  Deliver certificates directly to participants' inboxes with personalized messages via Gmail.
+                  Deliver certificates directly to participants&apos; inboxes with personalized messages via Gmail.
                 </p>
               </div>
             </div>

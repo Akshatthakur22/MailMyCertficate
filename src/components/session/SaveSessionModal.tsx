@@ -67,7 +67,7 @@ export function SaveSessionModal({
 
         {/* Body */}
         <p className="text-sm text-secondary mb-4">
-          We'll save your <span className="font-medium">{certificateCount} certificates</span> and let you resume where you left off when you return.
+          We&apos;ll save your <span className="font-medium">{certificateCount} certificates</span> and let you resume where you left off when you return.
         </p>
 
         {/* Email input */}

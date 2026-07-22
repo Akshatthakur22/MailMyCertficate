@@ -18,10 +18,10 @@ export function BeforeYouStart() {
                             <span className="text-sm font-medium text-accent">5–30 minutes</span>
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
-                            What you'll need
+                            What you&apos;ll need
                         </h2>
                         <p className="text-secondary">
-                            Three things. That's it.
+                            Three things. That&apos;s it.
                         </p>
                     </div>
 
@@ -76,7 +76,7 @@ export function BeforeYouStart() {
                         </h3>
                         <div className="bg-yellow-50/20 border border-yellow-200/30 rounded-lg p-4">
                             <p className="text-sm text-secondary">
-                                <span className="font-medium text-foreground">PDF templates don't work.</span> Convert them to PNG/JPG first. Canva exports directly as PNG — use that.
+                                <span className="font-medium text-foreground">PDF templates don&apos;t work.</span> Convert them to PNG/JPG first. Canva exports directly as PNG — use that.
                             </p>
                         </div>
                     </div>

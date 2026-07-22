@@ -6,11 +6,9 @@ import {
     Shield,
     Database,
     HardDrive,
-    Mail,
     Github,
     Lock,
     EyeOff,
-    Server,
     ArrowRight,
 } from 'lucide-react';
 
@@ -464,8 +462,8 @@ export default function PrivacyPolicy() {
                                         Page path and navigation flow (no personal data)
                                     </li>
                                     <li>
-                                        Feature usage (e.g., "template_uploaded",
-                                        "certificate_generated") with aggregate counts only
+                                        Feature usage (e.g., &quot;template_uploaded&quot;,
+                                        &quot;certificate_generated&quot;) with aggregate counts only
                                     </li>
                                     <li>
                                         Browser type and device category (non-identifying)

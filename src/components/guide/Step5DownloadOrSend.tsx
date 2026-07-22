@@ -133,7 +133,7 @@ export function Step5DownloadOrSend() {
                         <div>
                             <h4 className="font-semibold text-foreground text-sm mb-1">What happens next</h4>
                             <p className="text-sm text-secondary">
-                                If you're sending by email, the next step is setting up Gmail. If downloading, you're done — grab your ZIP and distribute.
+                                If you&apos;re sending by email, the next step is setting up Gmail. If downloading, you&apos;re done — grab your ZIP and distribute.
                             </p>
                         </div>
                     </div>

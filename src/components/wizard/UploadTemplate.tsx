@@ -156,7 +156,7 @@ export function UploadTemplate() {
                 <>
                     {/* Upload form — initial state */}
                     <p className="text-secondary text-sm mb-5 max-w-sm mx-auto">
-                        Your design will be personalized with each recipient's data.
+                        Your design will be personalized with each recipient&apos;s data.
                     </p>
 
                     <div className="mb-4 text-left">

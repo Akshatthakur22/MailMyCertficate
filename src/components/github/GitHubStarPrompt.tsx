@@ -18,13 +18,18 @@ interface GitHubStarPromptProps {
 }
 
 export function GitHubStarPrompt({ trigger, certificatesCount }: GitHubStarPromptProps) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => shouldShowGitHubStarPrompt(certificatesCount));
   const trackedShownRef = useRef(false);
 
   useEffect(() => {
-    if (!shouldShowGitHubStarPrompt(certificatesCount)) return;
+    if (!visible) {
+      if (shouldShowGitHubStarPrompt(certificatesCount)) {
+        setVisible(true);
+      } else {
+        return;
+      }
+    }
 
-    setVisible(true);
     markGitHubStarPromptShownThisSession();
 
     if (trackedShownRef.current) return;
@@ -38,7 +43,7 @@ export function GitHubStarPrompt({ trigger, certificatesCount }: GitHubStarPromp
       },
       { dedupeKey: `star-prompt-${trigger}-${certificatesCount}` },
     );
-  }, [trigger, certificatesCount]);
+  }, [trigger, certificatesCount, visible]);
 
   const handleStarClick = () => {
     trackEvent(

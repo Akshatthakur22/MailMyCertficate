@@ -70,7 +70,7 @@ export function Step1PrepareTemplate() {
                                     ⚠️ Important
                                 </h4>
                                 <p className="text-sm text-secondary">
-                                    <span className="font-medium text-foreground">Don't use PDF files.</span> Export your design as PNG or JPG. If you have a PDF, convert it to an image first using any online converter.
+                                    <span className="font-medium text-foreground">Don&apos;t use PDF files.</span> Export your design as PNG or JPG. If you have a PDF, convert it to an image first using any online converter.
                                 </p>
                             </div>
                         </div>
@@ -115,7 +115,7 @@ export function Step1PrepareTemplate() {
                         <div>
                             <h4 className="font-semibold text-foreground text-sm mb-1">What happens next</h4>
                             <p className="text-sm text-secondary">
-                                After uploading, you'll see a preview of your template. Next step: add your participant data (names, emails, etc.).
+                                After uploading, you&apos;ll see a preview of your template. Next step: add your participant data (names, emails, etc.).
                             </p>
                         </div>
                     </div>

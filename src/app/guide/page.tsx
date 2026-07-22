@@ -5,37 +5,15 @@ import { ProductFooter } from '@/components/product/ProductFooter';
 import { GuideStructuredData } from '@/components/guide/GuideStructuredData';
 import { 
     Upload,
-    FileSpreadsheet,
-    Palette,
-    Zap,
-    Download,
     Mail,
     Monitor,
-    HardDrive,
-    Lock,
-    AlertCircle,
     Github,
-    Move,
-    MousePointer,
-    Settings,
-    Type,
-    ZoomIn,
-    RefreshCw,
     Layers,
-    Clock,
-    Users,
-    Shield,
-    CheckCircle,
-    Sparkles,
-    ArrowRight,
-    Eye,
     Database,
 } from 'lucide-react';
 
 // Import refined components
 import { WorkflowSeparator } from '@/components/guide/WorkflowSeparator';
-import { VisualWorkflowStep } from '@/components/guide/VisualWorkflowStep';
-import { CompactChecklistItem } from '@/components/guide/QuickChecklist';
 import { HelpAnswersSection } from '@/components/guide/HelpAnswersSection';
 import { Hero } from '@/components/guide/Hero';
 import { BeforeYouStart } from '@/components/guide/BeforeYouStart';

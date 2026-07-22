@@ -128,7 +128,7 @@ export function CompletionPanel({
         <div className="rounded-2xl border border-border bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-border px-5 py-4">
             <XCircle className="h-4 w-4 text-rose-500" />
-            <h3 className="text-sm font-semibold text-foreground">Couldn't reach {failed} {failed === 1 ? 'recipient' : 'recipients'}</h3>
+            <h3 className="text-sm font-semibold text-foreground">Couldn&apos;t reach {failed} {failed === 1 ? 'recipient' : 'recipients'}</h3>
           </div>
           <ul className="max-h-72 divide-y divide-border overflow-y-auto">
             {failedItems.map((item) => (

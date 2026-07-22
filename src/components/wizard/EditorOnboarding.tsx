@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { ArrowRight, Lock } from 'lucide-react';
 
@@ -15,16 +15,11 @@ interface EditorOnboardingProps {
 export function EditorOnboarding({ fieldsCount, show }: EditorOnboardingProps) {
   const csvData = useAppStore((state) => state.csvData);
   const [dismissed, setDismissed] = useState(false);
-  const dismissedRef = useRef(false);
 
-  useEffect(() => {
-    if (fieldsCount > 0 && !dismissedRef.current) {
-      dismissedRef.current = true;
-      setDismissed(true);
-    }
-  }, [fieldsCount]);
+  // Auto-dismiss once fields are placed — derive from props
+  const autoDismissed = fieldsCount > 0;
 
-  if (!show || dismissed) return null;
+  if (!show || dismissed || autoDismissed) return null;
 
   const recipientCount = csvData.length;
 

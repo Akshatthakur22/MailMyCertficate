@@ -1,4 +1,4 @@
-import { Palette, CheckCircle2, Move } from 'lucide-react';
+import { CheckCircle2, Move } from 'lucide-react';
 
 /* ————————————————————————————————————————————————————
    Step 3: Customize Field Placement
@@ -135,7 +135,7 @@ export function Step3CustomizeFields() {
                                     Zoom in/out for precise placement. Use the zoom controls in the editor toolbar to get a closer look at where fields should go.
                                 </p>
                                 <p className="text-secondary leading-relaxed text-sm">
-                                    Only {'{name}'} is required. Email, date, and position are optional—just don't place them if you don't need them on your certificate.
+                                    Only {'{name}'} is required. Email, date, and position are optional—just don&apos;t place them if you don&apos;t need them on your certificate.
                                 </p>
                             </div>
                         </div>
@@ -149,7 +149,7 @@ export function Step3CustomizeFields() {
                         <div>
                             <h4 className="font-semibold text-foreground text-sm mb-1">What happens next</h4>
                             <p className="text-sm text-secondary">
-                                After positioning fields, you'll generate all certificates at once. We'll take your template and participant data, then create personalized PDFs in your browser.
+                                After positioning fields, you&apos;ll generate all certificates at once. We&apos;ll take your template and participant data, then create personalized PDFs in your browser.
                             </p>
                         </div>
                     </div>

@@ -22,11 +22,11 @@ export default function ToolWizardView() {
     const currentStep = useAppStore((state) => state.currentStep);
     const sessionHydrationVersion = useAppStore((state) => state.sessionHydrationVersion);
     const setCurrentStep = useAppStore((state) => state.setCurrentStep);
-    const [isHydrated, setIsHydrated] = useState(false);
 
-    useEffect(() => {
-        setIsHydrated(true);
-    }, []);
+    // Track client-side mount (SSR renders with false, client re-renders with true)
+    const [isHydrated, setIsHydrated] = useState(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { setIsHydrated(true); }, []);
 
     const handleStepClick = (step: number) => {
         if (step < currentStep) {

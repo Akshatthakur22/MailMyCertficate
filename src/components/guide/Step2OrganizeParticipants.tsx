@@ -93,13 +93,13 @@ export function Step2OrganizeParticipants() {
                                 <div className="flex items-start gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0"></div>
                                     <p className="text-secondary leading-relaxed">
-                                        Use CSV: Download your data as a CSV file and drag it in. We'll auto-detect your headers.
+                                        Use CSV: Download your data as a CSV file and drag it in. We&apos;ll auto-detect your headers.
                                     </p>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0"></div>
                                     <p className="text-secondary leading-relaxed">
-                                        Use Google Sheets: Paste a public sheet URL. We'll fetch the latest data each time.
+                                        Use Google Sheets: Paste a public sheet URL. We&apos;ll fetch the latest data each time.
                                     </p>
                                 </div>
                                 <div className="flex items-start gap-3">
@@ -128,7 +128,7 @@ export function Step2OrganizeParticipants() {
                                     ⚠️ Common issue
                                 </h4>
                                 <p className="text-sm text-secondary">
-                                    <span className="font-medium text-foreground">Google Sheets must be public.</span> Right-click the sheet → Share → Change to "Anyone with the link can view" → Copy the URL and paste it here.
+                                    <span className="font-medium text-foreground">Google Sheets must be public.</span> Right-click the sheet → Share → Change to &quot;Anyone with the link can view&quot; → Copy the URL and paste it here.
                                 </p>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ export function Step2OrganizeParticipants() {
                         <div>
                             <h4 className="font-semibold text-foreground text-sm mb-1">What happens next</h4>
                             <p className="text-sm text-secondary">
-                                After importing, you'll see a preview of your data. Next: drag your name and email fields onto the template to position them exactly where you want them.
+                                After importing, you&apos;ll see a preview of your data. Next: drag your name and email fields onto the template to position them exactly where you want them.
                             </p>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Github, ShieldCheck } from 'lucide-react';
+import { Github } from 'lucide-react';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { buttonVariants } from '@/components/ui/Button';
 import { GITHUB_REPO_URL } from '@/config/github';

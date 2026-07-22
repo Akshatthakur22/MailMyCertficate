@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderSingleCertificate } from '../engine/pdfRenderer';
 
 let cachedTemplate: Blob | null = null;

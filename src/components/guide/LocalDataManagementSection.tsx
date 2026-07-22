@@ -83,7 +83,7 @@ export function LocalDataManagementSection() {
                 <div className="space-y-2 text-sm">
                   <div className="p-3 bg-background rounded-lg border border-border/20">
                     <div className="text-secondary mb-1">Tool header</div>
-                    <div className="text-xs text-accent/70">Click "Your local data" anytime</div>
+                    <div className="text-xs text-accent/70">Click &quot;Your local data&quot; anytime</div>
                   </div>
                   <div className="p-3 bg-background rounded-lg border border-border/20">
                     <div className="text-secondary mb-1">/settings page</div>
@@ -91,7 +91,7 @@ export function LocalDataManagementSection() {
                   </div>
                   <div className="p-3 bg-background rounded-lg border border-border/20">
                     <div className="text-secondary mb-1">Return visit modal</div>
-                    <div className="text-xs text-accent/70">"Previous session found" prompt</div>
+                    <div className="text-xs text-accent/70">&quot;Previous session found&quot; prompt</div>
                   </div>
                 </div>
               </div>

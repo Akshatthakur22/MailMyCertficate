@@ -42,7 +42,7 @@ export function WorkflowOverview() {
                     {/* Section Header */}
                     <div className="text-center mb-12">
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
-                            Here's how it works
+                            Here&apos;s how it works
                         </h2>
                         <p className="text-secondary">
                             Five simple steps. Most organizers finish in under 10 minutes.

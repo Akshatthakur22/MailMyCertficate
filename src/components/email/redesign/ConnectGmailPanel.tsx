@@ -42,11 +42,11 @@ export function ConnectGmailPanel({
             <Mail className="h-6 w-6 text-accent" />
           </div>
           <h2 className="mt-5 text-2xl font-semibold tracking-tight text-foreground">
-            You're ready to send
+            You&apos;re ready to send
           </h2>
           <p className="mt-2 max-w-md text-sm leading-6 text-secondary">
             {certificateCount} {certificateCount === 1 ? 'certificate' : 'certificates'} for {' '}
-            {recipientCount} {recipientCount === 1 ? 'person' : 'people'}. Connect your Gmail account and we'll deliver them as personalized emails from you.
+            {recipientCount} {recipientCount === 1 ? 'person' : 'people'}. Connect your Gmail account and we&apos;ll deliver them as personalized emails from you.
           </p>
 
           <div className="mt-7">

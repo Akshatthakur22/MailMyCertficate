@@ -15,7 +15,7 @@ interface HelpAnswersSectionProps {
   subtitle?: string;
 }
 
-function HelpCard({ question, answer, icon, type }: HelpItem) {
+function HelpCard({ question, answer, icon }: HelpItem) {
   const cardId = `help-${question.replace(/\s+/g, '-').toLowerCase()}`;
 
   return (

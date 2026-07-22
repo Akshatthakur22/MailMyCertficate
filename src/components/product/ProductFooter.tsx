@@ -87,6 +87,7 @@ export function ProductFooter() {
             </Link>
           </div>
         </div>
+
         {/* Creator */}
         <div className="mt-10 pt-10 border-t border-border/60 flex justify-end">
           <div>

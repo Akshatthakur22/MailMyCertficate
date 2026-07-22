@@ -27,7 +27,7 @@ export function OAuthFlow() {
                                         <Users size={24} className="text-accent" />
                                     </div>
                                     <div className="font-medium text-foreground text-sm mb-1">You</div>
-                                    <div className="text-xs text-secondary/70">Click "Connect Gmail"</div>
+                                    <div className="text-xs text-secondary/70">Click &quot;Connect Gmail&quot;</div>
                                 </div>
                                 
                                 <ArrowRight size={20} className="text-border/30 mx-auto" />
@@ -47,7 +47,7 @@ export function OAuthFlow() {
                                         <Shield size={24} className="text-accent" />
                                     </div>
                                     <div className="font-medium text-foreground text-sm mb-1">Permission</div>
-                                    <div className="text-xs text-secondary/70">"Send emails on your behalf"</div>
+                                    <div className="text-xs text-secondary/70">&quot;Send emails on your behalf&quot;</div>
                                 </div>
                                 
                                 <ArrowRight size={20} className="text-border/30 mx-auto" />

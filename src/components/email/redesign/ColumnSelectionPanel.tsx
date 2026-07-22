@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 
 interface ColumnSelectionPanelProps {
   csvHeaders: string[];
@@ -27,18 +25,15 @@ export function ColumnSelectionPanel({
   validRecipientCount,
   totalRowCount,
 }: ColumnSelectionPanelProps) {
-  const [hasValidEmail, setHasValidEmail] = useState(!!emailColumn && (validRecipientCount ?? 0) > 0);
-
-  useEffect(() => {
-    setHasValidEmail(!!emailColumn && (validRecipientCount ?? 0) > 0);
-  }, [emailColumn, validRecipientCount]);
+  const hasValidEmail = !!emailColumn && (validRecipientCount ?? 0) > 0;
 
   return (
     <div className="p-6 border border-accent/20 bg-accent-light/20 rounded-xl space-y-5">
       <div>
         <h3 className="font-semibold text-foreground mb-4">Tell us which columns to use</h3>
+
         <p className="text-sm text-secondary mb-4">
-          We'll use these to personalize your emails.
+          We&apos;ll use these to personalize your emails.
         </p>
       </div>
 

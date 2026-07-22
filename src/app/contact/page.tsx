@@ -10,7 +10,6 @@ import { buttonVariants } from '@/components/ui/Button';
 function RevealSection({
     children,
     className = '',
-    delay = '',
 }: {
     children: React.ReactNode;
     className?: string;
@@ -84,7 +83,7 @@ export default function Contact() {
 
                             {/* Subtitle */}
                             <p className="text-lg md:text-xl text-secondary mb-8 max-w-3xl">
-                                Questions, ideas, bug reports, or just want to say hi — I'd love to hear from you.
+                                Questions, ideas, bug reports, or just want to say hi — I&apos;d love to hear from you.
                             </p>
                         </RevealSection>
                     </div>
@@ -186,7 +185,7 @@ export default function Contact() {
                                     </div>
                                     <div className="text-sm text-secondary/70">
                                         I usually reply within a day or two.<br />
-                                        Sometimes faster if I'm between commits.
+                                        Sometimes faster if I&apos;m between commits.
                                     </div>
                                 </div>
                             </RevealSection>
@@ -203,7 +202,7 @@ export default function Contact() {
                             <RevealSection>
                                 <h2 className="text-2xl md:text-3xl font-bold mb-6">Open Source</h2>
                                 <p className="text-secondary mb-8 leading-relaxed text-lg">
-                                    MailMyCertificate is open source. If you'd like to contribute, improve performance, or help shape the project — contributions are always welcome.
+                                    MailMyCertificate is open source. If you&apos;d like to contribute, improve performance, or help shape the project — contributions are always welcome.
                                 </p>
                                 <Link
                                     href="https://github.com/akshatthakur22/MailMyCertficate"

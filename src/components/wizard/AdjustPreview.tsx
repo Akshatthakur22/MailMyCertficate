@@ -531,7 +531,7 @@ export function AdjustPreview() {
                                             <li>Drag fields to move them on the certificate</li>
                                             <li>Resize by dragging the corner handles</li>
                                             <li>Use Ctrl+Z to undo changes</li>
-                                            <li>Leave space between fields so text doesn't overlap</li>
+                                            <li>Leave space between fields so text doesn&apos;t overlap</li>
                                             <li>Preview before generating to catch positioning issues</li>
                                         </ul>
                                     </div>

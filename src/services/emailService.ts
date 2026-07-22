@@ -1,6 +1,3 @@
-import { USER_PLAN } from '@/config/analytics';
-import type { AnalyticsEvent, UserPlan } from '@/lib/analytics/types';
-
 export interface EmailRequest {
   recipient: string;
   subject: string;
@@ -33,7 +30,8 @@ export interface AuthLoginResponse {
 
 // ✅ CSRF tokens MUST come from server-set HTTPOnly cookies, NOT localStorage
 // Never store security tokens in accessible storage
-export const updateCsrfToken = (newToken: string) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const updateCsrfToken = (_token: string) => {
   // Server manages CSRF token in HTTPOnly cookie
   // Frontend acknowledges receipt but does NOT store it
   console.debug('[Auth] Server provided CSRF token in secure cookie');

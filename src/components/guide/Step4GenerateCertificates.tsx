@@ -90,13 +90,13 @@ export function Step4GenerateCertificates() {
                                 <div className="flex items-start gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0"></div>
                                     <p className="text-secondary leading-relaxed text-sm">
-                                        Click the "Generate" button and MailMyCertificate springs into action.
+                                        Click the &quot;Generate&quot; button and MailMyCertificate springs into action.
                                     </p>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0"></div>
                                     <p className="text-secondary leading-relaxed text-sm">
-                                        We combine your template with each participant's data (name, email, etc.) to create personalized PDFs.
+                                        We combine your template with each participant&apos;s data (name, email, etc.) to create personalized PDFs.
                                     </p>
                                 </div>
                                 <div className="flex items-start gap-3">
@@ -131,7 +131,7 @@ export function Step4GenerateCertificates() {
                         <div>
                             <h4 className="font-semibold text-foreground text-sm mb-1">What happens next</h4>
                             <p className="text-sm text-secondary">
-                                Once generation completes, you'll see your certificates ready to download as a ZIP or send via email. Both options are always available.
+                                Once generation completes, you&apos;ll see your certificates ready to download as a ZIP or send via email. Both options are always available.
                             </p>
                         </div>
                     </div>

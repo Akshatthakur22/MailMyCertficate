@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useGenerator } from '@/hooks/useGenerator';
 import { db } from '@/core/db/schema';
 import { Button } from '@/components/ui/Button';
-import { CheckCircle, Download, Mail, AlertTriangle, Loader2, Play, Sparkles } from 'lucide-react';
+import { CheckCircle, Download, Mail, AlertTriangle, Loader2, Play } from 'lucide-react';
 import JSZip from 'jszip';
 import { useRouter } from 'next/navigation';
 import { updateSession, touchActivity, startNewBatch, markRecoveryDecided } from '@/core/session/sessionManager';

@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, AlertTriangle, Mail, Users, FileCheck2, Send, Loader2, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Mail, Users, FileCheck2, Send, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface SampleRecipient {
@@ -95,7 +95,7 @@ export function SendReadinessPanel({
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-amber-700">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
-                {invalidRecipients} won't receive (invalid)
+                {invalidRecipients} won&apos;t receive (invalid)
               </div>
               {invalidExamples.length > 0 && (
                 <div className="ml-6 space-y-0.5 rounded border border-amber-200 bg-amber-50 px-2 py-1.5">

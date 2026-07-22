@@ -1,5 +1,5 @@
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd, buildFaqPageJsonLd, buildPageGraph } from '@/lib/structured-data';
+import { buildBreadcrumbJsonLd, buildFaqPageJsonLd } from '@/lib/structured-data';
 import { GUIDE_FAQS } from '@/data/guideFaqs';
 
 export function GuideStructuredData() {

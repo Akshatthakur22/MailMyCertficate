@@ -335,7 +335,7 @@ export default function EmailView() {
     try {
       const status = await emailService.getStatus();
       setAuthStatus(status);
-    } catch (error) {
+    } catch {
       setMessage({ 
         type: 'error', 
         text: 'Could not load Gmail status.',
@@ -351,7 +351,7 @@ export default function EmailView() {
     try {
       const loginData = await emailService.login();
       window.location.href = loginData.authorization_url;
-    } catch (error) {
+    } catch {
       setMessage({ 
         type: 'error', 
         text: 'Could not open Gmail login.',
@@ -366,7 +366,7 @@ export default function EmailView() {
       await emailService.logout();
       setAuthStatus({ authenticated: false, email: null });
       setMessage({ type: 'success', text: 'Disconnected from Gmail.' });
-    } catch (error) {
+    } catch {
       setMessage({ 
         type: 'error', 
         text: 'Failed to disconnect.',

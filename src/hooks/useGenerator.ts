@@ -156,8 +156,9 @@ export function useGenerator() {
                 fields
             });
 
-        } catch (err: any) {
-            setError(err.message || "Generation failed");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Generation failed";
+            setError(message);
             setIsGenerating(false);
             workerRef.current?.terminate();
             workerRef.current = null;
