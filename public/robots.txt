@@ -3,5 +3,6 @@ Allow: /
 Disallow: /tool
 Disallow: /email
 Disallow: /settings
+Disallow: /admin
 
 Sitemap: https://mailmycertificate.tech/sitemap.xml

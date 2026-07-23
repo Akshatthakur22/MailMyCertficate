@@ -43,6 +43,11 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Admin routes are handled by the admin-scoped service worker
+    if (url.pathname.startsWith('/admin')) {
+        return;
+    }
+
     if (event.request.method !== 'GET') {
         event.respondWith(fetch(event.request));
         return;

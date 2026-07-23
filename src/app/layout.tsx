@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsProvider";
 import { GoogleTagManager, GoogleTagManagerNoscript } from "@/components/analytics/GoogleTagManager";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { GlobalStructuredData } from "@/components/seo/GlobalStructuredData";
 import { absoluteUrl } from "@/config/site";
 import { getGoogleSiteVerification, getRootMetadataBase } from "@/lib/metadata";
@@ -79,7 +80,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2D6A4F" />
         <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
         <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
@@ -90,6 +90,7 @@ export default function RootLayout({
         <GoogleTagManagerNoscript />
         <GlobalStructuredData />
         <GoogleTagManager />
+        <GoogleAnalytics />
         <AnalyticsTracker />
         {children}
         <Analytics />
