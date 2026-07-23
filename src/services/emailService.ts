@@ -28,14 +28,18 @@ export interface AuthLoginResponse {
   error?: string;
 }
 
-// ✅ CSRF tokens MUST come from server-set HTTPOnly cookies, NOT localStorage
-// Never store security tokens in accessible storage
+// ✅ CSRF tokens are stored in localStorage after OAuth callback
+// and sent as X-CSRF-Token header with every email request
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const updateCsrfToken = (_token: string) => {
-  // Server manages CSRF token in HTTPOnly cookie
-  // Frontend acknowledges receipt but does NOT store it
-  console.debug('[Auth] Server provided CSRF token in secure cookie');
+  // Token is stored in localStorage by EmailView
+  // This function exists for API compatibility
 };
+
+function getCsrfToken(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('csrf_token') || '';
+}
 
 export const emailService = {
   // Authentication endpoints
@@ -81,14 +85,13 @@ export const emailService = {
 
   async logout(): Promise<{ success: boolean }> {
     try {
-      // ✅ Send POST to logout endpoint
-      // Server will clear HTTPOnly cookie
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
         },
-        credentials: 'include', // Include HTTPOnly cookie
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -109,14 +112,13 @@ export const emailService = {
   // Email sending endpoint
   async sendEmail(emailRequest: EmailRequest): Promise<EmailResponse> {
     try {
-      // ✅ CSRF token sent via HTTPOnly cookie automatically
-      // No manual header insertion needed
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
         },
-        credentials: 'include', // Browser automatically includes HTTPOnly cookies
+        credentials: 'include',
         body: JSON.stringify(emailRequest),
       });
 
@@ -151,9 +153,12 @@ export const emailService = {
       const pdfBlob = new Blob([uint8Array], { type: 'application/pdf' });
       formData.append('attachment', pdfBlob, 'certificate.pdf');
 
-      // ✅ HTTPOnly cookie sent automatically by browser
+      // Send with CSRF token header
       const response = await fetch('/api/send-email', {
         method: 'POST',
+        headers: {
+          'X-CSRF-Token': getCsrfToken(),
+        },
         credentials: 'include',
         body: formData,
       });
