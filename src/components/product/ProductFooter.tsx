@@ -73,7 +73,7 @@ export function ProductFooter() {
 
           {/* Other Projects */}
           <div className="text-xs text-secondary/60">
-            Other projects:{' '}
+            Other projects by Akshat Thakur:{' '}
             <Link href="https://safexam.in" target="_blank" className="text-accent hover:underline">
               SafeExam
             </Link>

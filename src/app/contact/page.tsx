@@ -83,7 +83,7 @@ export default function Contact() {
 
                             {/* Subtitle */}
                             <p className="text-lg md:text-xl text-secondary mb-8 max-w-3xl">
-                                Questions, ideas, bug reports, or just want to say hi — I&apos;d love to hear from you.
+                                I&apos;m Akshat Thakur, the developer behind MailMyCertificate. Questions, ideas, bug reports, or just want to say hi — I&apos;d love to hear from you.
                             </p>
                         </RevealSection>
                     </div>

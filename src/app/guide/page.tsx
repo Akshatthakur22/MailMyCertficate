@@ -268,6 +268,13 @@ export default function Guide() {
             <RevealSection>
                 <CTASection />
             </RevealSection>
+
+            {/* Author byline */}
+            <div className="container-width py-8 border-t border-border/40">
+                <p className="text-sm text-secondary text-center">
+                    Written by Akshat Thakur — developer of MailMyCertificate and organizer of too many hackathons.
+                </p>
+            </div>
         </main>
 
         <ProductFooter />

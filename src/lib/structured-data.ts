@@ -27,7 +27,7 @@ export function buildEntityGraphJsonLd() {
         description:
           'Software developer focused on building scalable web applications, AI-powered products, developer tools, and educational platforms.',
         image: absoluteUrl('/logo.png'),
-        sameAs: [FOUNDER_GITHUB, FOUNDER_TWITTER, FOUNDER_LINKEDIN],
+        sameAs: [FOUNDER_GITHUB, FOUNDER_TWITTER, FOUNDER_LINKEDIN, 'https://safexam.in', 'https://calcuzy.app', 'https://priyasarvutthan.org'],
         knowsAbout: [
           'Web Development',
           'Full Stack Development',
