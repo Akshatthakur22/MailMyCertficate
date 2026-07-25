@@ -79,7 +79,7 @@ export default function AboutPage() {
               </h1>
 
               <p className="text-lg md:text-xl text-secondary mb-4 max-w-3xl">
-                Built from a real organizer workflow — not a startup pitch.
+                Built by Akshat Thakur from a real organizer workflow — not a startup pitch.
               </p>
 
               <p className="text-sm text-secondary/70 max-w-2xl">
@@ -248,6 +248,9 @@ attach_pdf("john_certificate.pdf")`}
                 <br className="hidden md:block" />
                 then rebuilt it properly for everyone else.&quot;
               </blockquote>
+              <p className="mt-4 text-sm text-secondary">
+                — Akshat Thakur, creator of MailMyCertificate
+              </p>
             </RevealSection>
           </div>
         </section>

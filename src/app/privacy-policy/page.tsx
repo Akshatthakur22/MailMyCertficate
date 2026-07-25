@@ -357,28 +357,32 @@ export default function PrivacyPolicy() {
                                 </ul>
 
                                 <h3 className="font-semibold text-lg mt-6 mb-4 text-foreground">
-                                    Google Sheets API (spreadsheets.readonly scope)
+                                    Google Sheets Import (Public CSV Export — No OAuth Scope Required)
                                 </h3>
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>Purpose:</strong> Import participant data
-                                        (names, emails, custom fields) from your Google
-                                        Sheets to personalize certificates.
+                                        <strong>How it works:</strong> When you paste a
+                                        Google Sheets link, MailMyCertificate fetches the
+                                        publicly shared sheet using Google&apos;s standard CSV
+                                        export URL. No OAuth token or API scope is used
+                                        for this operation.
                                     </li>
                                     <li>
-                                        <strong>Data Accessed:</strong> Only the columns
-                                        and rows you explicitly select during import.
+                                        <strong>Requirement:</strong> The sheet must be set
+                                        to &quot;Anyone with the link can view&quot; by you before
+                                        import. We never access private or
+                                        non-shared sheets.
                                     </li>
                                     <li>
-                                        <strong>Data Handling:</strong> Sheet data is read
-                                        once, processed entirely on your device, and never
-                                        stored on MailMyCertificate servers.
+                                        <strong>Data Handling:</strong> Sheet data is
+                                        fetched once, processed entirely on your device,
+                                        and never stored on MailMyCertificate servers.
                                     </li>
                                     <li>
-                                        <strong>No Modifications:</strong> This application
-                                        never modifies, edits, or deletes any content in
-                                        your Google Sheets.
+                                        <strong>No Authentication Required:</strong> This
+                                        feature does not request any Google Sheets API
+                                        scope and does not access your Google account.
                                     </li>
                                 </ul>
 
@@ -407,6 +411,33 @@ export default function PrivacyPolicy() {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="mt-8 p-6 rounded-xl bg-accent/5 border border-accent/20">
+                                    <h3 className="font-semibold text-lg mb-3 text-foreground">
+                                        Google API Services User Data Policy — Limited Use Disclosure
+                                    </h3>
+                                    <p className="text-base leading-relaxed text-foreground/85">
+                                        MailMyCertificate&apos;s use and transfer to any other app of
+                                        information received from Google APIs will adhere to the{' '}
+                                        <a
+                                            href="https://developers.google.com/terms/api-services-user-data-policy"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-accent font-medium hover:underline"
+                                        >
+                                            Google API Services User Data Policy
+                                        </a>
+                                        , including the Limited Use requirements.
+                                    </p>
+                                    <p className="mt-3 text-base leading-relaxed text-foreground/85">
+                                        Specifically, MailMyCertificate limits its use of Google user
+                                        data to providing and improving user-facing features that are
+                                        visible and prominent in the application&apos;s interface. We do not
+                                        use Google user data for serving advertisements, and we do not
+                                        allow humans to read user data except with affirmative user
+                                        consent, for security purposes, or to comply with applicable law.
+                                    </p>
+                                </div>
                             </Section>
 
                             {/* Section 5 */}
@@ -428,6 +459,149 @@ export default function PrivacyPolicy() {
                                     However, participant certificate data is not intended
                                     to be permanently stored on these infrastructure
                                     services.
+                                </p>
+                            </Section>
+
+                            {/* Section 5.1 - Data Protection & Security */}
+                            <Section title="5.1 Data Protection & Security Measures">
+                                <p>
+                                    MailMyCertificate implements multiple layers of
+                                    security to protect your data during the certificate
+                                    generation and email delivery workflow.
+                                </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Transport Security
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>HTTPS only:</strong> All communication
+                                        between your browser and our servers is encrypted
+                                        using TLS (HTTPS). Unencrypted HTTP connections
+                                        are not accepted.
+                                    </li>
+                                    <li>
+                                        <strong>OAuth tokens in transit:</strong> Google
+                                        OAuth tokens (access and refresh) are transmitted
+                                        exclusively over encrypted HTTPS connections and
+                                        are never exposed in URLs or client-side storage.
+                                    </li>
+                                </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Session & Credential Security
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>HttpOnly session cookies:</strong> OAuth
+                                        credentials are stored in server-side sessions
+                                        accessed only via HttpOnly, Secure, SameSite
+                                        cookies — never accessible to client-side
+                                        JavaScript.
+                                    </li>
+                                    <li>
+                                        <strong>Session-scoped credentials:</strong> Google
+                                        OAuth tokens are held only for the duration of
+                                        your active session (maximum 1 hour) and are not
+                                        written to any persistent database or file system.
+                                    </li>
+                                    <li>
+                                        <strong>CSRF protection:</strong> All state-changing
+                                        operations (sending emails, logout) are protected
+                                        by cryptographic CSRF tokens validated on the server.
+                                    </li>
+                                    <li>
+                                        <strong>OAuth state validation:</strong> The OAuth
+                                        callback verifies a server-generated state parameter
+                                        to prevent cross-site request forgery during login.
+                                    </li>
+                                </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Access Controls
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Minimal scope principle:</strong> We request
+                                        only <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code> —
+                                        the narrowest Gmail scope available. We cannot read,
+                                        modify, or delete anything in your mailbox.
+                                    </li>
+                                    <li>
+                                        <strong>No persistent storage:</strong> OAuth
+                                        credentials are never stored in databases, log
+                                        files, or any system that outlives your browser
+                                        session.
+                                    </li>
+                                    <li>
+                                        <strong>Production hardening:</strong> Debug endpoints
+                                        and verbose error messages are disabled in production.
+                                        Internal errors are sanitized before being returned
+                                        to clients.
+                                    </li>
+                                </ul>
+                            </Section>
+
+                            {/* Section 5.2 - Data Sharing & Prohibited Uses */}
+                            <Section title="5.2 Data Sharing, Disclosure & Prohibited Uses">
+                                <p>
+                                    MailMyCertificate does not sell, rent, trade, or
+                                    otherwise disclose Google user data to any third
+                                    party except as strictly necessary to provide the
+                                    service (e.g., transmitting your email through
+                                    Google&apos;s own Gmail API on your behalf).
+                                </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    We explicitly do NOT use Google user data for:
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Advertising:</strong> No targeted,
+                                        personalized, retargeted, or interest-based
+                                        advertising of any kind.
+                                    </li>
+                                    <li>
+                                        <strong>Data brokering or resale:</strong> We never
+                                        sell or transfer user data to data brokers,
+                                        information resellers, or any party for
+                                        commercial gain.
+                                    </li>
+                                    <li>
+                                        <strong>Credit or lending decisions:</strong> User
+                                        data is never used to determine creditworthiness
+                                        or for lending purposes.
+                                    </li>
+                                    <li>
+                                        <strong>Unrelated databases:</strong> We never
+                                        combine or build datasets unrelated to
+                                        MailMyCertificate&apos;s user-facing certificate
+                                        generation and delivery features.
+                                    </li>
+                                    <li>
+                                        <strong>AI/ML model training:</strong> Google user
+                                        data is never used to train, improve, or develop
+                                        generalized or non-personalized artificial
+                                        intelligence or machine learning models.
+                                    </li>
+                                    <li>
+                                        <strong>Surveillance or tracking:</strong> We do
+                                        not use Google user data for profiling,
+                                        monitoring, or tracking individuals beyond what is
+                                        needed to deliver the certificate email they
+                                        requested.
+                                    </li>
+                                </ul>
+
+                                <p className="mt-6">
+                                    <strong>Summary:</strong> Google user data obtained by
+                                    MailMyCertificate is used solely to send certificate
+                                    emails on your behalf. It is not transferred,
+                                    disclosed, or repurposed for any other objective.
                                 </p>
                             </Section>
 
@@ -515,6 +689,57 @@ export default function PrivacyPolicy() {
                                         or their recipients.
                                     </li>
                                 </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Requesting Data Deletion
+                                </h3>
+
+                                <p>
+                                    Because MailMyCertificate does not store participant
+                                    data or certificate content on its servers, there is
+                                    typically nothing to delete. However, if you believe
+                                    any personal data has been retained or you wish to
+                                    revoke your Google OAuth authorization, you may:
+                                </p>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Revoke access:</strong> Visit your{' '}
+                                        <a
+                                            href="https://myaccount.google.com/permissions"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-accent font-medium hover:underline"
+                                        >
+                                            Google Account Permissions
+                                        </a>{' '}
+                                        page and remove MailMyCertificate.
+                                    </li>
+                                    <li>
+                                        <strong>Clear local data:</strong> Clear your
+                                        browser&apos;s site data for mailmycertificate.tech,
+                                        or use the &quot;Clear Data&quot; option in the app&apos;s
+                                        Settings page.
+                                    </li>
+                                    <li>
+                                        <strong>Contact us:</strong> Email{' '}
+                                        <a
+                                            href="mailto:akshatthakur22@gmail.com"
+                                            className="text-accent font-medium hover:underline"
+                                        >
+                                            akshatthakur22@gmail.com
+                                        </a>{' '}
+                                        or use our{' '}
+                                        <Link
+                                            href="/contact"
+                                            className="text-accent font-medium hover:underline"
+                                        >
+                                            Contact page
+                                        </Link>{' '}
+                                        if you have any data deletion concerns. We will
+                                        respond within 7 days.
+                                    </li>
+                                </ul>
                             </Section>
 
                             {/* Section 7 */}
@@ -585,7 +810,7 @@ export default function PrivacyPolicy() {
 
                             {/* Last Updated */}
                             <div className="mt-10 text-sm text-secondary/60">
-                                Last updated: January 2026
+                                Last updated: July 2026
                             </div>
                         </div>
                     </div>

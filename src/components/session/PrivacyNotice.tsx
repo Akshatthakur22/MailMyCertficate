@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Shield } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -12,7 +13,10 @@ export function PrivacyNotice({ className, compact = false }: PrivacyNoticeProps
   if (compact) {
     return (
       <p className={cn('text-xs text-secondary leading-relaxed', className)}>
-        All certificates and recipient data stay in your browser. Nothing is permanently stored on our servers.
+        All certificates and recipient data stay in your browser. Nothing is permanently stored on our servers.{' '}
+        <Link href="/privacy-policy" className="text-accent hover:underline font-medium">
+          Privacy policy
+        </Link>
       </p>
     );
   }
@@ -30,7 +34,10 @@ export function PrivacyNotice({ className, compact = false }: PrivacyNoticeProps
         <p className="mt-1 text-xs leading-relaxed text-blue-800">
           All certificates, recipient data, and generated files are stored locally in your browser. No
           certificate data is permanently stored by Mail My Certificate. You can clear session data at any
-          time from Settings.
+          time from Settings.{' '}
+          <Link href="/privacy-policy" className="text-blue-900 font-medium hover:underline">
+            Read full privacy policy
+          </Link>
         </p>
       </div>
     </div>
