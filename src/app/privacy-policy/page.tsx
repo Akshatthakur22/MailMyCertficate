@@ -13,13 +13,19 @@ import {
 } from 'lucide-react';
 
 import { SEO_KEYWORDS } from '@/lib/seo-keywords';
+import { PAGE_DATES } from '@/data/pageDates';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { SpeakableSchema } from '@/components/seo/SpeakableSchema';
+import { buildBreadcrumbJsonLd } from '@/lib/structured-data';
 
 export const metadata: Metadata = createPageMetadata({
-    title: 'Privacy Policy',
+    title: 'Privacy Policy — MailMyCertificate',
     description:
-        'MailMyCertificate privacy policy: local-first certificate generation, browser storage, Gmail OAuth, and how your data is handled.',
+        'MailMyCertificate privacy policy: local-first certificate generation, browser storage, Gmail OAuth scopes, and exactly what data is never collected.',
     path: '/privacy-policy',
     keywords: [...SEO_KEYWORDS.privacy],
+    datePublished: PAGE_DATES['/privacy-policy'].published,
+    dateModified: PAGE_DATES['/privacy-policy'].modified,
 });
 
 function Section({
@@ -44,6 +50,13 @@ function Section({
 export default function PrivacyPolicy() {
     return (
         <div className="min-h-screen bg-background text-foreground">
+            <JsonLd
+                data={buildBreadcrumbJsonLd([
+                    { name: 'Home', path: '/' },
+                    { name: 'Privacy Policy', path: '/privacy-policy' },
+                ])}
+            />
+            <SpeakableSchema path="/privacy-policy" cssSelectors={['h1', 'h2', '[data-speakable]']} />
             {/* ======================================
                 NAVBAR
                ====================================== */}

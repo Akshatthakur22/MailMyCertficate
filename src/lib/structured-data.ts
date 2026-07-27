@@ -144,14 +144,7 @@ export function buildEntityGraphJsonLd() {
           'AI/ML data protection guarantees (2026 compliance)',
         ],
         screenshot: absoluteUrl('/og-image.png'),
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '5',
-          bestRating: '5',
-          worstRating: '1',
-          ratingCount: '1',
-          description: 'Privacy-first certificate automation platform',
-        },
+
         downloadUrl: appUrl,
         inLanguage: 'en-US',
         datePublished: '2024-01-01',
@@ -228,6 +221,26 @@ export function buildBreadcrumbJsonLd(items: { name: string; path: string }[]) {
       name: item.name,
       item: absoluteUrl(item.path),
     })),
+  };
+}
+
+/**
+ * Build SpeakableSpecification JSON-LD for voice search targeting.
+ * Points Google/voice assistants to the CSS selectors containing the best speakable content.
+ */
+export function buildSpeakableJsonLd(
+  pagePath: string,
+  cssSelectors: string[] = ['h1', '[data-speakable]', '.speakable']
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'MailMyCertificate',
+    url: absoluteUrl(pagePath),
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: cssSelectors,
+    },
   };
 }
 

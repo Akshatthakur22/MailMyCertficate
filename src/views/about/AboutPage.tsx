@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { RevealSection } from '@/components/layout/RevealSection';
 import { ProductFooter } from '@/components/product/ProductFooter';
+import { LastUpdated } from '@/components/seo/LastUpdated';
+import { RelatedPages } from '@/components/seo/RelatedPages';
+import { ABOUT_PAGE_FAQS } from '@/data/aboutFaqs';
 import { buttonVariants } from '@/components/ui/Button';
 import {
   ArrowRight,
@@ -78,15 +81,23 @@ export default function AboutPage() {
                 About MailMyCertificate
               </h1>
 
-              <p className="text-lg md:text-xl text-secondary mb-4 max-w-3xl">
-                Built by Akshat Thakur from a real organizer workflow — not a startup pitch.
+              <p className="text-lg md:text-xl text-secondary mb-4 max-w-3xl" data-speakable>
+                <strong className="text-foreground">MailMyCertificate</strong> is a free,
+                open-source bulk certificate generator built by{' '}
+                <strong className="text-foreground">Akshat Thakur</strong>. It turns a template image
+                and a participant list into personalized PDF certificates, generated inside your
+                browser and delivered through your own Gmail account. It began as a Python script
+                written overnight for a college event with more than 300 participants.
               </p>
 
-              <p className="text-sm text-secondary/70 max-w-2xl">
-                Started as a Python automation script during a college event.
-                <br />
-                Built because it genuinely solved a real problem.
+              <p className="text-secondary mb-6 max-w-3xl leading-relaxed">
+                It is maintained as a single-developer open-source project under the MIT licence, not
+                a funded product. That shapes every decision on this page: no accounts to create, no
+                participant data to upload, no pricing page, and no roadmap promises that depend on
+                someone else&apos;s money.
               </p>
+
+              <LastUpdated path="/about" />
             </RevealSection>
           </div>
         </section>
@@ -240,6 +251,138 @@ attach_pdf("john_certificate.pdf")`}
           </div>
         </section>
 
+        {/* How the architecture delivers the privacy claim */}
+        <section className="py-16 md:py-24 border-t border-border/50" aria-labelledby="about-architecture">
+          <div className="container-width">
+            <RevealSection className="max-w-4xl mx-auto">
+              <h2
+                id="about-architecture"
+                className="text-2xl md:text-3xl font-bold tracking-tight mb-4"
+              >
+                How does the local-first architecture actually work?
+              </h2>
+              <p className="text-secondary leading-relaxed mb-8" data-speakable>
+                &quot;Privacy-first&quot; is easy to claim and hard to verify, so here is the
+                mechanism rather than the marketing. Three parts of the system matter, and all of
+                them are inspectable in the public repository.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    heading: 'PDF generation runs in your browser',
+                    body: 'Certificates are rendered client-side with pdf-lib inside a Web Worker, which keeps the interface responsive while a batch is processing. Your template image and participant names are never sent anywhere to be composited. The practical consequence: if you disconnect your network after loading the page, generation still completes.',
+                  },
+                  {
+                    heading: 'Participant rows live in IndexedDB on your device',
+                    body: 'Imported CSV and Google Sheets data persists locally through Dexie, which is what lets you close the tab mid-batch and pick the session back up. Clearing your browser storage deletes it permanently, because there is no server-side copy to restore from.',
+                  },
+                  {
+                    heading: 'The backend only touches email at send time',
+                    body: 'A small Flask API on Vercel handles the Gmail OAuth exchange and the send call. It requests only the gmail.send scope, so it cannot read your inbox or contacts. It receives a message and its attachment at the moment you send, and stores neither.',
+                  },
+                  {
+                    heading: 'Analytics deliberately exclude participant data',
+                    body: 'Google Tag Manager records product events such as which step of the wizard was reached. Participant names, email addresses and template files are never included in an analytics payload.',
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.heading}
+                    className="bg-muted/20 rounded-lg p-6 border border-border/50"
+                  >
+                    <h3 className="font-semibold text-foreground mb-2">{item.heading}</h3>
+                    <p className="text-secondary leading-relaxed text-sm">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-secondary leading-relaxed mt-8">
+                The full technical detail, including what Google receives during OAuth, is written up
+                in the{' '}
+                <Link href="/privacy-policy" className="text-accent hover:underline">
+                  privacy policy
+                </Link>
+                . If you would rather read code than prose, the repository is the authoritative
+                answer.
+              </p>
+            </RevealSection>
+          </div>
+        </section>
+
+        {/* Who it is and is not for */}
+        <section className="py-16 md:py-24 border-t border-border/50" aria-labelledby="about-who-for">
+          <div className="container-width">
+            <RevealSection className="max-w-4xl mx-auto">
+              <h2 id="about-who-for" className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+                Who is MailMyCertificate for?
+              </h2>
+              <p className="text-secondary leading-relaxed mb-8" data-speakable>
+                It is built for the person who has to get certificates out of the door after an event
+                has already finished, usually without a budget and usually in a hurry.
+              </p>
+
+              <div className="grid gap-8 md:grid-cols-2">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">A good fit</h3>
+                  <ul className="space-y-2 text-secondary text-sm list-disc pl-5">
+                    <li>Hackathon and tech-fest organizers issuing winner and participation batches</li>
+                    <li>College clubs and student societies with no software budget</li>
+                    <li>Workshop, bootcamp and webinar hosts collecting sign-ups via Google Forms</li>
+                    <li>NGOs and non-profits running training or volunteer programmes</li>
+                    <li>Teams who cannot upload participant personal data to a third-party vendor</li>
+                    <li>Anyone who already has a certificate design and just needs the merge step</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Not a good fit</h3>
+                  <ul className="space-y-2 text-secondary text-sm list-disc pl-5">
+                    <li>
+                      Credentials needing a public verification portal or QR-scannable registry — see
+                      the{' '}
+                      <Link href="/vs/certifier" className="text-accent hover:underline">
+                        Certifier comparison
+                      </Link>
+                    </li>
+                    <li>Enterprise LMS or HR system integration through an API</li>
+                    <li>Editing a PDF template directly, since templates are PNG or JPG images</li>
+                    <li>Teams needing shared cloud sessions, because sessions are device-local</li>
+                    <li>Organisations requiring a vendor contract, SLA or paid support line</li>
+                  </ul>
+                </div>
+              </div>
+
+              <p className="text-secondary leading-relaxed mt-8">
+                Being direct about the second column saves you the worse outcome: discovering a
+                missing capability the evening before certificates are due.
+              </p>
+            </RevealSection>
+          </div>
+        </section>
+
+        {/* Visible FAQ — matches the FAQPage schema emitted by AboutStructuredData */}
+        <section className="py-16 md:py-24 border-t border-border/50" aria-labelledby="about-faq">
+          <div className="container-width">
+            <RevealSection className="max-w-4xl mx-auto">
+              <h2 id="about-faq" className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+                Frequently asked questions about the project
+              </h2>
+              <p className="text-secondary leading-relaxed mb-8">
+                These are the questions that arrive most often by email and on GitHub.
+              </p>
+              <dl className="divide-y divide-border/50 border-t border-border/50">
+                {ABOUT_PAGE_FAQS.map((faq) => (
+                  <div key={faq.question} className="py-5">
+                    <dt className="font-semibold text-foreground mb-2">{faq.question}</dt>
+                    <dd className="text-secondary leading-relaxed text-sm" data-speakable>
+                      {faq.answer}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </RevealSection>
+          </div>
+        </section>
+
         <section className="py-16 md:py-24 border-t border-border/50">
           <div className="container-width">
             <RevealSection className="max-w-3xl mx-auto text-center">
@@ -254,6 +397,8 @@ attach_pdf("john_certificate.pdf")`}
             </RevealSection>
           </div>
         </section>
+
+        <RelatedPages pageKey="about" />
       </main>
 
       <ProductFooter />

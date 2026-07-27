@@ -1,4 +1,7 @@
 import { Github, Mail, Twitter, Linkedin, ArrowRight } from 'lucide-react';
+import { LastUpdated } from '@/components/seo/LastUpdated';
+import { RelatedPages } from '@/components/seo/RelatedPages';
+import { CONTACT_PAGE_FAQS } from '@/data/contactFaqs';
 import Link from 'next/link';
 import { ContactChannelLink } from '@/components/analytics/ContactChannelLink';
 import { ProductFooter } from '@/components/product/ProductFooter';
@@ -82,9 +85,10 @@ export default function Contact() {
                             </h1>
 
                             {/* Subtitle */}
-                            <p className="text-lg md:text-xl text-secondary mb-8 max-w-3xl">
+                            <p className="text-lg md:text-xl text-secondary mb-8 max-w-3xl" data-speakable>
                                 I&apos;m Akshat Thakur, the developer behind MailMyCertificate. Questions, ideas, bug reports, or just want to say hi — I&apos;d love to hear from you.
                             </p>
+                            <LastUpdated path="/contact" />
                         </RevealSection>
                     </div>
                 </section>
@@ -217,6 +221,49 @@ export default function Contact() {
                         </div>
                     </div>
                 </section>
+                {/* ======================================
+                    FAQ — visible content backing the FAQPage schema emitted by
+                    this route's layout. Schema without matching on-page content
+                    is a structured-data policy violation.
+                   ====================================== */}
+                <section
+                    className="py-16 md:py-24 border-t border-border/50"
+                    aria-labelledby="contact-faq"
+                >
+                    <div className="container-width">
+                        <div className="max-w-4xl mx-auto">
+                            <RevealSection>
+                                <h2
+                                    id="contact-faq"
+                                    className="text-2xl md:text-3xl font-bold tracking-tight mb-4"
+                                >
+                                    What should you expect when you get in touch?
+                                </h2>
+                                <p className="text-secondary leading-relaxed mb-8">
+                                    Honest answers about response times, where to report bugs, and
+                                    what not to send.
+                                </p>
+                                <dl className="divide-y divide-border/50 border-t border-border/50">
+                                    {CONTACT_PAGE_FAQS.map((faq) => (
+                                        <div key={faq.question} className="py-5">
+                                            <dt className="font-semibold text-foreground mb-2">
+                                                {faq.question}
+                                            </dt>
+                                            <dd
+                                                className="text-secondary leading-relaxed text-sm"
+                                                data-speakable
+                                            >
+                                                {faq.answer}
+                                            </dd>
+                                        </div>
+                                    ))}
+                                </dl>
+                            </RevealSection>
+                        </div>
+                    </div>
+                </section>
+
+                <RelatedPages pageKey="contact" />
             </main>
 
             <ProductFooter />

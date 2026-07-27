@@ -22,7 +22,8 @@ export const metadata: Metadata = {
     default: "MailMyCertificate | Free Bulk Certificate Generator",
     template: "%s | MailMyCertificate"
   },
-  description: "Generate and email hundreds of personalized certificates in minutes. Built by Akshat Thakur. Upload template + CSV, create PDFs locally in your browser, send via Gmail. Free, open source, privacy-first.",
+  // Kept at <=160 chars so it is not truncated in search results.
+  description: "Free bulk certificate generator. Upload a template and CSV, create personalized PDFs in your browser, and send them via Gmail. Open source, privacy-first.",
   keywords: [...SEO_KEYWORDS.home],
   verification: getGoogleSiteVerification(),
   authors: [

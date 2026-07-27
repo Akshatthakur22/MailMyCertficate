@@ -5,6 +5,8 @@ import { RevealSection } from '@/components/layout/RevealSection';
 import { ProductFooter } from '@/components/product/ProductFooter';
 import { FloatingStarWidget } from '@/components/github/FloatingStarWidget';
 import { GITHUB_REPO_URL } from '@/config/github';
+import { HOME_PAGE_FAQS } from '@/data/homeFaqs';
+import { getRelatedPages } from '@/data/relatedPages';
 import { ArrowRight, Github, Check } from 'lucide-react';
 import {
   CertificateFlowIllustration,
@@ -77,7 +79,7 @@ export default function LandingPage() {
 
                 <RevealSection>
                   <h1 className="text-[clamp(2.6rem,6vw,5.5rem)] font-semibold leading-[1.02] tracking-tight text-landing-ink mb-6">
-                    Certificates for
+                    Bulk certificates for
                     <br />
                     hundreds, in
                     <br />
@@ -86,9 +88,21 @@ export default function LandingPage() {
                 </RevealSection>
 
                 <RevealSection>
-                  <p className="text-lg md:text-xl text-landing-secondary leading-relaxed mb-10 max-w-md">
-                    Upload a template. Import your participants. Generate personalized PDFs
-                    — entirely in your browser. No signup. No cloud uploads. No subscription.
+                  {/* Plain-language definition sentence. AI engines and featured
+                      snippets both need an explicit "X is a..." statement to lift;
+                      the headline above is deliberately editorial and does not
+                      state what the product actually is. */}
+                  <p
+                    className="text-lg md:text-xl text-landing-secondary leading-relaxed mb-6 max-w-md"
+                    data-speakable
+                  >
+                    <strong className="font-semibold text-landing-ink">MailMyCertificate</strong> is a
+                    free, open-source bulk certificate generator. Upload a template, import your
+                    participant list, and it creates a personalized PDF for every name — then emails
+                    them from your own Gmail.
+                  </p>
+                  <p className="text-base text-landing-secondary/80 leading-relaxed mb-10 max-w-md">
+                    Everything runs in your browser. No signup, no cloud uploads, no subscription.
                   </p>
                 </RevealSection>
 
@@ -111,7 +125,7 @@ export default function LandingPage() {
 
                 <RevealSection>
                   <p className="text-xs text-landing-secondary/70 italic">
-                    Trusted by hackathon organizers, universities, and communities.
+                    Built for hackathon organizers, universities, and community events.
                   </p>
                 </RevealSection>
               </div>
@@ -564,6 +578,90 @@ export default function LandingPage() {
                   If it saves you even one Sunday, it was worth building.
                 </p>
               </div>
+            </RevealSection>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════
+            FAQ — Question-phrased headings for snippets & AI answers
+           ═══════════════════════════════════════════════════════ */}
+        <section
+          className="landing-section-alt py-24 md:py-32 border-t border-landing-rule"
+          aria-labelledby="home-faq-heading"
+        >
+          <div className="container-width max-w-4xl">
+            <RevealSection>
+              <span className="landing-label mb-4 block">Questions</span>
+              <h2
+                id="home-faq-heading"
+                className="text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-tight text-landing-ink mb-4"
+              >
+                What do people ask before they start?
+              </h2>
+              <p className="text-lg text-landing-secondary leading-relaxed mb-12 max-w-2xl">
+                The honest answers, including the things MailMyCertificate deliberately does not do.
+              </p>
+            </RevealSection>
+
+            <RevealSection>
+              <dl className="divide-y divide-landing-rule border-t border-landing-rule">
+                {HOME_PAGE_FAQS.map((faq) => (
+                  <div key={faq.question} className="py-6">
+                    <dt className="text-lg font-semibold text-landing-ink mb-2">{faq.question}</dt>
+                    <dd
+                      className="text-base text-landing-secondary leading-relaxed"
+                      data-speakable
+                    >
+                      {faq.answer}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </RevealSection>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════
+            EXPLORE — Contextual internal links with real anchor text
+           ═══════════════════════════════════════════════════════ */}
+        <section
+          className="py-24 md:py-32 border-t border-landing-rule"
+          aria-labelledby="home-explore-heading"
+        >
+          <div className="container-width max-w-5xl">
+            <RevealSection>
+              <span className="landing-label mb-4 block">Where To Next</span>
+              <h2
+                id="home-explore-heading"
+                className="text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-tight text-landing-ink mb-12"
+              >
+                Find the workflow that matches yours.
+              </h2>
+            </RevealSection>
+
+            <RevealSection>
+              <ul className="grid gap-5 sm:grid-cols-2 list-none pl-0">
+                {getRelatedPages('home').map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="landing-annotation-card group flex h-full flex-col p-6 transition-colors hover:border-[#2D6A4F]/40"
+                    >
+                      <span className="mb-2 inline-flex items-center gap-2 text-lg font-semibold text-landing-ink">
+                        {link.label}
+                        <ArrowRight
+                          size={16}
+                          className="transition-transform group-hover:translate-x-0.5"
+                          aria-hidden="true"
+                        />
+                      </span>
+                      <span className="text-base leading-relaxed text-landing-secondary">
+                        {link.blurb}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </RevealSection>
           </div>
         </section>

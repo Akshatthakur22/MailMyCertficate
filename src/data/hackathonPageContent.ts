@@ -1,50 +1,50 @@
 export const HACKATHON_PAGE_FAQS = [
   {
-    question: 'How fast can I send hackathon certificates after judging ends?',
+    question: 'Can I generate certificates for 500+ hackathon participants?',
     answer:
-      'Organizers typically upload a template, import a CSV or Google Sheet of winners and participants, generate PDFs locally, and send via Gmail in under 10–15 minutes for a few hundred recipients.',
+      'Yes. MailMyCertificate runs entirely in your browser using Web Workers and pdf-lib. There is no artificial cap on the number of certificates you can generate in a single batch.',
   },
   {
-    question: 'Can I use different certificate designs for winners and participants?',
+    question: 'How do I get participant data from my hackathon registration form?',
     answer:
-      'Run separate batches: upload one template per category (e.g. Winner, Participant), import the filtered sheet rows, generate, and send. Each batch stays in its own local session.',
+      'Export from Google Forms to Google Sheets, or download a CSV from Devfolio, Unstop, or your registration platform. Import the file or public sheet URL into MailMyCertificate.',
   },
   {
-    question: 'Is MailMyCertificate free for large hackathons?',
+    question: 'Can I add different certificate types (winner, participant, mentor)?',
     answer:
-      'Yes. There are no artificial export limits. Gmail sending is subject to Google API quotas on your connected account.',
+      'Yes. Add a "type" or "role" column in your spreadsheet and map it to a text field on the certificate. Run separate batches with different templates for each category.',
   },
   {
-    question: 'Do hackers need to create accounts?',
+    question: 'Is this suitable for MLH-partnered hackathons?',
     answer:
-      'No. Organizers use MailMyCertificate in the browser. Participants only receive email with their PDF attachment.',
+      'MailMyCertificate generates standard PDF certificates. It does not integrate with MLH verification systems. For standard participation and winner certificates, it works perfectly.',
   },
   {
-    question: 'Where does participant data go?',
+    question: 'Can multiple organizers use the same batch?',
     answer:
-      'Roster data and generated PDFs stay in the organizer browser (IndexedDB) unless you choose Gmail delivery. We do not host hackathon attendee databases.',
+      'Currently, sessions are browser-local. Share the generated ZIP with co-organizers, or have them open the same public Google Sheet URL independently.',
   },
 ] as const;
 
 export const HACKATHON_HOW_TO_STEPS = [
   {
-    name: 'Export your hackathon roster',
-    text: 'Use judging spreadsheets, Devpost exports, or Google Form responses linked to Sheets. Include name, email, and track or prize tier columns.',
+    name: 'Collect registrations',
+    text: 'Use Google Forms, Devfolio, or any platform that exports CSV or connects to Google Sheets.',
   },
   {
-    name: 'Prepare certificate templates',
-    text: 'Create PNG or JPG designs for each category (winner, participant, mentor). Export from Canva or Figma.',
+    name: 'Design your certificate template',
+    text: 'Create a hackathon certificate in Canva or Figma. Export as PNG or JPG with space for participant name and category.',
   },
   {
-    name: 'Import data and place fields',
-    text: 'Upload the template, import CSV or a public Google Sheet, drag name and event fields onto the design.',
+    name: 'Import participant data',
+    text: 'Upload CSV or paste a public Google Sheets URL. Map name, email, and optional columns like team or track.',
   },
   {
-    name: 'Batch-generate PDFs locally',
-    text: 'Generate hundreds of certificates in your browser. Preview individual PDFs before sending.',
+    name: 'Place fields and generate',
+    text: 'Drag text fields onto the template canvas. Generate all personalized PDFs locally in seconds.',
   },
   {
-    name: 'Bulk send from organizer Gmail',
-    text: 'Connect Gmail, personalize the message, and deliver certificates before your closing ceremony stream ends.',
+    name: 'Distribute via Gmail or ZIP',
+    text: 'Send certificates from your Gmail account in bulk, or download a ZIP to share via Discord, Slack, or email manually.',
   },
 ] as const;

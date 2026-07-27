@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { LastUpdated } from '@/components/seo/LastUpdated';
+import { RelatedPages } from '@/components/seo/RelatedPages';
 import { ArrowRight, Check, X } from 'lucide-react';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { FAQSection } from '@/components/guide/FAQSection';
@@ -57,6 +60,8 @@ export default function GoogleFormsToCertificatesPage() {
                 Google Sheets guide
               </Link>
             </div>
+
+            <LastUpdated path="/google-forms-to-certificates" />
           </div>
         </section>
 
@@ -147,6 +152,108 @@ export default function GoogleFormsToCertificatesPage() {
           </div>
         </section>
 
+        {/* Sample template imagery */}
+        <section
+          className="py-16 md:py-20 border-b border-border/50 bg-muted/10"
+          aria-labelledby="forms-template-example"
+        >
+          <div className="container-width max-w-4xl">
+            <h2
+              id="forms-template-example"
+              className="text-2xl md:text-3xl font-bold tracking-tight mb-4"
+            >
+              What does a certificate template look like?
+            </h2>
+            <p className="text-secondary leading-relaxed mb-8" data-speakable>
+              A template is an ordinary image with the participant-specific areas left empty. Every
+              fixed element — border, title, signature line, logos — is baked into the image, and only
+              the name and event details are filled per row.
+            </p>
+            <figure className="overflow-hidden rounded-xl border border-border/60 bg-background">
+              <Image
+                src="/sample-certificate-template.png"
+                alt="A sample certificate template image with a decorative border, a certificate of participation title, and blank space in the centre where each participant's name is inserted during generation"
+                width={1490}
+                height={1058}
+                className="w-full h-auto"
+                sizes="(max-width: 768px) 100vw, 800px"
+              />
+              <figcaption className="px-5 py-3 text-sm text-secondary border-t border-border/60">
+                A blank template with the name area left empty. This exact file ships in the
+                repository as Test_Template.png if you want something to experiment with before
+                designing your own.
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        {/* Cleaning form data — the real friction point */}
+        <section
+          className="py-16 md:py-20 border-b border-border/50"
+          aria-labelledby="forms-clean-data"
+        >
+          <div className="container-width max-w-4xl">
+            <h2
+              id="forms-clean-data"
+              className="text-2xl md:text-3xl font-bold tracking-tight mb-4"
+            >
+              How do I clean up messy Google Form responses first?
+            </h2>
+            <p className="text-secondary leading-relaxed mb-6" data-speakable>
+              Fix three things in the linked spreadsheet before you import: remove duplicate
+              submissions, normalise how names are capitalised, and confirm every row has a valid
+              email address. Google Forms records exactly what people typed, and a certificate prints
+              exactly what the sheet contains, so a name entered as &quot;JOHN DOE&quot; or
+              &quot;john doe&quot; will appear that way on the PDF.
+            </p>
+            <p className="text-secondary leading-relaxed mb-6">
+              A few minutes of tidying beats reissuing certificates afterwards. In practice these are
+              the recurring problems:
+            </p>
+            <ul className="space-y-3 text-secondary list-disc pl-6 mb-8">
+              <li>
+                <strong className="text-foreground">Duplicate submissions.</strong> People submit
+                twice when they are unsure the first attempt registered. Remove duplicates on the
+                email column, keeping whichever row is more complete.
+              </li>
+              <li>
+                <strong className="text-foreground">Inconsistent capitalisation.</strong> Applying a
+                proper-case formula to the name column and pasting the result back gives uniform
+                output across the whole batch.
+              </li>
+              <li>
+                <strong className="text-foreground">Trailing spaces.</strong> Invisible in the sheet,
+                but they shift text placement on a centred certificate. Trimming the column solves it.
+              </li>
+              <li>
+                <strong className="text-foreground">Test entries.</strong> The rows you submitted
+                yourself while building the form are still in there. Delete them before importing.
+              </li>
+              <li>
+                <strong className="text-foreground">Timestamp and consent columns.</strong> Harmless
+                to leave in place, since you choose which columns map to certificate fields, but
+                hiding them makes the mapping step less error-prone.
+              </li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-foreground mb-3">
+              Collecting the right fields in the first place
+            </h3>
+            <p className="text-secondary leading-relaxed mb-4">
+              If you are still designing the form, make the name a single short-answer question rather
+              than separate first and last name questions, and mark it required. One field maps
+              cleanly onto one certificate placement, whereas splitting it means recombining two
+              columns later.
+            </p>
+            <p className="text-secondary leading-relaxed">
+              Collect only what the certificate and the email actually need, which is usually a name
+              and an email address. Every extra personal detail is data you then have to look after,
+              and the local-first workflow protects that data once it reaches your browser, not the
+              copy already sitting in your Google account.
+            </p>
+          </div>
+        </section>
+
         <FAQSection
           faqs={[...GOOGLE_FORMS_PAGE_FAQS]}
           title="Google Forms certificate FAQ"
@@ -168,6 +275,8 @@ export default function GoogleFormsToCertificatesPage() {
             </TrackToolCta>
           </div>
         </section>
+        <RelatedPages pageKey="googleForms" />
+
       </main>
 
       <ProductFooter />

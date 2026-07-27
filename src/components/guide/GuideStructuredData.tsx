@@ -1,8 +1,11 @@
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd, buildFaqPageJsonLd } from '@/lib/structured-data';
+import { absoluteUrl, getAppUrl } from '@/config/site';
 import { GUIDE_FAQS } from '@/data/guideFaqs';
 
 export function GuideStructuredData() {
+  const appUrl = getAppUrl();
+
   const breadcrumb = buildBreadcrumbJsonLd([
     { name: 'Home', path: '/' },
     { name: 'Guide', path: '/guide' },
@@ -19,13 +22,13 @@ export function GuideStructuredData() {
     },
     {
       '@type': 'WebPage',
-      '@id': 'https://mailmycertificate.tech/guide#webpage',
+      '@id': `${appUrl}/guide#webpage`,
       name: 'How-to Guide - MailMyCertificate',
       description:
         'Complete step-by-step guide for bulk certificate generation, Google Sheets integration, and Gmail delivery.',
-      url: 'https://mailmycertificate.tech/guide',
+      url: absoluteUrl('/guide'),
       isPartOf: {
-        '@id': 'https://mailmycertificate.tech#website',
+        '@id': `${appUrl}/#website`,
       },
     },
   ];

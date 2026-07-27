@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { LastUpdated } from '@/components/seo/LastUpdated';
+import { RelatedPages } from '@/components/seo/RelatedPages';
 import { buttonVariants } from '@/components/ui/Button';
 import { RevealSection } from '@/components/layout/RevealSection';
 import { ProductFooter } from '@/components/product/ProductFooter';
@@ -78,6 +80,12 @@ export default function Guide() {
             <RevealSection>
                 <Hero />
             </RevealSection>
+
+            {/* Visible content freshness signal, sourced from the same
+                PAGE_DATES map that feeds this route's metadata. */}
+            <div className="container-width pb-4">
+                <LastUpdated path="/guide" />
+            </div>
 
             {/* ======================================
                 BEFORE YOU START
@@ -275,6 +283,8 @@ export default function Guide() {
                     Written by Akshat Thakur — developer of MailMyCertificate and organizer of too many hackathons.
                 </p>
             </div>
+        <RelatedPages pageKey="guide" />
+
         </main>
 
         <ProductFooter />

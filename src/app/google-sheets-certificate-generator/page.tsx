@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { LastUpdated } from '@/components/seo/LastUpdated';
+import { RelatedPages } from '@/components/seo/RelatedPages';
 import { ArrowRight, Check, X } from 'lucide-react';
 import { TrackToolCta } from '@/components/analytics/TrackToolCta';
 import { FAQSection } from '@/components/guide/FAQSection';
@@ -59,6 +61,8 @@ export default function GoogleSheetsCertificateGeneratorPage() {
                 Full visual guide
               </Link>
             </div>
+
+            <LastUpdated path="/google-sheets-certificate-generator" />
           </div>
         </section>
 
@@ -263,6 +267,8 @@ export default function GoogleSheetsCertificateGeneratorPage() {
             </TrackToolCta>
           </div>
         </section>
+        <RelatedPages pageKey="googleSheets" />
+
       </main>
 
       <ProductFooter />
