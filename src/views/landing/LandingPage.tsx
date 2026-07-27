@@ -79,7 +79,7 @@ export default function LandingPage() {
 
                 <RevealSection>
                   <h1 className="text-[clamp(2.6rem,6vw,5.5rem)] font-semibold leading-[1.02] tracking-tight text-landing-ink mb-6">
-                    Bulk certificates for
+                    Certificates for
                     <br />
                     hundreds, in
                     <br />
@@ -88,21 +88,9 @@ export default function LandingPage() {
                 </RevealSection>
 
                 <RevealSection>
-                  {/* Plain-language definition sentence. AI engines and featured
-                      snippets both need an explicit "X is a..." statement to lift;
-                      the headline above is deliberately editorial and does not
-                      state what the product actually is. */}
-                  <p
-                    className="text-lg md:text-xl text-landing-secondary leading-relaxed mb-6 max-w-md"
-                    data-speakable
-                  >
-                    <strong className="font-semibold text-landing-ink">MailMyCertificate</strong> is a
-                    free, open-source bulk certificate generator. Upload a template, import your
-                    participant list, and it creates a personalized PDF for every name — then emails
-                    them from your own Gmail.
-                  </p>
-                  <p className="text-base text-landing-secondary/80 leading-relaxed mb-10 max-w-md">
-                    Everything runs in your browser. No signup, no cloud uploads, no subscription.
+                  <p className="text-lg md:text-xl text-landing-secondary leading-relaxed mb-10 max-w-md">
+                    Upload a template. Import your participants. Generate personalized PDFs
+                    — entirely in your browser. No signup. No cloud uploads. No subscription.
                   </p>
                 </RevealSection>
 
@@ -125,7 +113,7 @@ export default function LandingPage() {
 
                 <RevealSection>
                   <p className="text-xs text-landing-secondary/70 italic">
-                    Built for hackathon organizers, universities, and community events.
+                    Trusted by hackathon organizers, universities, and communities.
                   </p>
                 </RevealSection>
               </div>
