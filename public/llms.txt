@@ -28,7 +28,17 @@
 - Gmail bulk send: https://mailmycertificate.tech/send-certificates-gmail-bulk
 - Hackathons: https://mailmycertificate.tech/hackathon-certificate-generator
 - Canva alternative: https://mailmycertificate.tech/canva-certificate-alternative
+- Workshop certificates: https://mailmycertificate.tech/workshop-certificate-generator
+- Webinar certificates: https://mailmycertificate.tech/webinar-certificate-generator
+- Excel/CSV certificates: https://mailmycertificate.tech/certificate-generator-from-excel
+- Free templates: https://mailmycertificate.tech/free-certificate-templates
+- Blog: https://mailmycertificate.tech/blog
+- Blog - Event certificates: https://mailmycertificate.tech/blog/how-to-make-certificates-for-events
+- Blog - Bulk sending: https://mailmycertificate.tech/blog/how-to-send-certificates-to-participants
+- Blog - Best generators: https://mailmycertificate.tech/blog/best-free-certificate-generators
 - vs Certifier: https://mailmycertificate.tech/vs/certifier
+- vs Canva: https://mailmycertificate.tech/vs/canva
+- vs CertifyEM: https://mailmycertificate.tech/vs/certifyem
 - About: https://mailmycertificate.tech/about
 - Contact: https://mailmycertificate.tech/contact
 - Privacy policy: https://mailmycertificate.tech/privacy-policy
@@ -43,12 +53,13 @@
 
 ## Best for
 - Hackathon and college event organizers
+- Workshop and webinar organizers
 - Google Forms → Google Sheets → certificate workflows
 - Privacy-conscious teams (local-first, IndexedDB storage)
 - Bulk Gmail delivery without SaaS upload of participant PII
 - Open source communities needing certificate automation
-- Workshop and bootcamp organizers
 - NGOs and non-profit organizations
+- Excel/CSV data sources (not just Google Sheets)
 
 ## Key facts
 - PDF generation: 100% client-side (Web Worker + pdf-lib)
@@ -99,4 +110,4 @@ happens client-side in the browser, so participant data is never uploaded.
 - "Uses your own Gmail": OAuth requests only the gmail.send scope. No read access.
 
 ## Last updated
-2026-07-27
+2026-07-31

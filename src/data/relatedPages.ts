@@ -49,6 +49,41 @@ const PAGE_REGISTRY = {
     label: 'MailMyCertificate vs Certifier',
     blurb: 'An honest side-by-side, including the cases where Certifier is the better choice.',
   },
+  vsCanva: {
+    href: '/vs/canva',
+    label: 'MailMyCertificate vs Canva',
+    blurb: 'When to use Canva for design, when to use MailMyCertificate for bulk automation, and how to combine both.',
+  },
+  vsCertifyem: {
+    href: '/vs/certifyem',
+    label: 'MailMyCertificate vs CertifyEM',
+    blurb: 'Feature-by-feature comparison for event managers, with pricing and use-case guidance.',
+  },
+  workshop: {
+    href: '/workshop-certificate-generator',
+    label: 'Workshop certificate generator',
+    blurb: 'Best practices for creating and sending certificates to workshop participants at scale.',
+  },
+  webinar: {
+    href: '/webinar-certificate-generator',
+    label: 'Webinar certificate generator',
+    blurb: 'Generate certificates for online events with optional attendance tracking and bulk delivery.',
+  },
+  excel: {
+    href: '/certificate-generator-from-excel',
+    label: 'Certificate generator from Excel/CSV',
+    blurb: 'Import participant data directly from Excel, CSV, or any spreadsheet format.',
+  },
+  templates: {
+    href: '/free-certificate-templates',
+    label: 'Free certificate templates',
+    blurb: 'Browse ready-made certificate designs for events, courses, achievements, and recognition.',
+  },
+  blog: {
+    href: '/blog',
+    label: 'Blog & guides',
+    blurb: 'Articles on certificate creation, bulk delivery, best practices, and tool comparisons.',
+  },
   about: {
     href: '/about',
     label: 'About the project',
@@ -70,16 +105,23 @@ export type PageKey = keyof typeof PAGE_REGISTRY;
 
 /** Contextual "related pages" graph. Each page points at topically adjacent pages. */
 export const RELATED_PAGES = {
-  home: ['guide', 'googleSheets', 'hackathon', 'certifier'],
-  guide: ['googleSheets', 'googleForms', 'gmailBulk', 'canva'],
-  googleSheets: ['googleForms', 'guide', 'gmailBulk', 'canva'],
-  googleForms: ['googleSheets', 'guide', 'gmailBulk', 'hackathon'],
-  gmailBulk: ['guide', 'googleSheets', 'hackathon', 'privacy'],
-  hackathon: ['gmailBulk', 'googleForms', 'canva', 'guide'],
-  canva: ['guide', 'googleSheets', 'hackathon', 'certifier'],
-  certifier: ['canva', 'guide', 'privacy', 'about'],
-  about: ['guide', 'privacy', 'contact', 'certifier'],
-  contact: ['guide', 'about', 'privacy', 'certifier'],
+  home: ['guide', 'googleSheets', 'hackathon', 'certifier', 'workshop', 'blog'],
+  guide: ['googleSheets', 'googleForms', 'gmailBulk', 'canva', 'excel', 'blog'],
+  googleSheets: ['googleForms', 'guide', 'gmailBulk', 'canva', 'excel', 'workshop'],
+  googleForms: ['googleSheets', 'guide', 'gmailBulk', 'hackathon', 'workshop', 'webinar'],
+  gmailBulk: ['guide', 'googleSheets', 'hackathon', 'privacy', 'blog', 'excel'],
+  hackathon: ['gmailBulk', 'googleForms', 'canva', 'guide', 'webinar', 'blog'],
+  canva: ['guide', 'googleSheets', 'hackathon', 'certifier', 'vsCanva', 'workshop'],
+  workshop: ['guide', 'googleSheets', 'webinar', 'hackathon', 'templates', 'blog'],
+  webinar: ['googleForms', 'workshop', 'excel', 'templates', 'blog', 'guide'],
+  excel: ['googleSheets', 'guide', 'gmailBulk', 'templates', 'workshop', 'blog'],
+  templates: ['workshop', 'webinar', 'excel', 'canva', 'blog', 'guide'],
+  blog: ['guide', 'workshop', 'webinar', 'excel', 'templates', 'contact'],
+  certifier: ['canva', 'guide', 'privacy', 'about', 'vsCanva', 'vsCertifyem'],
+  vsCanva: ['certifier', 'canva', 'guide', 'vsCertifyem', 'templates', 'blog'],
+  vsCertifyem: ['certifier', 'vsCanva', 'workshop', 'webinar', 'blog', 'guide'],
+  about: ['guide', 'privacy', 'contact', 'certifier', 'blog', 'contact'],
+  contact: ['guide', 'about', 'privacy', 'certifier', 'blog', 'contact'],
 } as const satisfies Record<string, readonly PageKey[]>;
 
 export type RelatedPagesKey = keyof typeof RELATED_PAGES;
