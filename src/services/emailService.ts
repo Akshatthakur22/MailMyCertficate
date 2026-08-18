@@ -28,12 +28,9 @@ export interface AuthLoginResponse {
   error?: string;
 }
 
-// ✅ CSRF tokens are stored in localStorage after OAuth callback
-// and sent as X-CSRF-Token header with every email request
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const updateCsrfToken = (_token: string) => {
   // Token is stored in localStorage by EmailView
-  // This function exists for API compatibility
 };
 
 function getCsrfToken(): string {
@@ -41,26 +38,37 @@ function getCsrfToken(): string {
   return localStorage.getItem('csrf_token') || '';
 }
 
+function getAnalyticsHeaders(): Record<string, string> {
+  // Lazily import to avoid circular deps — analytics service is tiny
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getAnalyticsHeaders: _get } = require('@/services/analyticsService');
+    return _get() as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
 export const emailService = {
   // Authentication endpoints
   async login(): Promise<AuthLoginResponse> {
     try {
-      const response = await fetch('/api/auth/login', { 
-        credentials: 'include' // Automatically includes HTTPOnly cookies
+      // Append visitor/session IDs so backend can record oauth_started
+      let loginUrl = '/api/auth/login';
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { buildLoginUrl } = require('@/services/analyticsService');
+        loginUrl = buildLoginUrl(loginUrl);
+      } catch { /* analytics unavailable */ }
+
+      const response = await fetch(loginUrl, {
+        credentials: 'include'
       });
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      // ✅ Trust server-set HTTPOnly cookie for CSRF
-      // Do NOT manually store the token
+      if (!response.ok) throw new Error(data.error || 'Login failed');
       return data;
     } catch (error) {
-      throw new Error(
-        error instanceof Error ? error.message : 'Login failed'
-      );
+      throw new Error(error instanceof Error ? error.message : 'Login failed');
     }
   },
 
@@ -117,6 +125,7 @@ export const emailService = {
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCsrfToken(),
+          ...getAnalyticsHeaders(),
         },
         credentials: 'include',
         body: JSON.stringify(emailRequest),
@@ -158,6 +167,7 @@ export const emailService = {
         method: 'POST',
         headers: {
           'X-CSRF-Token': getCsrfToken(),
+          ...getAnalyticsHeaders(),
         },
         credentials: 'include',
         body: formData,

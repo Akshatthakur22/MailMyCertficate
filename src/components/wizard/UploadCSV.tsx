@@ -11,6 +11,7 @@ import { db, type CSVRowData } from '@/core/db/schema';
 import { touchActivity, updateSession } from '@/core/session/sessionManager';
 import type { CSVRow } from '@/types/csv';
 import { trackEvent } from '@/lib/analytics';
+import { trackBackendEvent } from '@/services/analyticsService';
 import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 import { detectEmailColumn, detectNameColumn } from '@/utils/recipientColumn';
 
@@ -139,6 +140,7 @@ export function UploadCSV() {
                 },
                 { dedupeKey: `${sessionId}-csv-${allData.length}` }
             );
+            trackBackendEvent('csv_uploaded', { row_count: allData.length, import_source: 'csv' });
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to import data.');
         }
@@ -189,6 +191,7 @@ export function UploadCSV() {
                 },
                 { dedupeKey: `${sessionId}-sheets-${data.length}` }
             );
+            trackBackendEvent('csv_uploaded', { row_count: data.length, import_source: 'google_sheets' });
         } catch (err: unknown) {
             console.error(err);
             if (err instanceof Error) {

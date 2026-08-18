@@ -8,6 +8,7 @@ import { cn } from '@/utils/cn';
 import { db } from '@/core/db/schema';
 import { updateSession, touchActivity } from '@/core/session/sessionManager';
 import { hasActivated, markActivated, trackEvent } from '@/lib/analytics';
+import { trackBackendEvent } from '@/services/analyticsService';
 import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 
 export function UploadTemplate() {
@@ -71,6 +72,8 @@ export function UploadTemplate() {
                 },
                 { dedupeKey: `${sessionId}-template` },
             );
+            // Mirror to backend for central analytics
+            trackBackendEvent('template_selected', { template_name: templateName, file_type: fileType });
 
             if (!hasActivated()) {
                 markActivated();

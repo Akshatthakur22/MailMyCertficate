@@ -7,6 +7,7 @@ import {
   trackPageView,
   incrementToolVisitCount,
 } from '@/lib/analytics';
+import { trackPageView as trackPageViewBackend, trackBackendEvent } from '@/services/analyticsService';
 
 const PAGE_EVENT_MAP: Record<string, () => void> = {
   '/': () => {
@@ -48,6 +49,8 @@ export function AnalyticsTracker() {
     lastPathRef.current = pathname;
 
     trackPageView(pathname);
+    // Also send page view to our backend for real visitor counting
+    trackPageViewBackend();
 
     const firePageEvent = PAGE_EVENT_MAP[pathname];
     if (firePageEvent) {
@@ -56,6 +59,11 @@ export function AnalyticsTracker() {
 
     if (pathname === '/pricing') {
       trackEvent({ event: 'pricing_viewed' }, { dedupeKey: '/pricing' });
+    }
+
+    // Tool opens are high-value events — record to backend
+    if (pathname === '/tool') {
+      trackBackendEvent('tool_opened');
     }
   }, [pathname]);
 

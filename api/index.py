@@ -1,5 +1,4 @@
 import os
-import os
 import json
 import importlib.util
 import base64
@@ -7,6 +6,8 @@ import secrets
 import csv
 import io
 import re
+import hmac
+import hashlib
 import urllib.request
 import urllib.error
 from datetime import timedelta
@@ -16,28 +17,28 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-# Load environment variables from .env.local
+# ─── Load .env.local ───────────────────────────────────────────────────────────
 def load_env():
     env_path = os.path.join(os.path.dirname(__file__), '..', '.env.local')
     if os.path.exists(env_path):
         with open(env_path, 'r') as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith('#'):
+                if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
-                    os.environ[key] = value
+                    os.environ.setdefault(key.strip(), value.strip())
 
 load_env()
 
-from flask import Flask, request, jsonify, redirect, session, url_for
+from flask import Flask, request, jsonify, redirect, session
 from flask_cors import CORS
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+# ─── Site config ───────────────────────────────────────────────────────────────
 def _load_site_config():
-    """Load site_config.py from the same directory (Vercel sys.path is project root)."""
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "site_config.py")
     spec = importlib.util.spec_from_file_location("site_config", path)
     if spec is None or spec.loader is None:
@@ -52,50 +53,77 @@ get_allowed_origins = _site_config.get_allowed_origins
 get_oauth_redirect_uri = _site_config.get_oauth_redirect_uri
 is_production = _site_config.is_production
 
-# Initialize Flask app for Vercel
+# ─── Analytics DB (graceful — never crashes the app) ───────────────────────────
+try:
+    from analytics_db import (
+        init_db, record_event, record_unique_visitor, upsert_session,
+        get_overview, get_daily_trend, get_recent_events,
+        get_user_list, get_user_journey, get_health,
+    )
+    _analytics_ready = init_db()
+except Exception as _ae:
+    import logging
+    logging.getLogger(__name__).error("Analytics module load failed: %s", _ae)
+    _analytics_ready = False
+
+    # Stub out all analytics calls so the app never crashes
+    def record_event(*a, **kw): return False          # noqa: E302
+    def record_unique_visitor(*a, **kw): return False  # noqa: E302
+    def upsert_session(*a, **kw): return False         # noqa: E302
+    def get_overview(*a, **kw): return {"db_available": False}  # noqa: E302
+    def get_daily_trend(*a, **kw): return []           # noqa: E302
+    def get_recent_events(*a, **kw): return []         # noqa: E302
+    def get_user_list(*a, **kw): return []             # noqa: E302
+    def get_user_journey(*a, **kw): return []          # noqa: E302
+    def get_health(*a, **kw): return {"db_available": False}  # noqa: E302
+
+# ─── Flask app ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
 
-# Configure CORS — origins from APP_URL / ALLOWED_ORIGINS (see site_config.py)
 CORS(app, origins=get_allowed_origins(), supports_credentials=True)
 
-# Google OAuth Configuration
+# ─── Google OAuth config ───────────────────────────────────────────────────────
 GOOGLE_CREDENTIALS_JSON = os.environ.get('GOOGLE_CREDENTIALS_JSON')
 if not GOOGLE_CREDENTIALS_JSON:
     raise ValueError("GOOGLE_CREDENTIALS_JSON environment variable is required")
 
-# Parse credentials from environment variable
 CLIENT_SECRETS = json.loads(GOOGLE_CREDENTIALS_JSON)
 CLIENT_ID = CLIENT_SECRETS['web']['client_id']
 CLIENT_SECRET = CLIENT_SECRETS['web']['client_secret']
-# Redirect URI is resolved per request in get_flow() (see site_config.py)
 
-# Session configuration for serverless - using Flask session cookies
-app.config['SESSION_COOKIE_SECURE'] = is_production()  # False for localhost, True for production
+app.config['SESSION_COOKIE_SECURE'] = is_production()
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
-# Production-safe session settings
-app.config['SESSION_COOKIE_DOMAIN'] = None  # Auto-detect
+app.config['SESSION_COOKIE_DOMAIN'] = None
 app.config['SESSION_COOKIE_PATH'] = '/'
 
-# Debug: Log session config
-if os.environ.get('FLASK_DEBUG') == '1':
-    print(f"[SESSION CONFIG] SECURE={app.config['SESSION_COOKIE_SECURE']}, HTTPONLY={app.config['SESSION_COOKIE_HTTPONLY']}, SAMESITE={app.config['SESSION_COOKIE_SAMESITE']}")
+# ─── Admin password verification ───────────────────────────────────────────────
+# Set ADMIN_PASSWORD_HASH in your env vars.
+# Generate with:  python3 -c "import hashlib,hmac; print(hmac.new(b'mmc_admin_v2', b'YOUR_PASSWORD', hashlib.sha256).hexdigest())"
+# Default (insecure placeholder) — dashboard will warn if this is still set.
+_ADMIN_PASSWORD_HASH = os.environ.get('ADMIN_PASSWORD_HASH', '')
+_ADMIN_HMAC_KEY = b'mmc_admin_v2'
+_ADMIN_SESSION_DURATION = timedelta(hours=8)
+_ADMIN_MAX_ATTEMPTS = 5
+_ADMIN_LOCKOUT_SECONDS = 900  # 15 min
 
-# Helper functions for production-safe credential management
+# In-memory rate limiter (resets on cold start — acceptable for admin-only use)
+_admin_attempt_tracker: dict = {}  # ip -> {count, locked_until}
+
+# ─────────────────────────────────────────────
+# Shared helpers
+# ─────────────────────────────────────────────
+
 def get_frontend_url():
-    """Frontend base URL for OAuth redirects (aligned with NEXT_PUBLIC_APP_URL / APP_URL)."""
     return get_app_url()
 
+
 def reconstruct_credentials(session_data):
-    """Reconstruct Google OAuth credentials from minimal session data"""
     if not session_data:
         return None
-    
-    # Get token_uri from CLIENT_SECRETS with fallback
     token_uri = CLIENT_SECRETS['web'].get('token_uri', 'https://oauth2.googleapis.com/token')
-    
     return Credentials(
         token=session_data.get('token'),
         refresh_token=session_data.get('refresh_token'),
@@ -105,18 +133,17 @@ def reconstruct_credentials(session_data):
         scopes=session_data.get('scopes')
     )
 
+
 def store_credentials_in_session(credentials):
-    """Store minimal essential credential data in Flask session"""
     session['credentials'] = {
         'token': credentials.token,
         'refresh_token': credentials.refresh_token,
-        'scopes': credentials.scopes
-        # Removed: token_uri, client_id, client_secret (use global config)
+        'scopes': credentials.scopes,
     }
     session.permanent = True
 
+
 def refresh_credentials_if_needed(credentials):
-    """Refresh credentials if expired and update session"""
     if credentials.expired and credentials.refresh_token:
         try:
             credentials.refresh(google.auth.transport.requests.Request())
@@ -128,27 +155,22 @@ def refresh_credentials_if_needed(credentials):
             return False
     return True
 
+
 def sanitize_error_response(error_msg, include_details=False):
-    """Sanitize error responses for production"""
-    if include_details:
-        return jsonify({"error": str(error_msg)}), 500
-    
     if is_production():
         return jsonify({"error": "Internal server error"}), 500
     return jsonify({"error": str(error_msg)}), 500
 
+
 def validate_csrf_token():
-    """Lightweight CSRF protection for POST routes"""
     csrf_token = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
     session_token = session.get('csrf_token')
-
     if not is_production():
         return True
-
     return bool(csrf_token and session_token and csrf_token == session_token)
 
+
 def get_flow():
-    """Create OAuth flow with environment credentials - standard confidential flow"""
     flow = Flow.from_client_config(
         CLIENT_SECRETS,
         scopes=[
@@ -157,250 +179,21 @@ def get_flow():
             'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email'
         ],
-        # Disable PKCE for standard confidential OAuth flow
         autogenerate_code_verifier=False
     )
     flow.redirect_uri = get_oauth_redirect_uri()
     return flow
 
 
-@app.route('/')
-def index():
-    return jsonify({"status": "Gmail API Backend is running"})
+def get_client_ip():
+    """Best-effort client IP for rate limiting only — not stored."""
+    return (
+        request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+        or request.headers.get('X-Real-IP', '')
+        or request.remote_addr
+        or 'unknown'
+    )
 
-
-@app.route('/api/debug/env')
-def debug_env():
-    """DEBUG ENDPOINT: Show environment configuration (only in development)"""
-    if os.environ.get('FLASK_DEBUG') != '1':
-        return jsonify({"error": "Not available in production"}), 403
-    
-    return jsonify({
-        "NODE_ENV": os.environ.get('NODE_ENV'),
-        "FLASK_DEBUG": os.environ.get('FLASK_DEBUG'),
-        "APP_URL": os.environ.get('APP_URL'),
-        "NEXT_PUBLIC_APP_URL": os.environ.get('NEXT_PUBLIC_APP_URL'),
-        "VERCEL_ENV": os.environ.get('VERCEL_ENV'),
-        "get_app_url()": get_app_url(),
-        "get_oauth_redirect_uri()": get_oauth_redirect_uri(),
-        "is_production()": is_production(),
-        "SESSION_COOKIE_SECURE": app.config['SESSION_COOKIE_SECURE'],
-        "session_cookie_samesite": app.config['SESSION_COOKIE_SAMESITE'],
-    })
-
-
-@app.route('/api/debug/session')
-def debug_session():
-    """DEBUG ENDPOINT: Show current session state (only in development)"""
-    if os.environ.get('FLASK_DEBUG') != '1':
-        return jsonify({"error": "Not available in production"}), 403
-    
-    return jsonify({
-        "has_state": 'state' in session,
-        "state_value": session.get('state', 'NOT SET'),
-        "has_credentials": 'credentials' in session,
-        "has_email": 'email' in session,
-        "email": session.get('email', 'NOT SET'),
-        "session_keys": list(session.keys()),
-    })
-
-
-# Alias routes for compatibility with frontend requests lacking /api prefix
-@app.route('/auth/login')
-def auth_login_alias():
-    return auth_login()
-
-@app.route('/auth/status')
-def auth_status_alias():
-    return auth_status()
-
-# Alias for /auth/callback to support proxy from Next.js
-@app.route('/auth/callback')
-def auth_callback_alias():
-    return auth_callback()
-
-# Alias for /send-email
-@app.route('/send-email', methods=['POST'])
-def send_email_alias():
-    return send_email()
-
-# Alias for /auth/logout
-@app.route('/auth/logout', methods=['POST'])
-def auth_logout_alias():
-    return auth_logout()
-
-@app.route('/api/auth/login')
-def auth_login():
-    """Initiate standard OAuth login flow (no PKCE)"""
-    try:
-        # Debug: Log environment and redirect URI
-        debug = os.environ.get('FLASK_DEBUG') == '1'
-        if debug:
-            print(f"\n=== AUTH LOGIN REQUEST ===")
-            print(f"APP_URL={os.environ.get('APP_URL')}")
-            print(f"NEXT_PUBLIC_APP_URL={os.environ.get('NEXT_PUBLIC_APP_URL')}")
-            print(f"NODE_ENV={os.environ.get('NODE_ENV')}")
-            print(f"FLASK_DEBUG={os.environ.get('FLASK_DEBUG')}")
-        
-        # Validate credentials are properly loaded
-        if not GOOGLE_CREDENTIALS_JSON:
-            return sanitize_error_response("GOOGLE_CREDENTIALS_JSON environment variable not set", include_details=True)
-        
-        flow = get_flow()
-        redirect_uri_used = flow.redirect_uri
-        if debug:
-            print(f"Redirect URI being used: {redirect_uri_used}")
-        
-        # Standard OAuth authorization URL without PKCE
-        authorization_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true',
-            prompt='consent'
-            # No code_challenge or code_verifier for standard OAuth
-        )
-        
-        if debug:
-            print(f"Authorization URL: {authorization_url}")
-            print(f"State: {state}")
-            print(f"=== END AUTH LOGIN ===\n")
-        
-        # Store state and CSRF token directly in Flask session
-        session['state'] = state
-        session['csrf_token'] = secrets.token_urlsafe(16)
-        session.permanent = True
-        
-        return jsonify({
-            "authorization_url": authorization_url,
-            "state": state,
-            "csrf_token": session['csrf_token']
-        })
-    
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Login error: {error_details}")
-        return sanitize_error_response(e, include_details=True)
-
-@app.route('/api/auth/callback')
-def auth_callback():
-    """Handle standard OAuth callback (no PKCE)"""
-    try:
-        debug = os.environ.get('FLASK_DEBUG') == '1'
-        if debug:
-            print(f"\n=== AUTH CALLBACK REQUEST ===")
-            print(f"Query params: error={request.args.get('error')}, state={request.args.get('state')}, code={request.args.get('code')}")
-        
-        error = request.args.get('error')
-        if error:
-            frontend_url = get_frontend_url()
-            if debug:
-                print(f"OAuth error received: {error}")
-                print(f"Redirecting to: {frontend_url}?error={error}")
-            return redirect(f'{frontend_url}?error={error}')
-        
-        state = request.args.get('state')
-        code = request.args.get('code')
-        
-        if not state or not code:
-            frontend_url = get_frontend_url()
-            if debug:
-                print(f"Missing state or code")
-            return redirect(f'{frontend_url}?error=missing_parameters')
-        
-        # Verify state from Flask session
-        stored_state = session.get('state')
-        if debug:
-            print(f"Stored state in session: {stored_state}")
-            print(f"State from callback: {state}")
-            print(f"Match: {stored_state == state}")
-        
-        if stored_state != state:
-            frontend_url = get_frontend_url()
-            if debug:
-                print(f"STATE MISMATCH! Redirecting to: {frontend_url}?error=invalid_state")
-                print(f"=== END AUTH CALLBACK ===\n")
-            return redirect(f'{frontend_url}?error=invalid_state')
-        
-        # Exchange code for tokens using standard OAuth flow (no PKCE)
-        flow = get_flow()
-        flow.fetch_token(code=code)
-        
-        credentials = flow.credentials
-        
-        # Store minimal credential data in Flask session
-        store_credentials_in_session(credentials)
-        
-        # Get user email and store in session
-        try:
-            oauth2_service = build('oauth2', 'v2', credentials=credentials)
-            user_info = oauth2_service.userinfo().get().execute()
-            session['email'] = user_info.get('email')
-            if debug:
-                print(f"User email: {session['email']}")
-        except Exception as e:
-            print(f"Could not fetch email: {e}")
-            session['email'] = None
-        
-        # Clear state from session and regenerate CSRF token
-        session.pop('state', None)
-        session['csrf_token'] = secrets.token_urlsafe(16)
-        session.permanent = True
-            
-        frontend_url = get_frontend_url()
-        redirect_url = f'{frontend_url}/email?auth_success=true&csrf_token={session["csrf_token"]}'
-        if debug:
-            print(f"Auth successful, redirecting to: {redirect_url}")
-            print(f"=== END AUTH CALLBACK ===\n")
-        # Include new CSRF token in redirect for frontend to capture
-        return redirect(redirect_url)
-    
-    except Exception as e:
-        print(f"OAuth callback error: {e}")
-        import traceback
-        print(traceback.format_exc())
-        frontend_url = get_frontend_url()
-        return redirect(f'{frontend_url}?error=authentication_failed')
-
-@app.route('/api/auth/status')
-def auth_status():
-    """Check authentication status"""
-    try:
-        credentials_data = session.get('credentials')
-        
-        if not credentials_data:
-            return jsonify({
-                "authenticated": False,
-                "email": None
-            })
-        
-        # Reconstruct credentials from minimal session data
-        credentials = reconstruct_credentials(credentials_data)
-        if not credentials:
-            session.clear()
-            return jsonify({
-                "authenticated": False,
-                "email": None
-            })
-        
-        # Refresh credentials if needed
-        if not refresh_credentials_if_needed(credentials):
-            return jsonify({
-                "authenticated": False,
-                "email": None
-            })
-        
-        payload = {
-            "authenticated": True,
-            "email": session.get('email'),
-        }
-        # Let the client sync CSRF after OAuth (session cookie holds the source of truth)
-        if session.get('csrf_token'):
-            payload["csrf_token"] = session['csrf_token']
-        return jsonify(payload)
-    
-    except Exception as e:
-        print(f"Auth status error: {e}")
-        return sanitize_error_response(e)
 
 EMAIL_ADDRESS_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
@@ -416,252 +209,729 @@ def is_valid_recipient_email(value):
     return bool(normalized) and EMAIL_ADDRESS_RE.match(normalized)
 
 
-@app.route('/api/send-email', methods=['POST'])
-def send_email():
-    """Send email using Gmail API"""
-    try:
-        # Lightweight CSRF protection for POST routes
-        if not validate_csrf_token():
-            return jsonify({"error": "Invalid CSRF token"}), 403
-        
-        credentials_data = session.get('credentials')
-        
-        if not credentials_data:
-            return jsonify({"error": "Not authenticated"}), 401
-        
-        # Handle both JSON and FormData formats
-        if request.content_type and 'multipart/form-data' in request.content_type:
-            # FormData format (with attachments)
-            recipient = request.form.get('recipient')
-            subject = request.form.get('subject')
-            body = request.form.get('body')
-            attachment = request.files.get('attachment')
-            
-            if not all([recipient, subject, body]):
-                return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
-                
-        else:
-            # JSON format (simple email)
-            try:
-                data = request.get_json(force=True)
-            except Exception as e:
-                return jsonify({"error": "Invalid JSON data"}), 400
-            
-            if not data:
-                return jsonify({"error": "No data provided"}), 400
-            
-            recipient = data.get('recipient')
-            subject = data.get('subject')
-            body = data.get('body')
-            attachment = None
-            
-            if not all([recipient, subject, body]):
-                return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+# ─────────────────────────────────────────────
+# Admin auth helpers
+# ─────────────────────────────────────────────
 
-        recipient = normalize_recipient_email(recipient)
-        if not is_valid_recipient_email(recipient):
-            return jsonify({
-                "error": "Invalid recipient email address. Check your participant data has a valid email column."
-            }), 400
-        
-        # Reconstruct credentials from minimal session data
+def _check_admin_rate_limit(ip: str) -> tuple:
+    """Returns (is_limited: bool, remaining_ms: int)."""
+    import time
+    now = time.time()
+    entry = _admin_attempt_tracker.get(ip, {})
+    locked_until = entry.get('locked_until', 0)
+    if locked_until and now < locked_until:
+        return True, int((locked_until - now) * 1000)
+    if locked_until and now >= locked_until:
+        _admin_attempt_tracker.pop(ip, None)
+    return False, 0
+
+
+def _record_admin_failure(ip: str):
+    import time
+    entry = _admin_attempt_tracker.setdefault(ip, {'count': 0})
+    entry['count'] = entry.get('count', 0) + 1
+    if entry['count'] >= _ADMIN_MAX_ATTEMPTS:
+        entry['locked_until'] = time.time() + _ADMIN_LOCKOUT_SECONDS
+
+
+def _clear_admin_rate_limit(ip: str):
+    _admin_attempt_tracker.pop(ip, None)
+
+
+def _verify_admin_password(password: str) -> bool:
+    """
+    Constant-time HMAC comparison against ADMIN_PASSWORD_HASH env var.
+    Falls back to a compiled-in dev hash if env var is not set
+    (only works in local dev — production MUST set ADMIN_PASSWORD_HASH).
+    """
+    if not _ADMIN_PASSWORD_HASH:
+        # No env var set — deny in production, allow dev default in local
+        if is_production():
+            return False
+        # Local dev fallback — same password as before: "akshat2024mmc!"
+        dev_hash = hmac.new(_ADMIN_HMAC_KEY, b'akshat2024mmc!', hashlib.sha256).hexdigest()
+        candidate = hmac.new(_ADMIN_HMAC_KEY, password.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(candidate, dev_hash)
+
+    candidate = hmac.new(_ADMIN_HMAC_KEY, password.encode(), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(candidate, _ADMIN_PASSWORD_HASH)
+
+
+def require_admin(f):
+    """Decorator — returns 401 if admin session is not active."""
+    from functools import wraps
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('admin_authenticated'):
+            return jsonify({"error": "Not authenticated", "code": "ADMIN_AUTH_REQUIRED"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ADMIN AUTHENTICATION ROUTES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/auth/login', methods=['POST'])
+def admin_login():
+    """Server-side admin login. Returns session cookie on success."""
+    import time
+    ip = get_client_ip()
+    limited, remaining_ms = _check_admin_rate_limit(ip)
+    if limited:
+        return jsonify({
+            "error": "Too many failed attempts",
+            "remaining_ms": remaining_ms,
+            "locked": True,
+        }), 429
+
+    try:
+        data = request.get_json(force=True) or {}
+    except Exception:
+        return jsonify({"error": "Invalid request body"}), 400
+
+    password = data.get('password', '')
+    if not password:
+        return jsonify({"error": "Password required"}), 400
+
+    # Intentional 300ms delay against brute-force
+    time.sleep(0.3)
+
+    if not _verify_admin_password(password):
+        _record_admin_failure(ip)
+        entry = _admin_attempt_tracker.get(ip, {})
+        remaining = max(0, _ADMIN_MAX_ATTEMPTS - entry.get('count', 0))
+        return jsonify({
+            "error": f"Incorrect password. {remaining} attempt(s) remaining.",
+            "remaining_attempts": remaining,
+        }), 401
+
+    _clear_admin_rate_limit(ip)
+    session['admin_authenticated'] = True
+    session['admin_authenticated_at'] = int(time.time())
+    session.permanent = True
+    app.permanent_session_lifetime = _ADMIN_SESSION_DURATION
+
+    return jsonify({"success": True, "message": "Authenticated"})
+
+
+@app.route('/api/admin/auth/status', methods=['GET'])
+def admin_auth_status():
+    """Check if the current session has admin access."""
+    import time
+    authed = session.get('admin_authenticated', False)
+    authed_at = session.get('admin_authenticated_at', 0)
+
+    # Enforce 8-hour server-side session expiry
+    if authed and authed_at:
+        age_hours = (time.time() - authed_at) / 3600
+        if age_hours > 8:
+            session.pop('admin_authenticated', None)
+            session.pop('admin_authenticated_at', None)
+            authed = False
+
+    return jsonify({
+        "authenticated": authed,
+        "has_password_configured": bool(_ADMIN_PASSWORD_HASH),
+    })
+
+
+@app.route('/api/admin/auth/logout', methods=['POST'])
+def admin_logout():
+    session.pop('admin_authenticated', None)
+    session.pop('admin_authenticated_at', None)
+    return jsonify({"success": True})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ADMIN ANALYTICS API ROUTES  (all require admin session)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/overview', methods=['GET'])
+@require_admin
+def admin_overview():
+    """
+    Returns aggregated product KPIs.
+    Query param: range = today | 7d | 30d | all (default: all)
+    """
+    range_type = request.args.get('range', 'all')
+    if range_type not in ('today', '7d', '30d', 'all'):
+        range_type = 'all'
+
+    today_stats = get_overview('today')
+    range_stats = get_overview(range_type)
+
+    return jsonify({
+        "range": range_type,
+        "today": today_stats,
+        "period": range_stats,
+        "db_available": range_stats.get('db_available', False),
+    })
+
+
+@app.route('/api/admin/trends', methods=['GET'])
+@require_admin
+def admin_trends():
+    """Daily trend data for charts. Query param: days = 7 | 30 | 90"""
+    try:
+        days = int(request.args.get('days', 30))
+    except (ValueError, TypeError):
+        days = 30
+    days = min(max(days, 7), 90)
+    return jsonify({"days": days, "data": get_daily_trend(days)})
+
+
+@app.route('/api/admin/events', methods=['GET'])
+@require_admin
+def admin_events():
+    """Recent events feed. Query param: limit (max 200)"""
+    try:
+        limit = int(request.args.get('limit', 50))
+    except (ValueError, TypeError):
+        limit = 50
+    limit = min(max(limit, 1), 200)
+    events = get_recent_events(limit)
+    return jsonify({"events": events, "count": len(events)})
+
+
+@app.route('/api/admin/users', methods=['GET'])
+@require_admin
+def admin_users():
+    """User activity list (authenticated users only). Supports pagination."""
+    try:
+        limit = int(request.args.get('limit', 50))
+        offset = int(request.args.get('offset', 0))
+    except (ValueError, TypeError):
+        limit, offset = 50, 0
+    limit = min(max(limit, 1), 200)
+    users = get_user_list(limit, offset)
+    return jsonify({"users": users, "count": len(users), "offset": offset})
+
+
+@app.route('/api/admin/users/<user_id>/journey', methods=['GET'])
+@require_admin
+def admin_user_journey(user_id: str):
+    """Timeline of events for a specific user."""
+    journey = get_user_journey(user_id)
+    return jsonify({"user_id": user_id, "events": journey})
+
+
+@app.route('/api/admin/health', methods=['GET'])
+@require_admin
+def admin_health():
+    """Analytics system health check."""
+    health = get_health()
+    health['analytics_module_ready'] = _analytics_ready
+    health['password_configured'] = bool(_ADMIN_PASSWORD_HASH)
+    return jsonify(health)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FRONTEND → BACKEND ANALYTICS INGESTION  (public, CORS-gated)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Allowlist of events the frontend is permitted to record server-side.
+# Backend-verified events (OAuth, email) are recorded inside their own routes.
+_FRONTEND_ALLOWED_EVENTS = {
+    "page_viewed", "tool_opened", "template_selected",
+    "csv_uploaded", "certificate_generation_started",
+    "certificate_generated", "certificate_downloaded",
+    "returning_user",
+}
+
+@app.route('/api/analytics/event', methods=['POST'])
+def ingest_frontend_event():
+    """
+    Receives client-side analytics events and records them server-side.
+    This is the bridge between the browser and the central analytics store.
+    Only allowlisted events are accepted.
+    """
+    try:
+        data = request.get_json(force=True) or {}
+    except Exception:
+        return jsonify({"ok": False}), 200  # always 200 — never break the frontend
+
+    event_name = data.get('event_name', '')
+    if event_name not in _FRONTEND_ALLOWED_EVENTS:
+        return jsonify({"ok": False, "reason": "event_not_allowed"}), 200
+
+    visitor_id = data.get('visitor_id') or None
+    analytics_session_id = data.get('session_id') or None
+    meta = data.get('meta') or {}
+
+    # Special handling for page views (tracks unique visitors)
+    if event_name == 'page_viewed' and visitor_id:
+        record_unique_visitor(visitor_id)
+    else:
+        record_event(
+            event_name=event_name,
+            visitor_id=visitor_id,
+            session_id=analytics_session_id,
+            source='frontend',
+            meta=meta,
+        )
+
+    # Update analytics session row
+    session_updates = {}
+    if event_name == 'tool_opened':
+        session_updates['tool_opened'] = 1
+    elif event_name == 'template_selected':
+        session_updates['template_used'] = 1
+    elif event_name == 'csv_uploaded':
+        session_updates['csv_imported'] = 1
+    elif event_name == 'certificate_generated':
+        session_updates['certs_generated'] = meta.get('certificates_count', 1)
+
+    if analytics_session_id and (visitor_id or session_updates):
+        upsert_session(
+            session_id=analytics_session_id,
+            visitor_id=visitor_id,
+            updates=session_updates,
+        )
+
+    return jsonify({"ok": True})
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STATUS + DEBUG
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/')
+def index():
+    return jsonify({"status": "Gmail API Backend is running"})
+
+
+@app.route('/api/debug/env')
+def debug_env():
+    if os.environ.get('FLASK_DEBUG') != '1':
+        return jsonify({"error": "Not available in production"}), 403
+    return jsonify({
+        "NODE_ENV": os.environ.get('NODE_ENV'),
+        "FLASK_DEBUG": os.environ.get('FLASK_DEBUG'),
+        "APP_URL": os.environ.get('APP_URL'),
+        "get_app_url()": get_app_url(),
+        "get_oauth_redirect_uri()": get_oauth_redirect_uri(),
+        "is_production()": is_production(),
+        "analytics_db_available": _analytics_ready,
+        "has_database_url": bool(os.environ.get('DATABASE_URL')),
+        "admin_password_configured": bool(_ADMIN_PASSWORD_HASH),
+    })
+
+
+@app.route('/api/debug/session')
+def debug_session():
+    if os.environ.get('FLASK_DEBUG') != '1':
+        return jsonify({"error": "Not available in production"}), 403
+    return jsonify({
+        "has_state": 'state' in session,
+        "has_credentials": 'credentials' in session,
+        "email": session.get('email', 'NOT SET'),
+        "admin_authenticated": session.get('admin_authenticated', False),
+    })
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GOOGLE OAUTH ROUTES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/auth/login')
+@app.route('/auth/login')
+def auth_login():
+    """Initiate Google OAuth flow and record oauth_started event."""
+    try:
+        if not GOOGLE_CREDENTIALS_JSON:
+            return sanitize_error_response("GOOGLE_CREDENTIALS_JSON not set", include_details=True)
+
+        flow = get_flow()
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+
+        session['state'] = state
+        session['csrf_token'] = secrets.token_urlsafe(16)
+        session['oauth_visitor_id'] = request.args.get('visitor_id') or None
+        session['oauth_analytics_session_id'] = request.args.get('analytics_session_id') or None
+        session.permanent = True
+
+        # Record the oauth attempt server-side
+        record_event(
+            event_name='google_oauth_started',
+            visitor_id=session.get('oauth_visitor_id'),
+            session_id=session.get('oauth_analytics_session_id'),
+            source='backend',
+        )
+
+        return jsonify({
+            "authorization_url": authorization_url,
+            "state": state,
+            "csrf_token": session['csrf_token']
+        })
+
+    except Exception as e:
+        import traceback
+        print(f"Login error: {traceback.format_exc()}")
+        return sanitize_error_response(e, include_details=True)
+
+
+@app.route('/api/auth/callback')
+@app.route('/auth/callback')
+def auth_callback():
+    """Handle OAuth callback and record oauth_success/failed server-side."""
+    try:
+        error = request.args.get('error')
+        if error:
+            record_event(
+                event_name='google_oauth_failed',
+                visitor_id=session.get('oauth_visitor_id'),
+                session_id=session.get('oauth_analytics_session_id'),
+                source='backend',
+                success=False,
+                error_code=error,
+            )
+            return redirect(f'{get_frontend_url()}?error={error}')
+
+        state = request.args.get('state')
+        code = request.args.get('code')
+        stored_state = session.get('state')
+
+        if not state or not code or stored_state != state:
+            record_event(
+                event_name='google_oauth_failed',
+                source='backend',
+                success=False,
+                error_code='state_mismatch',
+            )
+            return redirect(f'{get_frontend_url()}?error=invalid_state')
+
+        flow = get_flow()
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        store_credentials_in_session(credentials)
+
+        # Fetch user info
+        user_email = None
+        try:
+            oauth2_service = build('oauth2', 'v2', credentials=credentials)
+            user_info = oauth2_service.userinfo().get().execute()
+            user_email = user_info.get('email')
+            session['email'] = user_email
+        except Exception as e:
+            print(f"Could not fetch email: {e}")
+
+        visitor_id = session.pop('oauth_visitor_id', None)
+        analytics_session_id = session.pop('oauth_analytics_session_id', None)
+
+        # Record oauth success — hash email before storing
+        user_id = hashlib.sha256(user_email.encode()).hexdigest()[:16] if user_email else None
+        record_event(
+            event_name='google_oauth_success',
+            visitor_id=visitor_id,
+            user_id=user_id,
+            session_id=analytics_session_id,
+            source='backend',
+        )
+
+        if analytics_session_id:
+            upsert_session(
+                session_id=analytics_session_id,
+                visitor_id=visitor_id,
+                user_id=user_id,
+                user_email=user_email,
+                updates={'is_google_authed': True},
+            )
+
+        session.pop('state', None)
+        session['csrf_token'] = secrets.token_urlsafe(16)
+        session.permanent = True
+
+        return redirect(
+            f'{get_frontend_url()}/email?auth_success=true&csrf_token={session["csrf_token"]}'
+        )
+
+    except Exception as e:
+        print(f"OAuth callback error: {e}")
+        import traceback
+        print(traceback.format_exc())
+        record_event(event_name='google_oauth_failed', source='backend',
+                     success=False, error_code='exception')
+        return redirect(f'{get_frontend_url()}?error=authentication_failed')
+
+
+@app.route('/api/auth/status')
+@app.route('/auth/status')
+def auth_status():
+    try:
+        credentials_data = session.get('credentials')
+        if not credentials_data:
+            return jsonify({"authenticated": False, "email": None})
+
         credentials = reconstruct_credentials(credentials_data)
         if not credentials:
-            return jsonify({"error": "Invalid credentials"}), 401
-        
-        # Refresh credentials if needed
+            session.clear()
+            return jsonify({"authenticated": False, "email": None})
+
         if not refresh_credentials_if_needed(credentials):
-            return jsonify({"error": "Authentication expired"}), 401
-        
-        # Build Gmail service
+            return jsonify({"authenticated": False, "email": None})
+
+        payload = {"authenticated": True, "email": session.get('email')}
+        if session.get('csrf_token'):
+            payload["csrf_token"] = session['csrf_token']
+        return jsonify(payload)
+
+    except Exception as e:
+        print(f"Auth status error: {e}")
+        return sanitize_error_response(e)
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+@app.route('/auth/logout', methods=['POST'])
+def auth_logout():
+    try:
+        if not validate_csrf_token():
+            return jsonify({"error": "Invalid CSRF token"}), 403
+        session.clear()
+        return jsonify({"success": True})
+    except Exception as e:
+        return sanitize_error_response(e)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EMAIL SENDING — server records email_send_started / completed / failed
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/send-email', methods=['POST'])
+@app.route('/send-email', methods=['POST'])
+def send_email():
+    """Send one email via Gmail API. Records attempt + outcome server-side."""
+    # Pull analytics context from request headers (set by frontend analyticsService)
+    analytics_visitor_id = request.headers.get('X-Analytics-Visitor-Id') or None
+    analytics_session_id = request.headers.get('X-Analytics-Session-Id') or None
+
+    if not validate_csrf_token():
+        return jsonify({"error": "Invalid CSRF token"}), 403
+
+    credentials_data = session.get('credentials')
+    if not credentials_data:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    # Parse request body
+    if request.content_type and 'multipart/form-data' in request.content_type:
+        recipient = request.form.get('recipient')
+        subject = request.form.get('subject')
+        body = request.form.get('body')
+        attachment = request.files.get('attachment')
+        if not all([recipient, subject, body]):
+            return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+    else:
+        try:
+            data = request.get_json(force=True)
+        except Exception:
+            return jsonify({"error": "Invalid JSON data"}), 400
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        recipient = data.get('recipient')
+        subject = data.get('subject')
+        body = data.get('body')
+        attachment = None
+        if not all([recipient, subject, body]):
+            return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+
+    recipient = normalize_recipient_email(recipient)
+    if not is_valid_recipient_email(recipient):
+        return jsonify({"error": "Invalid recipient email address."}), 400
+
+    credentials = reconstruct_credentials(credentials_data)
+    if not credentials:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    if not refresh_credentials_if_needed(credentials):
+        return jsonify({"error": "Authentication expired"}), 401
+
+    # Determine the sender's hashed user_id
+    user_email = session.get('email')
+    user_id = hashlib.sha256(user_email.encode()).hexdigest()[:16] if user_email else None
+
+    # Record the attempt
+    record_event(
+        event_name='email_send_started',
+        visitor_id=analytics_visitor_id,
+        user_id=user_id,
+        session_id=analytics_session_id,
+        source='backend',
+    )
+    if analytics_session_id:
+        upsert_session(
+            session_id=analytics_session_id,
+            visitor_id=analytics_visitor_id,
+            user_id=user_id,
+            updates={'emails_attempted': 1},
+        )
+
+    try:
         gmail_service = build('gmail', 'v1', credentials=credentials)
-        
-        # Create email message
+
         if attachment:
-            # Email with attachment
-            # Read attachment content
             attachment_content = attachment.read()
             attachment_filename = attachment.filename or 'certificate.pdf'
-            
-            # Create message with attachment
             msg = MIMEMultipart()
             msg['From'] = 'me'
             msg['To'] = recipient
             msg['Subject'] = subject
-            
-            # Add body
             msg.attach(MIMEText(body, 'plain'))
-            
-            # Add attachment
             part = MIMEBase('application', 'octet-stream')
             part.set_payload(attachment_content)
             encoders.encode_base64(part)
-            part.add_header(
-                'Content-Disposition',
-                f'attachment; filename= {attachment_filename}'
-            )
+            part.add_header('Content-Disposition', f'attachment; filename= {attachment_filename}')
             msg.attach(part)
-            
-            # Convert to raw message
             raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
         else:
-            # Simple email without attachment
             message = f"From: me\r\nTo: {recipient}\r\nSubject: {subject}\r\n\r\n{body}"
             raw_message = base64.urlsafe_b64encode(message.encode('utf-8')).decode('utf-8')
-        
-        # Send email
+
         result = gmail_service.users().messages().send(
             userId='me',
             body={'raw': raw_message}
         ).execute()
-        
+
+        # ✅ Server-confirmed success
+        record_event(
+            event_name='email_send_completed',
+            visitor_id=analytics_visitor_id,
+            user_id=user_id,
+            session_id=analytics_session_id,
+            source='backend',
+            success=True,
+        )
+        if analytics_session_id:
+            upsert_session(
+                session_id=analytics_session_id,
+                updates={'emails_succeeded': 1},
+            )
+
         return jsonify({
             "success": True,
             "message_id": result['id'],
-            "recipient": recipient
+            "recipient": recipient,
         })
-    
+
     except HttpError as e:
-        print(f"Gmail API error: {e}")
+        error_code = 'gmail_api_error'
+        if getattr(e, 'resp', None):
+            status = e.resp.status
+            if status == 400:
+                error_code = 'invalid_recipient'
+            elif status == 401:
+                error_code = 'authentication_error'
+            elif status == 429:
+                error_code = 'rate_limit'
+
+        record_event(
+            event_name='email_send_failed',
+            visitor_id=analytics_visitor_id,
+            user_id=user_id,
+            session_id=analytics_session_id,
+            source='backend',
+            success=False,
+            error_code=error_code,
+        )
+        if analytics_session_id:
+            upsert_session(session_id=analytics_session_id, updates={'emails_failed': 1})
+
         error_message = "Failed to send email"
-        if getattr(e, 'resp', None) and e.resp.status == 400:
-            error_message = (
-                "Gmail rejected this message. The recipient address may be invalid "
-                "or the message could not be delivered."
-            )
+        if error_code == 'invalid_recipient':
+            error_message = ("Gmail rejected this message. The recipient address may be invalid "
+                             "or the message could not be delivered.")
         return jsonify({"error": error_message}), 400
+
     except Exception as e:
+        record_event(
+            event_name='email_send_failed',
+            visitor_id=analytics_visitor_id,
+            user_id=user_id,
+            session_id=analytics_session_id,
+            source='backend',
+            success=False,
+            error_code='unknown_error',
+        )
+        if analytics_session_id:
+            upsert_session(session_id=analytics_session_id, updates={'emails_failed': 1})
+
         print(f"Send email error: {e}")
         return sanitize_error_response(e)
 
-@app.route('/api/auth/logout', methods=['POST'])
-def auth_logout():
-    """Logout user"""
-    try:
-        # Lightweight CSRF protection for POST routes
-        if not validate_csrf_token():
-            return jsonify({"error": "Invalid CSRF token"}), 403
-        
-        session.clear()
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"Logout error: {e}")
-        return sanitize_error_response(e)
-
-
-# ————————————————————————————————
-# Google Sheets Import (Phase 2)
-# ————————————————————————————————
+# ═══════════════════════════════════════════════════════════════════════════════
+# GOOGLE SHEETS IMPORT
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def _extract_sheet_id(url):
-    """Extract Google Sheets ID from URL"""
     match = re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', url)
     return match.group(1) if match else None
 
+
 def _extract_gid(url):
-    """Extract gid (sheet tab) from URL"""
     match = re.search(r'[#&?]gid=(\d+)', url)
     return match.group(1) if match else None
 
-# Alias route
-@app.route('/sheets/import', methods=['POST'])
-def sheets_import_alias():
-    return sheets_import()
 
 @app.route('/api/sheets/import', methods=['POST'])
+@app.route('/sheets/import', methods=['POST'])
 def sheets_import():
-    """Import data from a public Google Sheet (read-only)"""
     try:
         data = request.get_json(force=True)
         if not data or 'url' not in data:
             return jsonify({"error": "Sheet URL is required"}), 400
 
         sheet_url = data['url'].strip()
-
-        # ✅ SANITIZE: Never log the raw sheet URL (contains potential sensitive identifiers)
         sheet_id = _extract_sheet_id(sheet_url)
         if not sheet_id:
-            # Return generic error without echoing URL
-            return jsonify({"error": "Invalid Google Sheets URL. Expected a link like: docs.google.com/spreadsheets/d/..."}), 400
+            return jsonify({"error": "Invalid Google Sheets URL."}), 400
 
-        # Extract gid if present (specific sheet tab)
         gid = _extract_gid(sheet_url)
-
-        # Build CSV export URL for public sheets
         export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
         if gid is not None:
             export_url += f"&gid={gid}"
 
-        # ✅ SANITIZE: Log sheet_id only (not full URL)
-        print(f"[Sheets Import] Fetching sheet: {sheet_id} (anonymized)")
-
-        # Fetch CSV data from Google
         try:
-            req = urllib.request.Request(export_url, headers={
-                'User-Agent': 'MailMyCertificate/1.0'
-            })
+            req = urllib.request.Request(export_url, headers={'User-Agent': 'MailMyCertificate/1.0'})
             with urllib.request.urlopen(req, timeout=30) as response:
                 csv_content = response.read().decode('utf-8')
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                # ✅ SANITIZE: Generic error (don't reveal sheet existence)
                 return jsonify({"error": "Sheet not found. Ensure the URL is correct and publicly shareable."}), 404
             elif e.code == 403:
                 return jsonify({"error": "Sheet access denied. Verify sharing settings are set to 'Anyone with link'."}), 403
             else:
-                # ✅ SANITIZE: Never include HTTP error details in production
-                error_msg = f"Failed to fetch sheet" if is_production() else f"HTTP {e.code} error"
-                return jsonify({"error": error_msg}), 502
-        except urllib.error.URLError as e:
+                return jsonify({"error": "Failed to fetch sheet" if is_production() else f"HTTP {e.code} error"}), 502
+        except urllib.error.URLError:
             return jsonify({"error": "Connection error. Check your internet and try again."}), 502
         except Exception as e:
-            # ✅ SANITIZE: Sanitize exception in production
-            error_msg = "Failed to fetch sheet data" if is_production() else str(e)
-            print(f"[Sheets Import ERROR] {error_msg}")
-            return jsonify({"error": error_msg}), 502
+            return jsonify({"error": "Failed to fetch sheet data" if is_production() else str(e)}), 502
 
-        # Detect private sheet redirect (Google returns HTML login page)
         stripped = csv_content.strip()
         if stripped.startswith('<!DOCTYPE') or stripped.startswith('<html') or stripped.startswith('<HTML'):
-            return jsonify({"error": "Sheet is not publicly accessible. Set sharing to 'Anyone with the link can view'."}), 403
+            return jsonify({"error": "Sheet is not publicly accessible."}), 403
 
-        # Strip BOM if present
         if csv_content.startswith('\ufeff'):
             csv_content = csv_content[1:]
 
-        # Parse CSV
         reader = csv.DictReader(io.StringIO(csv_content))
         headers = reader.fieldnames or []
-
         if not headers:
             return jsonify({"error": "Sheet appears to be empty or has no headers."}), 400
 
-        rows = []
-        for row in reader:
-            # Skip completely empty rows
-            if any(v.strip() for v in row.values() if v):
-                rows.append(dict(row))
-
+        rows = [dict(row) for row in reader if any(v.strip() for v in row.values() if v)]
         if len(rows) == 0:
             return jsonify({"error": "Sheet has headers but no data rows."}), 400
 
-        # ✅ SUCCESS: Log sheet import (anonymized)
-        print(f"[Sheets Import SUCCESS] {len(rows)} rows imported from sheet")
-
-        # Sanitize headers and data keys
         sanitized_headers = []
         header_map = {}
         for h in headers:
-            # Strip problematic chars but keep spaces and alphanumeric
             clean_h = re.sub(r'[^\w\s-]', '', h).strip()
             clean_h = re.sub(r'\s+', ' ', clean_h)
             sanitized_headers.append(clean_h)
             header_map[h] = clean_h
 
-        sanitized_rows = []
-        for row in rows:
-            clean_row = {header_map[k]: v for k, v in row.items()}
-            sanitized_rows.append(clean_row)
+        sanitized_rows = [{header_map[k]: v for k, v in row.items()} for row in rows]
 
         if len(sanitized_rows) > 400:
             return jsonify({"error": f"Too many rows ({len(sanitized_rows)}). Maximum 400 rows allowed."}), 400
@@ -674,16 +944,17 @@ def sheets_import():
         })
 
     except Exception as e:
-        # ✅ SANITIZE: Catch-all for unexpected errors
-        print(f"[Sheets Import ERROR - Unhandled] {str(e)}")
-        return sanitize_error_response(e, include_details=is_production() is False)
+        print(f"[Sheets Import ERROR] {str(e)}")
+        return sanitize_error_response(e, include_details=not is_production())
 
 
-# Vercel serverless function handler
+# ═══════════════════════════════════════════════════════════════════════════════
+# VERCEL HANDLER
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def handler(environ, start_response):
-    """Vercel Python serverless function handler"""
     return app(environ, start_response)
 
-# For local testing
+
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

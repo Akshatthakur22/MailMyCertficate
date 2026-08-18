@@ -632,6 +632,9 @@ export default function EmailView() {
             certificateCount={certificates.length}
             authenticating={authenticating}
             onLogin={handleLogin}
+            authenticated={authStatus.authenticated}
+            userEmail={authStatus.email}
+            onLogout={handleLogout}
           />
         )}
 

@@ -65,9 +65,9 @@ export function SendReadinessPanel({
         <button
           type="button"
           onClick={onLogout}
-          className="shrink-0 text-xs font-medium text-secondary underline-offset-2 hover:text-foreground hover:underline"
+          className="shrink-0 px-3 py-1.5 rounded-md bg-red-50 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors border border-red-200"
         >
-          Switch
+          Logout
         </button>
       </div>
 

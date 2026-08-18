@@ -5,3 +5,4 @@ google-api-python-client
 google-auth
 python-dotenv
 gunicorn
+psycopg2-binary

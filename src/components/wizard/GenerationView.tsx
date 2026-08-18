@@ -13,6 +13,7 @@ import { ZipDownloadSuccessPanel } from '@/components/session/ZipDownloadSuccess
 import { GitHubStarPrompt } from '@/components/github/GitHubStarPrompt';
 import { SaveSessionModal } from '@/components/session/SaveSessionModal';
 import { trackEvent } from '@/lib/analytics';
+import { trackBackendEvent } from '@/services/analyticsService';
 import type { GitHubStarPromptTrigger } from '@/lib/analytics';
 import { OpenSourceSupportCard } from '@/components/product/OpenSourceSupportCard';
 
@@ -148,6 +149,7 @@ export function GenerationView() {
                 },
                 { dedupeKey: `${sessionId}-zip` },
             );
+            trackBackendEvent('certificate_downloaded', { certificates_count: completedCerts });
 
             await updateSession(sessionId, {
                 workflowStage: 'DOWNLOAD',
