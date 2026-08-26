@@ -41,14 +41,9 @@ export type FrontendEventName =
   | 'tool_opened'
   | 'template_selected'
   | 'csv_uploaded'
-  | 'csv_import_failed'
   | 'certificate_generation_started'
   | 'certificate_generated'
-  | 'certificate_generation_failed'
   | 'certificate_downloaded'
-  | 'field_editor_opened'
-  | 'email_batch_started'
-  | 'email_send_completed'
   | 'returning_user';
 
 // ─── Event queue / debounce ────────────────────────────────────────────────────
@@ -260,36 +255,3 @@ export const adminApi = {
     return _adminFetch('/api/admin/health');
   },
 };
-
-
-// ─── Unified tracking API ─────────────────────────────────────────────────────
-/**
- * Track an analytics event to both the backend (via analytics API) and local fallback.
- * This is the unified entry point — call this instead of separate trackEvent + trackBackendEvent.
- * 
- * Usage:
- *   trackAnalyticsEvent('csv_uploaded', { row_count: 150, import_source: 'csv' })
- * 
- * Note: trackBackendEvent is still exported for cases where local tracking isn't needed.
- */
-export function trackAnalyticsEvent(
-  event_name: FrontendEventName,
-  meta?: Record<string, unknown>,
-  options?: { dedupeKey?: string; noLocalFallback?: boolean }
-): void {
-  if (typeof window === 'undefined') return;
-  
-  // Always send to backend (never breaks the app)
-  trackBackendEvent(event_name, meta);
-  
-  // Also store in localStorage for local diagnostics (unless disabled)
-  if (!options?.noLocalFallback) {
-    try {
-      // Dynamic require to avoid circular dependency
-      const analyticsLib = require('@/lib/analytics');
-      analyticsLib.trackEvent({ event: event_name, ...meta }, { dedupeKey: options?.dedupeKey });
-    } catch {
-      // Fail silently if local analytics unavailable
-    }
-  }
-}

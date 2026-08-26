@@ -58,7 +58,6 @@ export const SEO_KEYWORDS = {
     'certificate data protection',
   ],
   terms: ['mail my certificate terms of service', 'certificate generator terms'],
-
   googleSheets: [
     'google sheets certificate generator',
     'google forms to certificates',
@@ -128,8 +127,6 @@ export const SEO_KEYWORDS = {
     'free alternative to certifier',
     'certifier free version',
   ],
-
-  // New pages
   canvaComparison: [
     'mailmycertificate vs canva',
     'canva certificate bulk export',
@@ -227,5 +224,27 @@ export const SEO_KEYWORDS = {
     'certificate generator review',
     'certifier alternative list',
     'best certificate tool for events',
+  ],
+  forDevelopers: [
+    'open source certificate generator',
+    'certificate tool for developers',
+    'customizable certificate generator',
+    'fork and deploy certificate tool',
+    'certificate generator local first',
+    'developer friendly certificate tool',
+    'certificate tool open source github',
+    'hackathon organizer certificate generator',
+    'event organizer developer tool',
+  ],
+  forNonprofits: [
+    'free certificate generator nonprofits',
+    'privacy first certificate tool ngo',
+    'certificate generator no cloud upload',
+    'nonprofit certificate generation',
+    'gdpr compliant certificate tool',
+    'local first certificate ngo',
+    'free certificate tool for organizations',
+    'privacy certificate generator nonprofit',
+    'certificate generator nonprofit free',
   ],
 } as const;

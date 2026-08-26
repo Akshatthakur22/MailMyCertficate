@@ -434,8 +434,9 @@ def admin_health():
 # Backend-verified events (OAuth, email) are recorded inside their own routes.
 _FRONTEND_ALLOWED_EVENTS = {
     "page_viewed", "tool_opened", "template_selected",
-    "csv_uploaded", "certificate_generation_started",
-    "certificate_generated", "certificate_downloaded",
+    "csv_uploaded", "csv_import_failed", "field_editor_opened", "certificate_generation_started",
+    "certificate_generated", "certificate_generation_failed", "certificate_downloaded",
+    "email_batch_started", "email_send_completed",
     "returning_user",
 }
 

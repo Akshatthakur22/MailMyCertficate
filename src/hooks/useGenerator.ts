@@ -6,6 +6,7 @@ import {
     incrementGenerationCount,
     trackEvent,
 } from '@/lib/analytics';
+import { trackBackendEvent } from '@/services/analyticsService';
 import type { GenerationMethod } from '@/lib/analytics';
 
 export function useGenerator() {
@@ -162,6 +163,13 @@ export function useGenerator() {
             setIsGenerating(false);
             workerRef.current?.terminate();
             workerRef.current = null;
+            
+            // Track generation error to backend
+            trackBackendEvent('certificate_generation_failed', { 
+                error_code: 'generation_init_error',
+                error_message: message,
+                generation_method: generationMethod 
+            });
         }
     }, []);
 

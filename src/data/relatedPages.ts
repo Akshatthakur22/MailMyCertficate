@@ -120,8 +120,8 @@ export const RELATED_PAGES = {
   certifier: ['canva', 'guide', 'privacy', 'about', 'vsCanva', 'vsCertifyem'],
   vsCanva: ['certifier', 'canva', 'guide', 'vsCertifyem', 'templates', 'blog'],
   vsCertifyem: ['certifier', 'vsCanva', 'workshop', 'webinar', 'blog', 'guide'],
-  about: ['guide', 'privacy', 'contact', 'certifier', 'blog', 'contact'],
-  contact: ['guide', 'about', 'privacy', 'certifier', 'blog', 'contact'],
+  about: ['guide', 'privacy', 'contact', 'certifier', 'blog'],
+  contact: ['guide', 'about', 'privacy', 'certifier', 'blog'],
 } as const satisfies Record<string, readonly PageKey[]>;
 
 export type RelatedPagesKey = keyof typeof RELATED_PAGES;

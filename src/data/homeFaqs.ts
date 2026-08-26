@@ -18,6 +18,12 @@ export const HOME_PAGE_FAQS = [
       'Yes, entirely. It is MIT licensed with no paid tier, no trial, no per-certificate charge and no cap on how many you generate. There is nothing to sign up for, and no payment details are ever requested.',
   },
   {
+    // 3.8 — Address AI/automation anxiety directly; names the unasked objection upfront
+    question: 'Does this use AI on my data?',
+    answer:
+      'No. MailMyCertificate is a deterministic certificate generator — no machine learning, no generative AI, no training models. PDF generation is 100% local to your device. Your data is never uploaded to any external service, including for any form of automated processing. It is guaranteed in writing that your data will never be used to train, improve, or create any foundational or large language models.',
+  },
+  {
     question: 'How do I generate certificates in bulk?',
     answer:
       'Export your certificate design as a PNG or JPG, then import your participant list as a CSV file or a public Google Sheets URL. Drag name and event fields onto the template, and generate every PDF in one batch.',
@@ -32,6 +38,12 @@ export const HOME_PAGE_FAQS = [
     answer:
       'There is no artificial limit. Because generation happens locally, the practical ceiling is your own device memory rather than a plan tier. Batches of several hundred are routine for hackathons and workshops.',
   },
+  // 3.8 — Address implicit "what's the catch" skepticism directly; naming objection = stronger trust move
+  {
+    question: 'Why is this free? What\'s the catch?',
+    answer:
+      'No catch. MailMyCertificate is MIT-licensed open-source software created to solve a real problem — the certificate automation headache after events. It is funded by the creator solving their own problem, not VC. You can read the entire codebase on GitHub to verify.',
+  },
   {
     question: 'Do I need a Google account to use it?',
     answer:
@@ -41,10 +53,5 @@ export const HOME_PAGE_FAQS = [
     question: 'What file format should my certificate template be?',
     answer:
       'A PNG or JPG image. Design it in Canva, Figma or any editor, then export as an image rather than a PDF. Leave the name and event areas blank so those can be filled per participant.',
-  },
-  {
-    question: 'Can MailMyCertificate issue verifiable credentials?',
-    answer:
-      'No. It produces standard PDF certificates without a public verification portal or QR registry. If recipients must validate credentials through a hosted verification page, a paid platform is the right choice instead.',
   },
 ] as const;

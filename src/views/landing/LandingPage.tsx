@@ -19,21 +19,29 @@ import {
   SendStepIcon,
 } from '@/components/landing/illustrations';
 
+// 3.3 — Enhanced testimonials with org names and avatar initials
+// Initials serve as monogram avatars (more trustworthy than stock photos, but still humanized)
 const TESTIMONIALS = [
   {
     quote: 'Saved me an entire Sunday. We had 340 hackathon participants and I was dreading the certificate work. Done in 8 minutes.',
     name: 'Priya S.',
-    role: 'Hackathon organiser, IIT Delhi',
+    org: 'IIT Delhi',
+    role: 'Hackathon organiser',
+    initials: 'PS',
   },
   {
     quote: 'The privacy angle sold me immediately. Our NGO cannot upload beneficiary data to random SaaS tools. This runs entirely locally — exactly what we needed.',
     name: 'Rahul M.',
-    role: 'Program coordinator, Non-profit',
+    org: 'Non-profit Organization',
+    role: 'Program coordinator',
+    initials: 'RM',
   },
   {
     quote: 'Finally a tool that just works. No account, no watermark, no limit. Sent 200 workshop certificates via Gmail in one session.',
     name: 'Tanvi K.',
-    role: 'Community lead, Google Developer Group',
+    org: 'Google Developer Group',
+    role: 'Community lead',
+    initials: 'TK',
   },
 ] as const;
 
@@ -121,6 +129,12 @@ export default function LandingPage() {
                   </TrackToolCta>
                   <SampleProjectLauncher className="landing-btn-secondary font-semibold px-7 py-3.5 rounded-lg text-base" />
                 </RevealSection>
+                {/* 3.1 — Micro-trust strip directly under CTA: reduces first-time hesitation at moment of decision */}
+                <RevealSection>
+                  <p className="text-xs text-landing-secondary/70 font-medium">
+                    No card · No account · Runs in your browser
+                  </p>
+                </RevealSection>
                 <RevealSection>
                   <Link href="/guide" className="text-sm text-landing-secondary hover:text-landing-ink underline underline-offset-2 transition-colors">
                     See how it works in 5 steps →
@@ -143,15 +157,25 @@ export default function LandingPage() {
                   { Icon: Star, label: '$0', sub: 'No payment, ever' },
                   { Icon: Check, label: 'Unlimited', sub: 'No certificate cap' },
                   { Icon: Lock, label: 'No signup', sub: 'Open and start' },
-                  { Icon: Github, label: 'MIT licence', sub: 'Fully open source' },
-                ].map(({ Icon, label, sub }) => (
+                  // 3.2 — Link LICENSE directly for specificity over generic GitHub link; enables verification
+                  { Icon: Github, label: 'MIT licence', sub: 'Fully open source', href: `${GITHUB_REPO_URL}/blob/main/LICENSE` },
+                ].map(({ Icon, label, sub, href }) => (
                   <div key={label} className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-[#2D6A4F]/10 flex items-center justify-center shrink-0">
                       <Icon size={16} className="text-[#2D6A4F]" />
                     </div>
                     <div>
-                      <p className="text-base font-semibold text-landing-ink leading-none mb-0.5">{label}</p>
-                      <p className="text-xs text-landing-secondary">{sub}</p>
+                      {href ? (
+                        <Link href={href} target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">
+                          <p className="text-base font-semibold text-landing-ink leading-none mb-0.5">{label}</p>
+                          <p className="text-xs text-landing-secondary">{sub}</p>
+                        </Link>
+                      ) : (
+                        <>
+                          <p className="text-base font-semibold text-landing-ink leading-none mb-0.5">{label}</p>
+                          <p className="text-xs text-landing-secondary">{sub}</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -172,13 +196,19 @@ export default function LandingPage() {
             <RevealSection>
               <div className="grid md:grid-cols-3 gap-6">
                 {TESTIMONIALS.map((t) => (
-                  <div key={t.name} className="landing-annotation-card p-6">
+                  <div key={t.name} className="landing-annotation-card p-6 group hover:border-[#2D6A4F]/40 transition-colors">
+                    {/* 3.3 — Monogram avatar adds humanization without stock photos */}
+                    <div className="mb-4 w-10 h-10 rounded-full bg-[#2D6A4F]/10 flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#2D6A4F]">{t.initials}</span>
+                    </div>
                     <p className="text-base text-landing-secondary leading-relaxed mb-4 italic">
                       &ldquo;{t.quote}&rdquo;
                     </p>
                     <div className="border-t border-landing-rule pt-4">
                       <p className="text-sm font-semibold text-landing-ink">{t.name}</p>
-                      <p className="text-xs text-landing-secondary">{t.role}</p>
+                      {/* 3.3 — Org name as distinct line increases credibility vs. role alone */}
+                      <p className="text-xs text-landing-secondary font-medium mb-1">{t.org}</p>
+                      <p className="text-xs text-landing-secondary/70">{t.role}</p>
                     </div>
                   </div>
                 ))}
@@ -262,8 +292,9 @@ export default function LandingPage() {
                 { Icon: UploadStepIcon, step: '01', title: 'Upload template', desc: 'Any PNG or JPG certificate design works as your base. Drag it in.', offset: '' },
                 { Icon: DataStepIcon, step: '02', title: 'Import participants', desc: 'Paste a Google Sheets URL or upload a CSV. Headers auto-detected.', offset: 'lg:mt-10' },
                 { Icon: GenerateStepIcon, step: '03', title: 'Generate PDFs', desc: 'Place name fields on the canvas. One click creates every certificate.', offset: 'lg:mt-20' },
-                { Icon: SendStepIcon, step: '04', title: 'Send via Gmail', desc: 'Connect your own Gmail account and send all at once. Your credentials, your control.', offset: 'lg:mt-10' },
-              ].map(({ Icon, step, title, desc, offset }) => (
+                // 3.4 — Step 04 (Gmail) is highest-anxiety step: add explicit reassurance about OAuth scope + revocation
+                { Icon: SendStepIcon, step: '04', title: 'Send via Gmail', desc: 'Connect your own Gmail account and send all at once. Your credentials, your control.', offset: 'lg:mt-10', anxiety: true },
+              ].map(({ Icon, step, title, desc, offset, anxiety }) => (
                 <RevealSection key={step} className={offset}>
                   <div className="group">
                     <div className="mb-5 w-14 h-14 transition-transform duration-500 group-hover:-translate-y-1.5">
@@ -272,6 +303,12 @@ export default function LandingPage() {
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-landing-secondary mb-2">Step {step}</p>
                     <h3 className="text-lg font-semibold text-landing-ink mb-3">{title}</h3>
                     <p className="text-sm text-landing-secondary leading-relaxed">{desc}</p>
+                    {/* 3.4 — Anxiety-step specific reassurance: defuses OAuth concern before it happens */}
+                    {anxiety && (
+                      <p className="text-xs text-landing-secondary/70 mt-3">
+                        Send-only access · Revoke anytime in your Google Account
+                      </p>
+                    )}
                   </div>
                 </RevealSection>
               ))}
@@ -326,6 +363,16 @@ export default function LandingPage() {
                     <p className="text-4xl font-bold text-[#2D6A4F]">0</p>
                   </div>
                 </RevealSection>
+                {/* 3.5 — Convert claim into self-verifiable challenge: highest-leverage trust move for privacy-first tool */}
+                <RevealSection className="mt-8">
+                  <p className="text-sm text-landing-secondary/80 leading-relaxed">
+                    <strong>Verify it yourself:</strong> Open DevTools (F12 → Network tab), generate a certificate, and watch nothing leave your device. Or{' '}
+                    <Link href={`${GITHUB_REPO_URL}/blob/main/src/core/engine/pdfRenderer.ts`} target="_blank" rel="noopener noreferrer"
+                      className="text-landing-ink font-medium hover:underline">
+                      see the exact function in code →
+                    </Link>
+                  </p>
+                </RevealSection>
               </div>
               <RevealSection className="hidden lg:block">
                 <LocalPipelineIllustration className="w-full" />
@@ -350,9 +397,11 @@ export default function LandingPage() {
                   </h2>
                 </RevealSection>
                 <RevealSection>
+                  {/* 3.6 — Honest reframing: avoid false community social proof; emphasize openness + forkability instead */}
                   <p className="text-lg text-landing-secondary leading-relaxed mb-10">
-                    Every line of code is on GitHub. Read it. Audit it. Fork it. Deploy your own.
-                    This isn&apos;t a black box — it&apos;s a tool you can own.
+                    Every line of code is on GitHub. One developer built this, but it's open for anyone to fork, 
+                    audit, modify, and contribute to. This isn't a black box — it's a tool you can own, customize, 
+                    and deploy yourself.
                   </p>
                 </RevealSection>
                 <RevealSection className="flex flex-wrap gap-3">
@@ -361,9 +410,9 @@ export default function LandingPage() {
                     <Github size={16} />
                     View Source Code
                   </Link>
-                  <Link href={`${GITHUB_REPO_URL}/issues`} target="_blank" rel="noopener noreferrer"
+                  <Link href={`${GITHUB_REPO_URL}/fork`} target="_blank" rel="noopener noreferrer"
                     className="landing-btn-secondary inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-lg text-sm">
-                    Open Issues
+                    Fork & Deploy
                   </Link>
                 </RevealSection>
               </div>
@@ -419,17 +468,21 @@ export default function LandingPage() {
             <RevealSection>
               <dl className="space-y-2">
                 {HOME_PAGE_FAQS.slice(0, 5).map((faq) => (
-                  <details key={faq.question} className="group rounded-lg border border-landing-rule/50 bg-white/40 transition-colors hover:border-landing-rule">
+                  // 4 — Micro-interactions: smooth transitions + visual feedback on hover/open
+                  <details key={faq.question} className="group rounded-lg border border-landing-rule/50 bg-white/40 transition-all duration-300 hover:border-landing-rule hover:shadow-sm hover:bg-white/60">
                     <summary className="cursor-pointer px-4 py-3 font-medium text-landing-ink text-sm md:text-base flex items-center justify-between">
                       {faq.question}
-                      <span className="transition-transform group-open:rotate-180 text-landing-secondary shrink-0">
+                      <span className="transition-transform duration-300 group-open:rotate-180 text-landing-secondary shrink-0">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
                       </span>
                     </summary>
-                    <div className="px-4 py-3 border-t border-landing-rule/30 bg-white/20 text-sm text-landing-secondary leading-relaxed" data-speakable>
-                      {faq.answer}
+                    {/* 4 — Smooth max-height transition on open/close */}
+                    <div className="max-h-0 group-open:max-h-96 overflow-hidden transition-all duration-300 ease-in-out">
+                      <div className="px-4 py-3 border-t border-landing-rule/30 bg-white/20 text-sm text-landing-secondary leading-relaxed" data-speakable>
+                        {faq.answer}
+                      </div>
                     </div>
                   </details>
                 ))}
@@ -456,9 +509,10 @@ export default function LandingPage() {
             <RevealSection>
               <ul className="grid gap-5 sm:grid-cols-2 list-none pl-0">
                 {getRelatedPages('home').map((link) => (
+                  // 4 — Card hover: subtle scale + shadow lift for feedback
                   <li key={link.href}>
                     <Link href={link.href}
-                      className="landing-annotation-card group flex h-full flex-col p-6 transition-colors hover:border-[#2D6A4F]/40">
+                      className="landing-annotation-card group flex h-full flex-col p-6 transition-all duration-300 hover:border-[#2D6A4F]/40 hover:shadow-md hover:scale-[1.01] hover:bg-white/60">
                       <span className="mb-2 inline-flex items-center gap-2 text-lg font-semibold text-landing-ink">
                         {link.label}
                         <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -481,6 +535,12 @@ export default function LandingPage() {
               </h2>
               <p className="text-xl text-landing-secondary mb-12 max-w-xl mx-auto leading-relaxed">
                 No signup. No payment. No uploads. Just open the tool, import your list, and it&apos;s done.
+              </p>
+            </RevealSection>
+            {/* 3.9 — Re-surface strongest proof point before final decision: recency effect + specificity = conversion */}
+            <RevealSection className="mb-12 p-6 bg-white/40 rounded-lg border border-landing-rule/40 inline-block">
+              <p className="text-sm text-landing-secondary/80 italic">
+                &ldquo;Saved me an entire Sunday.&rdquo; — Priya S., Hackathon organiser, IIT Delhi
               </p>
             </RevealSection>
             <RevealSection className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">

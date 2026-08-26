@@ -9,11 +9,25 @@
  * Keeping both readers on one map prevents the metadata date and the on-page date
  * from drifting apart, which is a trust signal for both crawlers and AI engines.
  */
-
 export type PageDates = {
   published: string;
   modified: string;
 };
+
+export type DatedPath = keyof typeof PAGE_DATES;
+
+export function getPageDates(path: DatedPath) {
+  return PAGE_DATES[path];
+}
+
+export function formatPageDate(dateString: string): string {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
 
 export const PAGE_DATES = {
   '/': { published: '2024-01-01', modified: '2026-07-27' },
@@ -38,20 +52,6 @@ export const PAGE_DATES = {
   '/contact': { published: '2024-01-01', modified: '2026-07-27' },
   '/privacy-policy': { published: '2024-01-01', modified: '2026-07-27' },
   '/terms-of-service': { published: '2024-01-01', modified: '2026-07-27' },
-} as const satisfies Record<string, PageDates>;
-
-export type DatedPath = keyof typeof PAGE_DATES;
-
-export function getPageDates(path: DatedPath): PageDates {
-  return PAGE_DATES[path];
-}
-
-/** Human-readable form for on-page display, e.g. "27 July 2026". */
-export function formatPageDate(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  const monthName = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ][month - 1];
-  return `${day} ${monthName} ${year}`;
-}
+  '/for-developers': { published: '2026-08-26', modified: '2026-08-26' },
+  '/for-nonprofits': { published: '2026-08-26', modified: '2026-08-26' },
+} as const;

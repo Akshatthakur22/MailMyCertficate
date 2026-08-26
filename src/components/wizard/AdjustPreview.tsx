@@ -23,6 +23,7 @@ import {
     Redo2,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { trackBackendEvent } from '@/services/analyticsService';
 import { db } from '@/core/db/schema';
 
 const PRESET_COLORS = ['#000000', '#1F4ED8', '#DC2626', '#16A34A', '#FFFFFF'];
@@ -138,6 +139,7 @@ export function AdjustPreview() {
 
     const handleAddField = (header: string) => {
         if (!templateDimensions) return;
+        trackBackendEvent('field_editor_opened', { csv_columns: csvHeaders.length });
         const newField = {
             id: `${header}-${generateId()}`,
             columnName: header,

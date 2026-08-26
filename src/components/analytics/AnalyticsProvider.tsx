@@ -30,6 +30,8 @@ const PAGE_EVENT_MAP: Record<string, () => void> = {
         { event: 'returning_dashboard_visit', visit_count: visitCount },
         { dedupeKey: `returning-${visitCount}` }
       );
+      // Track returning user to backend analytics
+      trackBackendEvent('returning_user', { visit_count: visitCount });
     }
   },
 };

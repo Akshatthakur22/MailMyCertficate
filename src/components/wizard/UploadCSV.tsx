@@ -60,6 +60,7 @@ export function UploadCSV() {
             setError(null);
             if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
                 setError('Please upload a valid CSV file.');
+                trackBackendEvent('csv_import_failed', { error_code: 'invalid_file_type' });
                 return;
             }
 
@@ -75,8 +76,10 @@ export function UploadCSV() {
             console.error(err);
             if (err instanceof Error) {
                 setError(err.message || 'Failed to parse CSV.');
+                trackBackendEvent('csv_import_failed', { error_code: 'parse_error', error_message: err.message });
             } else {
                 setError('Failed to parse CSV.');
+                trackBackendEvent('csv_import_failed', { error_code: 'unknown_error' });
             }
         }
     };
@@ -89,7 +92,9 @@ export function UploadCSV() {
             const startIndex = existingRows.length;
 
             if (startIndex + data.length > 400) {
-                throw new Error(`Adding ${data.length} more rows would exceed the 400 row limit (current: ${startIndex}).`);
+                const err = `Adding ${data.length} more rows would exceed the 400 row limit (current: ${startIndex}).`;
+                trackBackendEvent('csv_import_failed', { error_code: 'row_limit_exceeded', row_count: data.length });
+                throw new Error(err);
             }
 
             // 1. Store CSV metadata in IDB if it's a file
@@ -142,7 +147,11 @@ export function UploadCSV() {
             );
             trackBackendEvent('csv_uploaded', { row_count: allData.length, import_source: 'csv' });
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to import data.');
+            const errorMsg = err instanceof Error ? err.message : 'Failed to import data.';
+            setError(errorMsg);
+            if (!(err instanceof Error && err.message.includes('row limit'))) {
+                trackBackendEvent('csv_import_failed', { error_code: 'database_error', error_message: errorMsg });
+            }
         }
     };
 
@@ -152,6 +161,7 @@ export function UploadCSV() {
     const handleSheetImport = async () => {
         if (!isValidSheetUrl(sheetUrl)) {
             setError('Please enter a valid Google Sheets URL (e.g. docs.google.com/spreadsheets/d/...)');
+            trackBackendEvent('csv_import_failed', { error_code: 'invalid_sheet_url', import_source: 'google_sheets' });
             return;
         }
 
@@ -194,11 +204,9 @@ export function UploadCSV() {
             trackBackendEvent('csv_uploaded', { row_count: data.length, import_source: 'google_sheets' });
         } catch (err: unknown) {
             console.error(err);
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('Failed to import from Google Sheets.');
-            }
+            const errorMsg = err instanceof Error ? err.message : 'Failed to import from Google Sheets.';
+            setError(errorMsg);
+            trackBackendEvent('csv_import_failed', { error_code: 'sheet_import_error', import_source: 'google_sheets', error_message: errorMsg });
         } finally {
             setIsImporting(false);
         }
@@ -495,6 +503,19 @@ export function UploadCSV() {
             <p className="text-secondary text-sm mb-6 max-w-sm mx-auto leading-relaxed">
                 Upload your participant data. Names, emails, and other details will be personalized into each certificate.
             </p>
+
+            {/* 400-row limit warning (UX improvement: show before upload) */}
+            <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-left">
+                <div className="flex items-start gap-3">
+                    <AlertTriangle size={16} className="text-amber-700 mt-0.5 shrink-0" />
+                    <div className="text-xs text-amber-900">
+                        <p className="font-medium">Max 400 rows per batch</p>
+                        <p className="text-amber-800 mt-1">
+                            Working with more than 400 participants? Upload them in separate batches. This keeps generation fast on your device.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <div className="mb-6 text-left">
                 <TrustBoundaryNotice variant="csv" />

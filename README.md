@@ -324,3 +324,17 @@ Thanks to the open-source community for tools that make this possible.
 <p align="center">
   Built with ❤ by <a href="https://github.com/akshatthakur22">Akshat Thakur</a>
 </p>
+
+---
+## 👨‍💻 For Developers
+If you're looking to **fork, customize, or contribute** to MailMyCertificate:
+- Check out the [/for-developers](#) page (coming soon) for architecture deep-dive and customization guide
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, code style, and PR process
+- Review [GitHub Issues](https://github.com/akshatthakur22/MailMyCertficate/issues) for bugs and feature requests
+- Join the discussion on [Discussions](https://github.com/akshatthakur22/MailMyCertficate/discussions) or email via GitHub profile
+
+**Why fork MailMyCertificate?**
+- You don't need to build certificate generation + Gmail integration from scratch
+- The entire workflow is open and transparent — no black box
+- Deploy to your own infrastructure (Vercel, self-hosted, Docker)
+- Customize fields, styling, or logic to fit your specific workflow

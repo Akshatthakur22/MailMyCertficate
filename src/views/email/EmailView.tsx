@@ -36,6 +36,7 @@ import {
   updateSession,
 } from '@/core/session/sessionManager';
 import { trackEvent } from '@/lib/analytics';
+import { trackBackendEvent } from '@/services/analyticsService';
 
 interface AuthStatus {
   authenticated: boolean;
@@ -451,6 +452,13 @@ export default function EmailView() {
     setDeliveryCompletedAt(null);
     setSendingState({ sending: true, processed: 0, total: sendItems.length, current: '' });
     await touchActivity(sessionId);
+    
+    // Track email batch start to backend
+    trackBackendEvent('email_batch_started', { 
+      total_recipients: sendItems.length,
+      valid_recipients: validRecipients,
+    });
+    
     await queueRef.current.startProcessing();
   };
 
