@@ -1,8 +1,13 @@
 import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/metadata';
+import { PAGE_DATES } from '@/data/pageDates';
 
-export const metadata: Metadata = {
-  title: 'How to Make Certificates for Events | MailMyCertificate',
+const PATH = '/blog/how-to-make-certificates-for-events';
+
+export const metadata: Metadata = createPageMetadata({
+  title: 'How to Make Certificates for Events',
   description: 'Step-by-step guide to creating beautiful, personalized certificates for workshops, conferences, and webinars using templates and bulk generation.',
+  path: PATH,
   keywords: [
     'event certificates',
     'certificate templates',
@@ -12,17 +17,9 @@ export const metadata: Metadata = {
     'how to make certificates',
     'certificate generator',
   ],
-  alternates: {
-    canonical: 'https://mailmycertificate.tech/blog/how-to-make-certificates-for-events',
-  },
-  openGraph: {
-    type: 'article',
-    url: 'https://mailmycertificate.tech/blog/how-to-make-certificates-for-events',
-    title: 'How to Make Certificates for Events',
-    description: 'Step-by-step guide to creating beautiful, personalized certificates for workshops, conferences, and webinars using templates and bulk generation.',
-    siteName: 'MailMyCertificate',
-  },
-};
+  datePublished: PAGE_DATES[PATH].published,
+  dateModified: PAGE_DATES[PATH].modified,
+});
 
 export default function BlogPostLayout({
   children,

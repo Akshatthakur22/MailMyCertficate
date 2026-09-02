@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Calendar, Clock } from 'lucide-react';
 
@@ -106,6 +104,17 @@ export default function BlogPostEventCertificates() {
             <p>
               No coding required. No design experience needed. The entire process takes minutes.
             </p>
+
+            <div className="bg-landing-section-alt/40 border border-landing-rule/30 rounded-lg p-6 md:p-8 my-8">
+              <h3 className="text-lg font-semibold text-landing-ink mb-3">Related Tools</h3>
+              <p className="mb-4">Depending on your data source, explore these tailored solutions:</p>
+              <ul className="space-y-2">
+                <li>• <Link href="/certificate-generator-from-excel" className="text-landing-accent hover:underline">Generate from Excel/CSV</Link> — For spreadsheet-based data</li>
+                <li>• <Link href="/google-sheets-certificate-generator" className="text-landing-accent hover:underline">Google Sheets Integration</Link> — For live Google Sheets</li>
+                <li>• <Link href="/hackathon-certificate-generator" className="text-landing-accent hover:underline">Hackathon Generator</Link> — Pre-optimized for tech events</li>
+                <li>• <Link href="/workshop-certificate-generator" className="text-landing-accent hover:underline">Workshop Generator</Link> — For training programs</li>
+              </ul>
+            </div>
 
             <h2 className="text-3xl font-semibold text-landing-ink pt-4">Step 4: Send Certificates to Your Participants</h2>
             <p>

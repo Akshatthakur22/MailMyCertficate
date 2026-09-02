@@ -120,6 +120,9 @@ export default function CertificateGeneratorFromExcelPage() {
             <h2 id="comparison-heading" className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
               CSV vs Google Sheets — which should you use?
             </h2>
+            <p className="text-secondary leading-relaxed mb-8">
+              Both workflows generate certificates the same way in MailMyCertificate. Choose based on where your data lives:
+            </p>
             <div className="overflow-x-auto rounded-xl border border-border/60">
               <table className="w-full text-sm text-left border-collapse">
                 <caption className="sr-only">CSV file vs Google Sheets URL comparison for certificate generation</caption>
@@ -132,24 +135,29 @@ export default function CertificateGeneratorFromExcelPage() {
                 </thead>
                 <tbody className="text-secondary">
                   <tr className="border-b border-border/50">
-                    <th scope="row" className="p-4 font-medium text-foreground text-left">Data is in Excel</th>
-                    <td className="p-4">Export as CSV</td>
+                    <th scope="row" className="p-4 font-medium text-foreground text-left">Data is in Excel on your computer</th>
+                    <td className="p-4"><strong>Export as CSV</strong></td>
                     <td className="p-4">File → Save As → CSV UTF-8 in Excel</td>
                   </tr>
                   <tr className="border-b border-border/50 bg-accent/5">
-                    <th scope="row" className="p-4 font-medium text-foreground text-left">Data from Google Forms</th>
-                    <td className="p-4">Google Sheets URL</td>
-                    <td className="p-4">No download needed; re-import for new responses</td>
+                    <th scope="row" className="p-4 font-medium text-foreground text-left">Data is in Google Sheets</th>
+                    <td className="p-4"><strong>Google Sheets URL</strong></td>
+                    <td className="p-4"><Link href="/google-sheets-certificate-generator" className="text-accent hover:underline">Use Google Sheets workflow</Link> instead</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <th scope="row" className="p-4 font-medium text-foreground text-left">Data from Google Forms responses</th>
+                    <td className="p-4"><strong>Google Forms workflow</strong></td>
+                    <td className="p-4"><Link href="/google-forms-to-certificates" className="text-accent hover:underline">See Google Forms guide</Link> for automated flow</td>
                   </tr>
                   <tr className="border-b border-border/50">
                     <th scope="row" className="p-4 font-medium text-foreground text-left">Data updated frequently</th>
-                    <td className="p-4">Google Sheets URL</td>
+                    <td className="p-4"><strong>Google Sheets URL</strong></td>
                     <td className="p-4">Always pulls the latest rows on import</td>
                   </tr>
                   <tr>
-                    <th scope="row" className="p-4 font-medium text-foreground text-left">Offline or private data</th>
-                    <td className="p-4">CSV upload</td>
-                    <td className="p-4">No sharing required; file stays on your device</td>
+                    <th scope="row" className="p-4 font-medium text-foreground text-left">Offline or private data (no sharing)</th>
+                    <td className="p-4"><strong>CSV upload</strong></td>
+                    <td className="p-4">File stays on your device, no sharing required</td>
                   </tr>
                 </tbody>
               </table>

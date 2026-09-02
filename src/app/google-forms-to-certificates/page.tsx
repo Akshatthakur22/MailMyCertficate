@@ -93,6 +93,56 @@ export default function GoogleFormsToCertificatesPage() {
         <section className="py-16 md:py-20 border-b border-border/50 bg-muted/10" aria-labelledby="forms-vs-addon">
           <div className="container-width max-w-5xl">
             <h2 id="forms-vs-addon" className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+              Which data source should you use?
+            </h2>
+            <p className="text-secondary leading-relaxed mb-8 max-w-3xl">
+              All workflows in MailMyCertificate generate certificates the same way. Choose based on where your participant data lives:
+            </p>
+
+            <div className="overflow-x-auto rounded-xl border border-border/60 mb-8">
+              <table className="w-full text-sm text-left border-collapse">
+                <caption className="sr-only">Data source comparison for certificate generation</caption>
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th scope="col" className="p-4 font-semibold text-foreground">Your data source</th>
+                    <th scope="col" className="p-4 font-semibold text-foreground">Recommended workflow</th>
+                    <th scope="col" className="p-4 font-semibold text-foreground">Why</th>
+                  </tr>
+                </thead>
+                <tbody className="text-secondary">
+                  <tr className="border-b border-border/50 bg-accent/5">
+                    <th scope="row" className="p-4 font-semibold text-foreground text-left">
+                      Google Forms responses
+                    </th>
+                    <td className="p-4"><strong>Google Forms workflow</strong> (this page)</td>
+                    <td className="p-4">Responses auto-sync to linked Sheet; most automated</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <th scope="row" className="p-4 font-semibold text-foreground text-left">
+                      Google Sheets only (no Forms)
+                    </th>
+                    <td className="p-4"><Link href="/google-sheets-certificate-generator" className="text-accent hover:underline">Google Sheets workflow</Link></td>
+                    <td className="p-4">Works with any shared Sheets URL; no Forms required</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <th scope="row" className="p-4 font-semibold text-foreground text-left">
+                      Excel or CSV file on your computer
+                    </th>
+                    <td className="p-4"><Link href="/certificate-generator-from-excel" className="text-accent hover:underline">CSV/Excel workflow</Link></td>
+                    <td className="p-4">File upload; no public URL sharing required</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" className="p-4 font-semibold text-foreground text-left">
+                      Private or offline data
+                    </th>
+                    <td className="p-4"><Link href="/certificate-generator-from-excel" className="text-accent hover:underline">CSV/Excel workflow</Link></td>
+                    <td className="p-4">No sharing required; stays on your device</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
               MailMyCertificate vs Google Forms add-ons
             </h2>
             <p className="text-secondary leading-relaxed mb-8 max-w-3xl">

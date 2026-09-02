@@ -1,8 +1,13 @@
 import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/metadata';
+import { PAGE_DATES } from '@/data/pageDates';
 
-export const metadata: Metadata = {
-  title: 'Send Certificates to Participants | MailMyCertificate',
+const PATH = '/blog/how-to-send-certificates-to-participants';
+
+export const metadata: Metadata = createPageMetadata({
+  title: 'How to Send Certificates to Participants',
   description: 'Bulk send personalized PDF certificates to participants via email using Gmail. No signup, no server uploads, runs entirely in your browser.',
+  path: PATH,
   keywords: [
     'send certificates',
     'bulk email certificates',
@@ -12,17 +17,9 @@ export const metadata: Metadata = {
     'certificate email delivery',
     'automated certificate sending',
   ],
-  alternates: {
-    canonical: 'https://mailmycertificate.tech/blog/how-to-send-certificates-to-participants',
-  },
-  openGraph: {
-    type: 'article',
-    url: 'https://mailmycertificate.tech/blog/how-to-send-certificates-to-participants',
-    title: 'Send Certificates to Participants',
-    description: 'Bulk send personalized PDF certificates to participants via email using Gmail. No signup, no server uploads, runs entirely in your browser.',
-    siteName: 'MailMyCertificate',
-  },
-};
+  datePublished: PAGE_DATES[PATH].published,
+  dateModified: PAGE_DATES[PATH].modified,
+});
 
 export default function BlogPostLayout({
   children,

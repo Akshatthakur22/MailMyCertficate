@@ -1,8 +1,12 @@
 import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/metadata';
+import { PAGE_DATES } from '@/data/pageDates';
+import { SEO_KEYWORDS } from '@/lib/seo-keywords';
 
-export const metadata: Metadata = {
-  title: 'Certificate Blog | MailMyCertificate',
+export const metadata: Metadata = createPageMetadata({
+  title: 'Certificate Blog — Tips, Guides & Tutorials',
   description: 'Learn best practices for creating and sending certificates in bulk. Read guides on certificate templates, event management, and certificate automation.',
+  path: '/blog',
   keywords: [
     'certificate generation',
     'bulk certificates',
@@ -12,17 +16,9 @@ export const metadata: Metadata = {
     'certificate tips',
     'certificate guides',
   ],
-  alternates: {
-    canonical: 'https://mailmycertificate.tech/blog',
-  },
-  openGraph: {
-    type: 'website',
-    url: 'https://mailmycertificate.tech/blog',
-    title: 'Certificate Blog | MailMyCertificate',
-    description: 'Learn best practices for creating and sending certificates in bulk.',
-    siteName: 'MailMyCertificate',
-  },
-};
+  datePublished: PAGE_DATES['/blog'].published,
+  dateModified: PAGE_DATES['/blog'].modified,
+});
 
 export default function BlogLayout({
   children,

@@ -19,7 +19,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: getRootMetadataBase(),
   title: {
-    default: "MailMyCertificate | Free Bulk Certificate Generator",
+    default: "Free Bulk Certificate Generator — Browser-Based & Privacy-First",
     template: "%s | MailMyCertificate"
   },
   // Kept at <=160 chars so it is not truncated in search results.

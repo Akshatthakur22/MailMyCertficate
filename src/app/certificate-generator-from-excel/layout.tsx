@@ -9,9 +9,9 @@ import { EXCEL_CSV_PAGE_FAQS, EXCEL_CSV_HOW_TO_STEPS } from '@/data/excelCsvPage
 const PATH = '/certificate-generator-from-excel';
 
 export const metadata: Metadata = createPageMetadata({
-  title: 'Certificate Generator from Excel / CSV — Free & Bulk',
+  title: 'Generate Certificates from CSV — Free Bulk Certificate Generator',
   description:
-    'Generate personalized certificates from an Excel spreadsheet or CSV file. Upload your data, build PDFs locally in your browser, and send via Gmail. Free, no account required.',
+    'Generate personalized certificates from a CSV file or Excel spreadsheet. Upload your data, build PDFs locally in your browser, and send via Gmail. Free, no account required.',
   path: PATH,
   keywords: [...SEO_KEYWORDS.excelCsv],
   datePublished: PAGE_DATES['/certificate-generator-from-excel'].published,

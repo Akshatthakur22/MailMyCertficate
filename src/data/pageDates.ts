@@ -52,6 +52,4 @@ export const PAGE_DATES = {
   '/contact': { published: '2024-01-01', modified: '2026-07-27' },
   '/privacy-policy': { published: '2024-01-01', modified: '2026-07-27' },
   '/terms-of-service': { published: '2024-01-01', modified: '2026-07-27' },
-  '/for-developers': { published: '2026-08-26', modified: '2026-08-26' },
-  '/for-nonprofits': { published: '2026-08-26', modified: '2026-08-26' },
 } as const;

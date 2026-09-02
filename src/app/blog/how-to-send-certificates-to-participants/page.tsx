@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Calendar, Clock } from 'lucide-react';
 
@@ -72,6 +70,10 @@ export default function BlogPostSendCertificates() {
               <li><strong className="text-landing-ink">Customize email:</strong> Add a personal subject line and message</li>
               <li><strong className="text-landing-ink">Click Send:</strong> All 500+ certificates go out automatically</li>
             </ol>
+
+            <p>
+              Learn more about <Link href="/send-certificates-gmail-bulk" className="text-landing-accent hover:underline font-semibold">bulk Gmail sending</Link> or explore alternatives like <Link href="/google-sheets-certificate-generator" className="text-landing-accent hover:underline">Google Sheets integration</Link>.
+            </p>
 
             <h3 className="text-2xl font-semibold text-landing-ink pt-4">Why Gmail?</h3>
             <ul className="space-y-3 pl-6">
