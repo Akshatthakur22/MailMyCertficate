@@ -239,7 +239,7 @@ export default function PrivacyPolicy() {
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
                                         Certificate templates are stored locally inside
-                                        your browser storage.
+                                        your browser storage (IndexedDB).
                                     </li>
                                     <li>
                                         CSV and Google Sheets imports are processed 100%
@@ -247,38 +247,44 @@ export default function PrivacyPolicy() {
                                     </li>
                                     <li>
                                         PDF generation occurs exclusively within your
-                                        browser using client-side processing.
+                                        browser using client-side Web Workers and pdf-lib.
                                     </li>
                                     <li>
                                         Generated certificates remain on your device until
-                                        you manually send them.
+                                        you manually send or download them.
                                     </li>
                                     <li>
-                                        All data is deleted immediately when your browser
-                                        tab closes.
+                                        Local browser storage data persists across page
+                                        reloads. You can clear it manually via browser
+                                        storage settings or using the app's "Clear Data"
+                                        option.
                                     </li>
                                 </ul>
 
                                 <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
-                                    What We Do Not Do
+                                    What We Do Not Do With Participant Data
                                 </h3>
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        We never upload participant data to external
-                                        servers.
+                                        We do not permanently upload or store participant
+                                        rosters on MailMyCertificate servers.
                                     </li>
                                     <li>
-                                        We never permanently store certificate generation
-                                        logs.
+                                        We do not retain participant names, emails, or
+                                        personal information in any permanent database.
                                     </li>
                                     <li>
-                                        We never access or cache your Google Sheets or
-                                        Gmail after the immediate operation.
+                                        We do not permanently store generated certificate PDFs.
                                     </li>
                                     <li>
-                                        We never use Workspace API data for any analytics
-                                        or secondary purposes.
+                                        We do not use Workspace API data (Gmail, Google Sheets)
+                                        for secondary purposes like analytics, marketing, or
+                                        machine learning.
+                                    </li>
+                                    <li>
+                                        We do not access your Google Sheets or Gmail after
+                                        the immediate operation completes.
                                     </li>
                                 </ul>
                             </Section>
@@ -353,19 +359,31 @@ export default function PrivacyPolicy() {
                                         to event participants.
                                     </li>
                                     <li>
-                                        <strong>Data Accessed:</strong> Only recipient
-                                        email addresses and certificate content.
+                                        <strong>Data Sent to Backend:</strong> When you request
+                                        email delivery, the backend temporarily receives recipient
+                                        email address, email subject, email body, and the PDF
+                                        certificate file necessary to compose and send the message
+                                        via Gmail API on your behalf.
                                     </li>
                                     <li>
-                                        <strong>Data Handling:</strong> Emails are sent
-                                        through your Gmail account only; MailMyCertificate
-                                        does not store, read, or retain emails, inbox
-                                        data, or any Gmail account information.
+                                        <strong>Temporary Processing:</strong> The backend uses
+                                        your Gmail OAuth credentials to submit the composed email
+                                        through Google's Gmail API. This email data is processed
+                                        only for the duration of the send operation and is not
+                                        intentionally retained in any permanent MailMyCertificate
+                                        database or log file.
                                     </li>
                                     <li>
-                                        <strong>No Inbox Access:</strong> This application
-                                        never reads, modifies, or stores any existing
-                                        emails in your Gmail inbox.
+                                        <strong>No Inbox Access:</strong> This application requests
+                                        only the <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code> scope.
+                                        MailMyCertificate never reads, modifies, stores, or deletes
+                                        any existing emails in your Gmail inbox. It cannot access
+                                        your Gmail history or account data.
+                                    </li>
+                                    <li>
+                                        <strong>After Send:</strong> Once the email is transmitted
+                                        through Gmail, MailMyCertificate does not retain a copy of
+                                        the sent message, recipient address, or email content.
                                     </li>
                                 </ul>
 
@@ -516,9 +534,11 @@ export default function PrivacyPolicy() {
                                     </li>
                                     <li>
                                         <strong>Session-scoped credentials:</strong> Google
-                                        OAuth tokens are held only for the duration of
-                                        your active session (maximum 1 hour) and are not
-                                        written to any persistent database or file system.
+                                        OAuth tokens (access and refresh) are maintained only
+                                        for the duration of your authenticated session
+                                        (maximum 1 hour). Upon session expiration or logout,
+                                        credentials are deleted and are not written to any
+                                        permanent MailMyCertificate database or file system.
                                     </li>
                                     <li>
                                         <strong>CSRF protection:</strong> All state-changing
@@ -539,15 +559,16 @@ export default function PrivacyPolicy() {
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
                                         <strong>Minimal scope principle:</strong> We request
-                                        only <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code> —
-                                        the narrowest Gmail scope available. We cannot read,
-                                        modify, or delete anything in your mailbox.
+                                        only <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code> — the
+                                        narrowest Gmail scope available. We cannot and do not
+                                        read, modify, delete, or retain any emails from your
+                                        mailbox.
                                     </li>
                                     <li>
-                                        <strong>No persistent storage:</strong> OAuth
-                                        credentials are never stored in databases, log
-                                        files, or any system that outlives your browser
-                                        session.
+                                        <strong>Not intentionally persisted:</strong> OAuth
+                                        credentials are stored only in server-side session
+                                        state and are not intentionally written to permanent
+                                        storage.
                                     </li>
                                     <li>
                                         <strong>Production hardening:</strong> Debug endpoints
@@ -669,37 +690,68 @@ export default function PrivacyPolicy() {
                             </Section>
 
                             {/* Section 6 */}
-                            <Section title="6. Data Retention & Instant Deletion">
+                            <Section title="6. Data Retention & Deletion">
                                 <p>
-                                    Your data is handled with the highest level of
-                                    transience and minimal retention.
+                                    MailMyCertificate minimizes data retention wherever
+                                    possible.
                                 </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Browser-Side Data
+                                </h3>
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>Certificate Generation:</strong> All PDF
-                                        generation occurs exclusively in your browser.
+                                        <strong>Storage mechanism:</strong> Participant lists,
+                                        templates, and certificate references are stored in
+                                        your browser's IndexedDB and localStorage.
                                     </li>
                                     <li>
-                                        <strong>Participant Data:</strong> Your participant
-                                        lists are never transmitted to or stored on
-                                        MailMyCertificate servers.
+                                        <strong>Persistence:</strong> This data persists across
+                                        page reloads within the same browser session. It allows
+                                        you to resume work if the page is accidentally refreshed.
                                     </li>
                                     <li>
-                                        <strong>Session Deletion:</strong> When you close
-                                        your browser tab, all temporary workflow data is
-                                        automatically deleted from local browser storage.
+                                        <strong>Manual deletion:</strong> You can clear this data at any
+                                        time by:
+                                        <ul className="mt-2 ml-4 space-y-2 list-disc">
+                                            <li>Using the app's Settings → "Clear Data" option</li>
+                                            <li>Clearing your browser's site data for mailmycertificate.tech</li>
+                                            <li>Using your browser's storage management tools</li>
+                                        </ul>
                                     </li>
                                     <li>
-                                        <strong>No Server Logs:</strong> Participant data
-                                        and certificate content are not logged on
+                                        <strong>No participant storage on our servers:</strong> Your
+                                        participant lists are never uploaded to or stored on
                                         MailMyCertificate infrastructure.
                                     </li>
+                                </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Backend Data
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>Email Content:</strong> Certificate emails
-                                        are sent through <em>your</em> Gmail account;
-                                        MailMyCertificate retains no copy of sent emails
-                                        or their recipients.
+                                        <strong>Gmail Send Operations:</strong> When you send a
+                                        certificate email, the backend temporarily receives the
+                                        recipient address and email content to compose and transmit
+                                        the message. This data is not intentionally retained in a
+                                        permanent database after the send operation completes.
+                                    </li>
+                                    <li>
+                                        <strong>OAuth Credentials:</strong> Google OAuth access and
+                                        refresh tokens are stored only in server-side session cookies
+                                        (HttpOnly, Secure, SameSite). These credentials have a
+                                        maximum lifetime of 1 hour and are deleted when your session
+                                        expires or you log out. They are not persisted in any permanent
+                                        database or file system.
+                                    </li>
+                                    <li>
+                                        <strong>Analytics Events:</strong> Anonymous usage events
+                                        (feature clicks, certificate counts, errors) are recorded for
+                                        product improvement. Participant PII is never included. See
+                                        "Analytics & GTM" section below.
                                     </li>
                                 </ul>
 
@@ -708,16 +760,14 @@ export default function PrivacyPolicy() {
                                 </h3>
 
                                 <p>
-                                    Because MailMyCertificate does not store participant
-                                    data or certificate content on its servers, there is
-                                    typically nothing to delete. However, if you believe
-                                    any personal data has been retained or you wish to
-                                    revoke your Google OAuth authorization, you may:
+                                    If you have questions about data retention or believe any
+                                    personal information has been retained on MailMyCertificate
+                                    servers, you may:
                                 </p>
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>Revoke access:</strong> Visit your{' '}
+                                        <strong>Revoke OAuth access:</strong> Visit your{' '}
                                         <a
                                             href="https://myaccount.google.com/permissions"
                                             target="_blank"
@@ -726,13 +776,13 @@ export default function PrivacyPolicy() {
                                         >
                                             Google Account Permissions
                                         </a>{' '}
-                                        page and remove MailMyCertificate.
+                                        page and disconnect MailMyCertificate. This immediately
+                                        invalidates our access to your Gmail account.
                                     </li>
                                     <li>
-                                        <strong>Clear local data:</strong> Clear your
-                                        browser&apos;s site data for mailmycertificate.tech,
-                                        or use the &quot;Clear Data&quot; option in the app&apos;s
-                                        Settings page.
+                                        <strong>Clear local data:</strong> Clear your browser's
+                                        IndexedDB and localStorage for mailmycertificate.tech, or
+                                        use the app's "Clear Data" option.
                                     </li>
                                     <li>
                                         <strong>Contact us:</strong> Email{' '}
@@ -748,9 +798,9 @@ export default function PrivacyPolicy() {
                                             className="text-accent font-medium hover:underline"
                                         >
                                             Contact page
-                                        </Link>{' '}
-                                        if you have any data deletion concerns. We will
-                                        respond within 7 days.
+                                        </Link>
+                                        {' '}to report data retention concerns. We will respond
+                                        within 7 days.
                                     </li>
                                 </ul>
                             </Section>
