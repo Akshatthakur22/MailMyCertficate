@@ -393,29 +393,83 @@ export default function PrivacyPolicy() {
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>How it works:</strong> When you paste a
-                                        Google Sheets link, MailMyCertificate fetches the
-                                        publicly shared sheet using Google&apos;s standard CSV
-                                        export URL. No OAuth token or API scope is used
-                                        for this operation.
+                                        <strong>How it works:</strong> When you provide a
+                                        publicly accessible Google Sheets URL, MailMyCertificate
+                                        retrieves the sheet&apos;s public CSV export through our
+                                        backend. No Google Sheets OAuth scope or API access is required.
+                                        The CSV data is returned to your browser for parsing and use in
+                                        the certificate workflow.
                                     </li>
                                     <li>
                                         <strong>Requirement:</strong> The sheet must be set
                                         to &quot;Anyone with the link can view&quot; by you before
-                                        import. We never access private or
-                                        non-shared sheets.
+                                        import. MailMyCertificate only accesses publicly shared sheets
+                                        and never requests private or non-shared sheets.
                                     </li>
                                     <li>
-                                        <strong>Data Handling:</strong> Sheet data is
-                                        fetched once, processed entirely on your device,
-                                        and never stored on MailMyCertificate servers.
+                                        <strong>Data Handling:</strong> After retrieving the CSV export,
+                                        the data is passed to your browser for parsing. Imported participant
+                                        data is stored locally in your browser's IndexedDB and is never
+                                        permanently retained on MailMyCertificate servers.
                                     </li>
                                     <li>
                                         <strong>No Authentication Required:</strong> This
-                                        feature does not request any Google Sheets API
-                                        scope and does not access your Google account.
+                                        feature does not request or use any Google Sheets API
+                                        scope, Google OAuth token, or access to your Google account.
                                     </li>
                                 </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-4 text-foreground">
+                                    Recipient Email Sources — No Leads Database or Lead Generation
+                                </h3>
+
+                                <p>
+                                    MailMyCertificate does NOT provide any of the following:
+                                </p>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>A leads database or shared contact database</li>
+                                    <li>Lead generation or lead sourcing services</li>
+                                    <li>Email address suggestions or recipient recommendations</li>
+                                    <li>Email scraping or automated email discovery services</li>
+                                    <li>Recipient list sharing or distribution between users</li>
+                                </ul>
+
+                                <p className="mt-4">
+                                    <strong>Recipients enter the system entirely from you:</strong>
+                                </p>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>CSV files you upload:</strong> Stored locally in your browser's IndexedDB, never uploaded to our servers
+                                    </li>
+                                    <li>
+                                        <strong>Public Google Sheets you specify:</strong> Imported once per session using a public CSV export (no OAuth required)
+                                    </li>
+                                </ul>
+
+                                <p className="mt-4">
+                                    <strong>Data isolation:</strong> All recipient data is scoped to your session and cannot be accessed by other MailMyCertificate users.
+                                </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-4 text-foreground">
+                                    No Email Warming, Automated Sending, or Reputation Services
+                                </h3>
+
+                                <p>
+                                    MailMyCertificate does NOT provide:
+                                </p>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>Email warming, inbox warming, or sender reputation optimization services</li>
+                                    <li>Automated email sequences, background email jobs, or scheduled sending</li>
+                                    <li>Simulated email activity, artificial engagement metrics, or deliverability enhancement</li>
+                                    <li>Any mechanism for unsolicited commercial email or cold outreach</li>
+                                </ul>
+
+                                <p className="mt-4">
+                                    <strong>How email sending works:</strong> All emails are sent immediately and synchronously when you explicitly click "Send". You control each send operation — MailMyCertificate does not autonomously generate, schedule, or send emails. The queue system manages rate limiting and reliability (preventing Gmail API rate limits from being exceeded), not email warming or reputation building.
+                                </p>
 
                                 <div className="mt-8 p-6 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-700">
                                     <div className="flex items-start gap-3">
@@ -509,7 +563,7 @@ export default function PrivacyPolicy() {
                                     <li>
                                         <strong>HTTPS only:</strong> All communication
                                         between your browser and our servers is encrypted
-                                        using TLS (HTTPS). Unencrypted HTTP connections
+                                        using HTTPS. Unencrypted HTTP connections
                                         are not accepted.
                                     </li>
                                     <li>
@@ -574,13 +628,73 @@ export default function PrivacyPolicy() {
                                         <strong>Production hardening:</strong> Debug endpoints
                                         and verbose error messages are disabled in production.
                                         Internal errors are sanitized before being returned
-                                        to clients.
+                                        to clients. Specific hardening measures include:
+                                        <ul className="mt-2 ml-4 space-y-2 list-disc">
+                                            <li>No stack traces or internal error details exposed to users</li>
+                                            <li>Request logging excludes sensitive data (tokens, OAuth credentials)</li>
+                                            <li>Monitoring and alerting configured for suspicious activity</li>
+                                            <li>Infrastructure runs on secure, managed platforms with security scanning</li>
+                                            <li>Dependencies are regularly audited for known vulnerabilities</li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </Section>
 
-                            {/* Section 5.2 - Data Sharing & Prohibited Uses */}
-                            <Section title="5.2 Data Sharing, Disclosure & Prohibited Uses">
+                            {/* Section 5.2 - Consent & Email Preferences */}
+                            <Section title="5.2 Recipient Consent & Email Preferences">
+                                <p>
+                                    MailMyCertificate is designed for sending certificates to event participants who have implicitly consented to receive communications from the event organizer.
+                                </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Consent & Organizer Responsibility
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>Organizer-provided recipients:</strong> Recipients are supplied
+                                        by the organizer from participant data the organizer provides. MailMyCertificate
+                                        does not independently verify consent or contact preferences.
+                                    </li>
+                                    <li>
+                                        <strong>Your responsibility:</strong> The organizer is responsible for
+                                        ensuring that all use of recipient information and email communications
+                                        complies with applicable laws and regulations in their jurisdiction,
+                                        including requirements regarding consent, notification, and opt-out mechanisms.
+                                    </li>
+                                    <li>
+                                        <strong>Product context:</strong> MailMyCertificate is designed for
+                                        organizer-initiated delivery of event-related communications (primarily certificates)
+                                        to participants whose information the organizer has provided.
+                                    </li>
+                                </ul>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Unsubscribe & Preference Management
+                                </h3>
+
+                                <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
+                                    <li>
+                                        <strong>No built-in unsubscribe or preference system:</strong> MailMyCertificate
+                                        does not provide unsubscribe links, preference management, suppression lists,
+                                        or recipient opt-out functionality.
+                                    </li>
+                                    <li>
+                                        <strong>Recipient contact:</strong> Recipients who wish to manage their
+                                        communication preferences or opt out of future communications should contact
+                                        the event organizer directly.
+                                    </li>
+                                    <li>
+                                        <strong>Product design:</strong> MailMyCertificate is designed for
+                                        organizer-initiated certificate delivery rather than subscription-based
+                                        or recurring communications. Compliance with applicable email communication
+                                        laws and regulations is the organizer&apos;s responsibility.
+                                    </li>
+                                </ul>
+                            </Section>
+
+                            {/* Section 5.3 - Data Sharing & Prohibited Uses */}
+                            <Section title="5.3 Data Sharing, Disclosure & Prohibited Uses">
                                 <p>
                                     MailMyCertificate does not sell, rent, trade, or
                                     otherwise disclose Google user data to any third
@@ -687,6 +801,17 @@ export default function PrivacyPolicy() {
                                     processed locally in your browser and never transmitted to
                                     analytics services.
                                 </p>
+
+                                <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
+                                    Data Retention for Analytics
+                                </h3>
+
+                                <p>
+                                    Analytics events are retained for 90 days in Google Analytics
+                                    by default. After 90 days, events are automatically deleted.
+                                    You may request deletion of your analytics data at any time by
+                                    contacting us.
+                                </p>
                             </Section>
 
                             {/* Section 6 */}
@@ -740,12 +865,16 @@ export default function PrivacyPolicy() {
                                         permanent database after the send operation completes.
                                     </li>
                                     <li>
-                                        <strong>OAuth Credentials:</strong> Google OAuth access and
-                                        refresh tokens are stored only in server-side session cookies
-                                        (HttpOnly, Secure, SameSite). These credentials have a
-                                        maximum lifetime of 1 hour and are deleted when your session
-                                        expires or you log out. They are not persisted in any permanent
-                                        database or file system.
+                                        <strong>OAuth Credentials & Session Security:</strong> Google
+                                        OAuth access and refresh tokens are stored only in server-side
+                                        session cookies with the following protections:
+                                        <ul className="mt-2 ml-4 space-y-2 list-disc">
+                                            <li><strong>HttpOnly flag:</strong> Tokens cannot be accessed by JavaScript, preventing XSS attacks</li>
+                                            <li><strong>Secure flag:</strong> Tokens are only transmitted over HTTPS</li>
+                                            <li><strong>SameSite="Lax":</strong> Tokens are protected against CSRF attacks</li>
+                                            <li><strong>Session lifetime:</strong> Maximum 1 hour. After session expiration, the application's server-side session credentials are no longer available to the application</li>
+                                            <li><strong>No persistent storage:</strong> Tokens are never stored in databases, local storage, or files</li>
+                                        </ul>
                                     </li>
                                     <li>
                                         <strong>Analytics Events:</strong> Anonymous usage events
