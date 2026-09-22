@@ -95,7 +95,7 @@ export function ProductFooter() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-secondary/60">
             <p>
               Built by{' '}
-              <Link href="https://github.com/akshatthakur22" target="_blank" rel="noopener noreferrer"
+              <Link href="https://akshatt.in" target="_blank" rel="noopener noreferrer"
                 className="text-accent hover:underline">
                 Akshat Thakur
               </Link>

@@ -434,7 +434,9 @@ export default function LandingPage() {
                   <div>
                     <h3 className="text-xl font-semibold text-landing-ink mb-1">Akshat Thakur</h3>
                     <p className="text-sm text-landing-secondary font-medium mb-4">Software Developer</p>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 mb-3">
+                      <Link href="https://akshatt.in" target="_blank" rel="noopener noreferrer"
+                        className="text-sm text-landing-secondary hover:text-landing-ink transition-colors">Portfolio →</Link>
                       <Link href="https://github.com/akshatthakur22" target="_blank" rel="noopener noreferrer"
                         className="text-sm text-landing-secondary hover:text-landing-ink transition-colors">GitHub →</Link>
                       <Link href="https://linkedin.com/in/akshatthakur22" target="_blank" rel="noopener noreferrer"

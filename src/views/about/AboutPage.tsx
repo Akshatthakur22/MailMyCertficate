@@ -398,6 +398,27 @@ attach_pdf("john_certificate.pdf")`}
           </div>
         </section>
 
+        <section className="py-16 md:py-24 border-t border-border/50">
+          <div className="container-width">
+            <RevealSection className="max-w-4xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">About the Developer</h2>
+              <div className="space-y-4 text-secondary leading-relaxed">
+                <p>
+                  MailMyCertificate was created by <strong>Akshat Thakur</strong>, a full-stack software developer focused on building open-source tools, web applications, and platforms that solve real-world problems.
+                </p>
+                <p>
+                  When not developing certificate workflows, Akshat is building <Link href="https://safexam.in" target="_blank" className="text-accent hover:underline">SafeExam</Link> (online examination platform), <Link href="https://calcuzy.app" target="_blank" className="text-accent hover:underline">Calcuzy</Link> (productivity calculator), and supporting <Link href="https://priyasarvutthan.org" target="_blank" className="text-accent hover:underline">Priya Sarv Utthan</Link> (non-profit organization platform).
+                </p>
+                <p className="pt-2">
+                  <Link href="https://akshatt.in" target="_blank" className="inline-flex items-center gap-2 text-accent hover:underline font-medium">
+                    View Akshat's portfolio and other projects →
+                  </Link>
+                </p>
+              </div>
+            </RevealSection>
+          </div>
+        </section>
+
         <RelatedPages pageKey="about" />
       </main>
 

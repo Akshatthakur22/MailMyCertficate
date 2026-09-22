@@ -86,7 +86,12 @@ export default function Contact() {
 
                             {/* Subtitle */}
                             <p className="text-lg md:text-xl text-secondary mb-8 max-w-3xl" data-speakable>
-                                I&apos;m Akshat Thakur, the developer behind MailMyCertificate. Questions, ideas, bug reports, or just want to say hi — I&apos;d love to hear from you.
+                                I&apos;m Akshat Thakur, a software developer building open-source tools, web applications, and educational platforms. MailMyCertificate is one of several projects I maintain. Questions, ideas, bug reports, or just want to chat — I&apos;d love to hear from you.
+                            </p>
+                            <p className="mb-8">
+                              <Link href="https://akshatt.in" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-accent hover:underline font-medium">
+                                View my portfolio and other projects →
+                              </Link>
                             </p>
                             <LastUpdated path="/contact" />
                         </RevealSection>
