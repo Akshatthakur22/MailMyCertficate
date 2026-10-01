@@ -8,7 +8,7 @@ import { SampleProjectLauncher } from '@/components/product/SampleProjectLaunche
 import { GITHUB_REPO_URL } from '@/config/github';
 import { HOME_PAGE_FAQS } from '@/data/homeFaqs';
 import { getRelatedPages } from '@/data/relatedPages';
-import { ArrowRight, Github, Check, Star, Lock } from 'lucide-react';
+import { ArrowRight, Github, Check, Star, Lock, FileSpreadsheet, FileText, Mail, ShieldCheck } from 'lucide-react';
 import {
   CertificateFlowIllustration,
   LocalPipelineIllustration,
@@ -19,35 +19,10 @@ import {
   SendStepIcon,
 } from '@/components/landing/illustrations';
 
-// 3.3 — Enhanced testimonials with org names and avatar initials
-// Initials serve as monogram avatars (more trustworthy than stock photos, but still humanized)
-const TESTIMONIALS = [
-  {
-    quote: 'Saved me an entire Sunday. We had 340 hackathon participants and I was dreading the certificate work. Done in 8 minutes.',
-    name: 'Priya S.',
-    org: 'IIT Delhi',
-    role: 'Hackathon organiser',
-    initials: 'PS',
-  },
-  {
-    quote: 'The privacy angle sold me immediately. Our NGO cannot upload beneficiary data to random SaaS tools. This runs entirely locally — exactly what we needed.',
-    name: 'Rahul M.',
-    org: 'Non-profit Organization',
-    role: 'Program coordinator',
-    initials: 'RM',
-  },
-  {
-    quote: 'Finally a tool that just works. No account, no watermark, no limit. Sent 200 workshop certificates via Gmail in one session.',
-    name: 'Tanvi K.',
-    org: 'Google Developer Group',
-    role: 'Community lead',
-    initials: 'TK',
-  },
-] as const;
-
-const AUDIENCE_SEGMENTS = [
-  'Hackathons', 'Workshops', 'College events',
-  'Webinars', 'NGO training', 'Coding competitions',
+const WORKFLOW_BENEFITS = [
+  { Icon: FileSpreadsheet, title: 'Bring your list', detail: 'Import a CSV or connect a Google Sheet.' },
+  { Icon: FileText, title: 'Make a batch', detail: 'Personalize a certificate for every participant.' },
+  { Icon: Mail, title: 'Send with Gmail', detail: 'Deliver each PDF to the right inbox.' },
 ] as const;
 
 export default function LandingPage() {
@@ -85,64 +60,65 @@ export default function LandingPage() {
       <main className="flex-1 w-full">
 
         {/* HERO */}
-        <section className="pt-20 pb-16 md:pt-24 md:pb-20 lg:pt-28 lg:pb-24">
+        <section className="relative pt-24 pb-14 md:pt-28 md:pb-20 lg:pt-32 lg:pb-24 overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_78%_40%,rgba(45,106,79,0.10),transparent_48%)]" aria-hidden="true" />
           <div className="container-width">
-            <div className="grid lg:grid-cols-[1fr_0.9fr] gap-12 lg:gap-16 items-center">
-              <div className="max-w-xl">
+            <div className="relative grid lg:grid-cols-[1fr_0.9fr] gap-10 lg:gap-16 items-center">
+              <div className="max-w-2xl">
                 <RevealSection>
-                  <div className="mb-6 flex items-center gap-2.5">
-                    <span className="inline-block w-2 h-2 rounded-full bg-[#2D6A4F]" />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-landing-secondary">
-                      Open Source · Privacy First · Free Forever
+                  <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#2D6A4F]/20 bg-white/70 px-3.5 py-2 shadow-sm">
+                    <ShieldCheck size={15} className="text-[#2D6A4F]" aria-hidden="true" />
+                    <span className="text-xs font-semibold text-landing-ink">
+                      Free · No account · Processed in your browser
                     </span>
                   </div>
                 </RevealSection>
                 <RevealSection>
-                  <h1 className="text-[clamp(2.6rem,6vw,5.5rem)] font-semibold leading-[1.02] tracking-tight text-landing-ink mb-4">
-                    Free bulk certificate<br />
-                    generator —<br />
-                    <span className="font-serif italic font-normal text-landing-secondary">no signup needed.</span>
+                  <h1 className="text-[clamp(2.55rem,5.5vw,5rem)] font-semibold leading-[1.02] tracking-tight text-landing-ink mb-5">
+                    Create and send<br className="hidden sm:block" /> certificates in batches.
                   </h1>
                 </RevealSection>
                 <RevealSection>
-                  <p className="text-lg md:text-xl text-landing-secondary leading-relaxed mb-6 max-w-md">
-                    Upload a template. Import participants from CSV or Google Sheets.
-                    Generate personalized PDFs in your browser, then send via Gmail.
-                    No cloud uploads. No subscription. No limit.
+                  <p className="text-lg md:text-xl text-landing-secondary leading-relaxed mb-7 max-w-xl">
+                    Turn one certificate design and a participant list into personalized PDFs, then email them with Gmail. Free, open source, and no signup required.
                   </p>
                 </RevealSection>
                 <RevealSection>
-                  <div className="flex flex-wrap gap-2 mb-8" aria-label="Perfect for">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-landing-secondary mr-1 self-center">Perfect for:</span>
-                    {AUDIENCE_SEGMENTS.map((seg) => (
-                      <span key={seg} className="inline-block rounded-full border border-landing-rule px-3 py-1 text-[11px] font-medium text-landing-secondary bg-white/60">
-                        {seg}
-                      </span>
-                    ))}
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 mb-8 text-sm text-landing-secondary" aria-label="Supported workflows">
+                    <span>CSV and Google Sheets</span><span aria-hidden="true" className="text-landing-rule">•</span>
+                    <span>Personalized PDFs</span><span aria-hidden="true" className="text-landing-rule">•</span>
+                    <span>Gmail delivery</span>
                   </div>
                 </RevealSection>
                 <RevealSection className="flex flex-col sm:flex-row gap-3 mb-6">
                   <TrackToolCta href="/tool" entryPoint="hero_cta"
                     className="landing-btn-primary inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-lg text-base">
-                    Start Generating — Free
+                    Create certificates free
                     <ArrowRight size={17} />
                   </TrackToolCta>
-                  <SampleProjectLauncher className="landing-btn-secondary font-semibold px-7 py-3.5 rounded-lg text-base" />
-                </RevealSection>
-                {/* 3.1 — Micro-trust strip directly under CTA: reduces first-time hesitation at moment of decision */}
-                <RevealSection>
-                  <p className="text-xs text-landing-secondary/70 font-medium">
-                    No card · No account · Runs in your browser
-                  </p>
-                </RevealSection>
-                <RevealSection>
-                  <Link href="/guide" className="text-sm text-landing-secondary hover:text-landing-ink underline underline-offset-2 transition-colors">
-                    See how it works in 5 steps →
-                  </Link>
+                    <SampleProjectLauncher className="landing-btn-secondary font-semibold px-7 py-3.5 rounded-lg text-base" />
                 </RevealSection>
               </div>
-              <RevealSection className="hidden lg:block">
-                <CertificateFlowIllustration className="w-full max-w-lg mx-auto animate-float-gentle" />
+              <RevealSection className="w-full">
+                <div className="rounded-2xl border border-landing-rule bg-white/70 p-4 shadow-[0_24px_70px_-36px_rgba(26,26,26,0.3)] sm:p-6">
+                  <div className="flex items-center justify-between gap-3 border-b border-landing-rule pb-3">
+                    <span className="text-xs font-semibold uppercase tracking-[0.13em] text-landing-secondary">One workflow, one place</span>
+                    <span className="rounded-full bg-[#2D6A4F]/10 px-2.5 py-1 text-[11px] font-semibold text-[#2D6A4F]">Runs locally</span>
+                  </div>
+                  <CertificateFlowIllustration className="my-2 w-full animate-float-gentle" />
+                  <div className="grid grid-cols-3 gap-2 border-t border-landing-rule pt-4 sm:gap-4">
+                    {WORKFLOW_BENEFITS.map(({ Icon, title, detail }, index) => (
+                      <div key={title} className="min-w-0">
+                        <div className="mb-2 flex items-center gap-1.5 text-[#2D6A4F]">
+                          <Icon size={15} aria-hidden="true" />
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-landing-secondary">0{index + 1}</span>
+                        </div>
+                        <p className="text-xs font-semibold text-landing-ink sm:text-sm">{title}</p>
+                        <p className="mt-1 hidden text-xs leading-relaxed text-landing-secondary sm:block">{detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </RevealSection>
             </div>
           </div>
@@ -184,32 +160,26 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* TESTIMONIALS */}
+        {/* USE CASES */}
         <section className="landing-section-alt py-16 md:py-20 border-t border-landing-rule">
           <div className="container-width max-w-6xl">
             <RevealSection className="text-center mb-12">
-              <span className="landing-label mb-4 block">Trusted by Organizers</span>
+              <span className="landing-label mb-4 block">Made for event organizers</span>
               <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-tight text-landing-ink max-w-2xl mx-auto">
-                Real feedback from hackathons, workshops, and events.
+                Spend less time on certificates after the event.
               </h2>
             </RevealSection>
             <RevealSection>
-              <div className="grid md:grid-cols-3 gap-6">
-                {TESTIMONIALS.map((t) => (
-                  <div key={t.name} className="landing-annotation-card p-6 group hover:border-[#2D6A4F]/40 transition-colors">
-                    {/* 3.3 — Monogram avatar adds humanization without stock photos */}
-                    <div className="mb-4 w-10 h-10 rounded-full bg-[#2D6A4F]/10 flex items-center justify-center">
-                      <span className="text-xs font-bold text-[#2D6A4F]">{t.initials}</span>
-                    </div>
-                    <p className="text-base text-landing-secondary leading-relaxed mb-4 italic">
-                      &ldquo;{t.quote}&rdquo;
-                    </p>
-                    <div className="border-t border-landing-rule pt-4">
-                      <p className="text-sm font-semibold text-landing-ink">{t.name}</p>
-                      {/* 3.3 — Org name as distinct line increases credibility vs. role alone */}
-                      <p className="text-xs text-landing-secondary font-medium mb-1">{t.org}</p>
-                      <p className="text-xs text-landing-secondary/70">{t.role}</p>
-                    </div>
+              <div className="grid md:grid-cols-3 gap-5">
+                {[
+                  { title: 'Hackathons', detail: 'Prepare participant and finalist certificates from your event roster.' },
+                  { title: 'Workshops', detail: 'Personalize completion certificates for attendees in one batch.' },
+                  { title: 'Webinars and training', detail: 'Match each certificate to a participant and email address.' },
+                ].map((item) => (
+                  <div key={item.title} className="landing-annotation-card p-6">
+                    <Check size={18} className="mb-4 text-[#2D6A4F]" aria-hidden="true" />
+                    <h3 className="mb-2 text-lg font-semibold text-landing-ink">{item.title}</h3>
+                    <p className="text-sm leading-relaxed text-landing-secondary">{item.detail}</p>
                   </div>
                 ))}
               </div>
@@ -266,15 +236,6 @@ export default function LandingPage() {
                 </div>
               </RevealSection>
             </div>
-            <RevealSection className="mt-24 md:mt-32 py-16 md:py-20 border-t border-b border-landing-rule text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-landing-secondary mb-6">With MailMyCertificate</p>
-              <p className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-none text-landing-ink">
-                4 hours
-                <span className="mx-4 md:mx-6 font-serif italic font-normal text-landing-secondary">→</span>
-                2 minutes
-              </p>
-              <p className="mt-4 text-lg text-landing-secondary">For 200 certificates. Same result. No chaos.</p>
-            </RevealSection>
           </div>
         </section>
 
@@ -284,7 +245,7 @@ export default function LandingPage() {
             <RevealSection className="max-w-xl mb-20">
               <span className="landing-label mb-4 block">How It Works</span>
               <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-tight text-landing-ink">
-                Four steps. Two minutes. Done.
+                Four steps from roster to ready-to-send certificates.
               </h2>
             </RevealSection>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
@@ -331,15 +292,16 @@ export default function LandingPage() {
                 <RevealSection>
                   <span className="landing-label mb-4 block">Privacy</span>
                   <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-tight text-landing-ink mb-8">
-                    Your data never<br />
-                    <span className="font-serif italic font-normal text-landing-secondary">leaves your computer.</span>
+                    Your participant list<br />
+                    <span className="font-serif italic font-normal text-landing-secondary">stays on your device.</span>
                   </h2>
                 </RevealSection>
                 <RevealSection>
                   <p className="text-lg text-landing-secondary leading-relaxed mb-8">
                     PDF generation, field placement, data processing — everything happens inside
-                    your browser using a Web Worker. No server ever receives your participant list
-                    or certificate files.
+                    your browser using a Web Worker. Your participant list and certificate files are
+                    not uploaded to our servers. If you choose email delivery, Gmail sends the PDFs
+                    using your own Google account.
                   </p>
                 </RevealSection>
                 <RevealSection>
@@ -359,8 +321,8 @@ export default function LandingPage() {
                 </RevealSection>
                 <RevealSection>
                   <div className="landing-annotation-card inline-block">
-                    <p className="text-xs text-landing-secondary mb-1">Network requests to external servers</p>
-                    <p className="text-4xl font-bold text-[#2D6A4F]">0</p>
+                    <p className="text-xs text-landing-secondary mb-1">Certificate and participant processing</p>
+                    <p className="text-lg font-bold text-[#2D6A4F]">In your browser</p>
                   </div>
                 </RevealSection>
                 {/* 3.5 — Convert claim into self-verifiable challenge: highest-leverage trust move for privacy-first tool */}
@@ -429,8 +391,8 @@ export default function LandingPage() {
             <RevealSection>
               <div className="landing-annotation-card p-8 md:p-12">
                 <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-                  <Image src="https://github.com/akshatthakur22.png" alt="Akshat Thakur" width={72} height={72}
-                    className="rounded-full ring-2 ring-landing-rule" />
+                  <Image src="/developer-photo.png" alt="Akshat Thakur" width={72} height={72}
+                    className="aspect-square rounded-full object-cover object-[center_30%] ring-2 ring-landing-rule" />
                   <div>
                     <h3 className="text-xl font-semibold text-landing-ink mb-1">Akshat Thakur</h3>
                     <p className="text-sm text-landing-secondary font-medium mb-4">Software Developer</p>
@@ -536,13 +498,7 @@ export default function LandingPage() {
                 Stop losing weekends<br />to certificate work.
               </h2>
               <p className="text-xl text-landing-secondary mb-12 max-w-xl mx-auto leading-relaxed">
-                No signup. No payment. No uploads. Just open the tool, import your list, and it&apos;s done.
-              </p>
-            </RevealSection>
-            {/* 3.9 — Re-surface strongest proof point before final decision: recency effect + specificity = conversion */}
-            <RevealSection className="mb-12 p-6 bg-white/40 rounded-lg border border-landing-rule/40 inline-block">
-              <p className="text-sm text-landing-secondary/80 italic">
-                &ldquo;Saved me an entire Sunday.&rdquo; — Priya S., Hackathon organiser, IIT Delhi
+                No signup or payment. Prepare your certificate batch in your browser, then choose whether to download it or send it with Gmail.
               </p>
             </RevealSection>
             <RevealSection className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
