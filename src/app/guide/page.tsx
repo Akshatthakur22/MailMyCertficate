@@ -214,7 +214,7 @@ export default function Guide() {
                         {
                             type: 'faq',
                             question: 'Is my data uploaded to your servers?',
-                            answer: 'No. Certificate generation happens locally in your browser. Participant lists and PDFs stay on your device unless you choose to send email through Gmail.'
+                            answer: 'CSV generation runs locally and keeps rows and PDFs in your browser. Public Sheets imports pass through our backend. Gmail delivery sends recipient details, message content, and PDF attachments through our backend to Google.'
                         },
                         {
                             type: 'faq',

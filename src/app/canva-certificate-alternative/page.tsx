@@ -282,7 +282,7 @@ export default function CanvaCertificateAlternativePage() {
                       <Check size={16} className="inline text-green-700" aria-hidden="true" /> One
                       batch, generated locally
                     </td>
-                    <td className="p-4">Never leaves your browser</td>
+                    <td className="p-4">Generation stays local; Sheets import and Gmail delivery use backend requests</td>
                     <td className="p-4">Free (MIT licence)</td>
                   </tr>
                   <tr>

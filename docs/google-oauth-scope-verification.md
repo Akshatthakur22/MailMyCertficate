@@ -92,10 +92,10 @@ If any of these appear in your Cloud Console, **remove them immediately** — th
 When the Cloud Console verification form asks "Why do you need this scope?", use:
 
 **gmail.send:**
-> "MailMyCertificate sends personalized certificate PDF emails on behalf of the authenticated user when they complete the certificate generation workflow and click 'Send.' This allows event organizers to distribute certificates to participants directly from their own Gmail account. We use gmail.send (not gmail.compose or broader scopes) because we only send outbound messages and never need to read, modify, or manage the user's mailbox, drafts, or labels."
+> "MailMyCertificate sends personalized certificate PDF emails on behalf of the authenticated user when they click Send. We use gmail.send because the app only sends outbound messages and never reads, modifies, or manages the user's mailbox, drafts, or labels. OpenID/profile/email scopes identify the connected account; its email address is also stored with usage aggregates in our backend analytics database."
 
 **openid / userinfo.profile / userinfo.email:**
-> "Used to identify the authenticated user and display their email address in the app interface, confirming which Gmail account will be used for sending. No profile data is stored beyond the active session."
+> "Used to identify the authenticated user and display their email address in the app interface, confirming which Gmail account will be used for sending. The email address is also stored with usage aggregates in the backend analytics session database; retention depends on the configured database and its operational policy."
 
 ---
 

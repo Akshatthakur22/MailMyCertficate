@@ -63,7 +63,7 @@ export function BeforeYouStart() {
                         <div>
                             <h3 className="font-semibold text-foreground mb-1 text-sm">Your data stays private</h3>
                             <p className="text-sm text-secondary">
-                                All certificate generation happens in your browser. Templates and participant data never leave your device. No servers involved in the core workflow.
+                                Certificate generation happens in your browser. Public Google Sheets imports pass through our backend, and Gmail delivery sends recipient details and certificate PDFs through our backend to Google.
                             </p>
                         </div>
                     </div>

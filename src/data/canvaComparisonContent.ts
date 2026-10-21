@@ -22,7 +22,7 @@ export const CANVA_COMPARISON_FAQS = [
   {
     question: 'Does MailMyCertificate upload my participant data like Canva does?',
     answer:
-      'No. All certificate generation happens locally in your browser. Participant names and emails never leave your device. Canva stores your designs on their cloud servers.',
+      'PDF generation happens locally in your browser. Public Google Sheets imports pass through our backend, and Gmail delivery sends recipient details and attachments through our backend to Google. Canva stores designs in its cloud service.',
   },
   {
     question: 'How long does it take to send 200 certificates using Canva vs MailMyCertificate?',
@@ -54,7 +54,7 @@ export const CANVA_COMPARISON_FEATURES = [
   },
   {
     feature: 'Participant data privacy',
-    mailMyCertificate: 'Local only — never uploaded',
+    mailMyCertificate: 'Local generation; backend requests for Sheets and Gmail',
     canva: 'Stored on Canva cloud servers',
   },
   {

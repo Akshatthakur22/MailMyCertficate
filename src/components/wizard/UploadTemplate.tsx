@@ -60,12 +60,10 @@ export function UploadTemplate() {
             setCurrentStep(2);
 
             const fileType = file.type === 'image/png' ? 'png' : 'jpeg';
-            const templateName = `custom_${fileType}_${width}x${height}`;
 
             trackEvent(
                 {
                     event: 'template_selected',
-                    template_name: templateName,
                     template_width: width,
                     template_height: height,
                     file_type: fileType,
@@ -73,7 +71,8 @@ export function UploadTemplate() {
                 { dedupeKey: `${sessionId}-template` },
             );
             // Mirror to backend for central analytics
-            trackBackendEvent('template_selected', { template_name: templateName, file_type: fileType });
+            // Filenames can contain names or event details, so keep analytics categorical.
+            trackBackendEvent('template_selected', { file_type: fileType });
 
             if (!hasActivated()) {
                 markActivated();

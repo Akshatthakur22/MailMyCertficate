@@ -14,7 +14,7 @@ export function LocalPipelineIllustration({
       fill="none"
       className={className}
       role="img"
-      aria-label="Data processing pipeline staying entirely inside the browser, with a crossed-out cloud representing no uploads"
+      aria-label="Certificate rendering pipeline running in the browser; Sheets import and Gmail delivery use backend requests"
     >
       <defs>
         <filter id="lp-glow" x="-20%" y="-20%" width="140%" height="140%">

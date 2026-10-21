@@ -21,7 +21,7 @@ export const HOME_PAGE_FAQS = [
     // 3.8 — Address AI/automation anxiety directly; names the unasked objection upfront
     question: 'Does this use AI on my data?',
     answer:
-      'No. MailMyCertificate is a deterministic certificate generator — no machine learning, no generative AI, no training models. PDF generation is 100% local to your device. Your data is never uploaded to any external service, including for any form of automated processing. It is guaranteed in writing that your data will never be used to train, improve, or create any foundational or large language models.',
+      'MailMyCertificate does not use AI to generate certificates. PDF rendering happens in your browser. Public Google Sheets imports are fetched through our backend, and Gmail delivery sends recipient details and PDF attachments through our backend to Google.',
   },
   {
     question: 'How do I generate certificates in bulk?',
@@ -31,7 +31,7 @@ export const HOME_PAGE_FAQS = [
   {
     question: 'Is my participant data uploaded anywhere?',
     answer:
-      'No. Certificates are rendered in your browser using pdf-lib in a Web Worker, and participant rows are stored in IndexedDB on your own device. The list is never uploaded to a MailMyCertificate server.',
+      'CSV rows and generated PDFs are stored in your browser for generation and download. Public Google Sheets data passes through our backend during import. If you send email, recipient details, message content, and PDF attachments pass through our backend to Gmail.',
   },
   {
     question: 'How many certificates can I generate at once?',
@@ -47,7 +47,7 @@ export const HOME_PAGE_FAQS = [
   {
     question: 'Do I need a Google account to use it?',
     answer:
-      'Only if you want to email the certificates. Generating and downloading them as a ZIP file needs no account at all. Gmail delivery uses your own Google account via OAuth, requesting only the gmail.send scope.',
+      'Only if you want to email the certificates. Generating and downloading them as a ZIP file needs no account at all. Gmail delivery uses your Google account via OAuth, requesting gmail.send plus OpenID and profile/email scopes to identify the connected account.',
   },
   {
     question: 'What file format should my certificate template be?',

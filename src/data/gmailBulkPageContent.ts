@@ -2,12 +2,12 @@ export const GMAIL_BULK_PAGE_FAQS = [
   {
     question: 'How many certificates can I send via Gmail at once?',
     answer:
-      'We recommend batches of around 400 emails for reliability. Gmail API has daily sending limits (typically 500 for free accounts, 2000 for Workspace). MailMyCertificate respects these limits automatically.',
+      'The app currently accepts up to 400 rows per import batch. Gmail applies its own sending limits, which can change; the app reports Gmail API rejections but does not pre-check or guarantee your remaining daily quota.',
   },
   {
     question: 'Does MailMyCertificate store my Gmail credentials?',
     answer:
-      'No. We use official Google OAuth — you authorize directly with Google. MailMyCertificate never sees or stores your password. Tokens remain in your browser session.',
+      'No. We use official Google OAuth — you authorize directly with Google. MailMyCertificate never sees or stores your password. Access and refresh tokens are encrypted in Flask’s signed session cookie, which is held by your browser and sent to our backend for Gmail requests.',
   },
   {
     question: 'Can I customize the email subject and body?',

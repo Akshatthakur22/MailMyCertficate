@@ -2,7 +2,7 @@ export const ABOUT_PAGE_FAQS = [
   {
     question: 'Is MailMyCertificate free to use?',
     answer:
-      'Yes, MailMyCertificate is completely free forever. There are no hidden charges, paywalls, or premium tiers. The tool is open source and runs entirely in your browser.',
+      'Yes. MailMyCertificate is free and open source. Certificate generation runs in your browser; public Sheets import and optional Gmail delivery use the backend.',
   },
   {
     question: 'Who built MailMyCertificate?',
@@ -12,7 +12,7 @@ export const ABOUT_PAGE_FAQS = [
   {
     question: 'Where is my data stored?',
     answer:
-      'Your data never leaves your device. Certificate PDFs, CSV data, and templates are all generated and stored locally in your browser using IndexedDB. MailMyCertificate servers never see your participant data.',
+      'CSV rows, templates, and generated PDFs are stored in your browser. Public Sheets imports pass through our backend, and Gmail delivery sends recipient details and attachments through our backend to Google.',
   },
   {
     question: 'Can I use MailMyCertificate for commercial events?',
@@ -27,7 +27,7 @@ export const ABOUT_PAGE_FAQS = [
   {
     question: 'Do you store participant emails?',
     answer:
-      'No. Participant emails are only used temporarily in your browser to populate the email queue during sending. We never store, log, or analyze email addresses or participant data.',
+      'Participant emails are used in your browser to prepare the send queue and are sent with each message request through our backend to Gmail. The application code does not intentionally save recipient addresses in its database, though operational logging outside this codebase may vary.',
   },
   {
     question: 'Can I contribute to the project?',

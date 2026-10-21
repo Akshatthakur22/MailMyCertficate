@@ -3,6 +3,7 @@ flask-cors
 google-auth-oauthlib
 google-api-python-client
 google-auth
+cryptography
 python-dotenv
 gunicorn
 psycopg2-binary

@@ -77,16 +77,16 @@ export function GmailComposer({
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-[#dadce0] bg-white shadow-sm lg:flex lg:h-full lg:min-h-0 lg:flex-col">
       {/* Window bar */}
-      <div className="flex items-center justify-between border-b border-accent/20 bg-accent px-4 py-2.5">
-        <span className="text-sm font-medium text-white">New message</span>
-        <div className="inline-flex rounded-lg bg-white/15 p-0.5">
+      <div className="flex items-center justify-between border-b border-[#dadce0] bg-[#f2f6fc] px-4 py-2.5">
+        <span className="text-sm font-medium text-[#202124]">New message</span>
+        <div className="inline-flex rounded-lg bg-[#e8eaed] p-0.5">
           <button
             type="button"
             onClick={() => setMode('edit')}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-              mode === 'edit' ? 'bg-white text-accent' : 'text-white/80 hover:text-white'
+              mode === 'edit' ? 'bg-white text-[#1a73e8] shadow-sm' : 'text-[#5f6368] hover:text-[#202124]'
             }`}
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -96,7 +96,7 @@ export function GmailComposer({
             type="button"
             onClick={() => setMode('preview')}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-              mode === 'preview' ? 'bg-white text-accent' : 'text-white/80 hover:text-white'
+              mode === 'preview' ? 'bg-white text-[#1a73e8] shadow-sm' : 'text-[#5f6368] hover:text-[#202124]'
             }`}
           >
             <Eye className="h-3.5 w-3.5" />
@@ -162,41 +162,42 @@ export function GmailComposer({
       </div>
 
       {mode === 'edit' ? (
-        <div className="space-y-4 px-4 py-3">
+      <div className="space-y-3 px-4 py-3 sm:px-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           {/* Subject */}
-          <div>
+          <div className="shrink-0">
             <input
               ref={subjectRef}
               type="text"
+              aria-label="Email subject"
               value={emailForm.subject}
               onChange={(e) => setEmailForm((prev) => ({ ...prev, subject: e.target.value }))}
               placeholder="Subject"
-              className="w-full border-b border-border bg-transparent pb-2 text-sm font-medium text-foreground outline-none placeholder:text-secondary/70 focus:border-accent"
+              className="w-full border-b border-[#dadce0] bg-transparent pb-2 text-sm font-medium text-[#202124] outline-none placeholder:text-[#5f6368] focus:border-[#1a73e8]"
             />
             <TokenRow tokens={templateTokens} onInsert={(t) => insertToken('subject', t)} />
           </div>
 
           {/* Body */}
-          <div>
+          <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
             <textarea
               ref={bodyRef}
               value={emailForm.body}
               onChange={(e) => setEmailForm((prev) => ({ ...prev, body: e.target.value }))}
               placeholder="Write your message…"
-              className="h-50 w-full resize-none rounded-lg bg-transparent text-sm leading-6 text-foreground outline-none placeholder:text-secondary/70"
+              className="h-40 w-full resize-y rounded-lg bg-transparent text-sm leading-6 text-[#202124] outline-none placeholder:text-[#5f6368] focus-visible:ring-0 lg:h-auto lg:min-h-0 lg:flex-1 lg:resize-none"
             />
             <TokenRow tokens={templateTokens} onInsert={(t) => insertToken('body', t)} />
           </div>
 
           {/* Attachment */}
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted px-3 py-2 text-xs">
+          <div className="flex shrink-0 items-center gap-2 rounded-lg border border-[#dadce0] bg-[#f8f9fa] px-3 py-2 text-xs">
             <Paperclip className="h-3.5 w-3.5 shrink-0 text-secondary" />
             <span className="truncate font-medium text-foreground">certificate.pdf</span>
             <span className="shrink-0 text-secondary">· {attachmentCount} attached</span>
           </div>
         </div>
       ) : (
-        <div className="px-4 py-4">
+        <div className="px-4 py-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           {previewRows.length > 1 && (
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="text-xs text-secondary">Preview as</span>

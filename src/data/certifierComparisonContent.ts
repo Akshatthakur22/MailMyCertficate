@@ -2,7 +2,7 @@ export const CERTIFIER_COMPARISON_FAQS = [
   {
     question: 'What is the main difference between MailMyCertificate and Certifier?',
     answer:
-      'MailMyCertificate is free, open source, and processes everything locally in your browser. Certifier is a paid SaaS that stores data on their servers and offers features like verification portals and LMS integrations.',
+      'MailMyCertificate is free and open source. PDF generation runs in your browser; public Sheets imports and Gmail delivery use backend requests. Certifier is a paid SaaS with features like verification portals and LMS integrations.',
   },
   {
     question: 'Does Certifier offer anything MailMyCertificate does not?',
@@ -17,7 +17,7 @@ export const CERTIFIER_COMPARISON_FAQS = [
   {
     question: 'Which tool is better for privacy?',
     answer:
-      'MailMyCertificate. All participant data stays in your browser (IndexedDB). Certifier requires uploading recipient information to their cloud servers for processing.',
+      'MailMyCertificate stores working rows in browser IndexedDB; public Sheets import passes through its backend and Gmail delivery sends recipient details and attachments through its API to Google. Certifier requires uploading recipient information to its cloud service for processing.',
   },
   {
     question: 'Can I switch from Certifier to MailMyCertificate?',

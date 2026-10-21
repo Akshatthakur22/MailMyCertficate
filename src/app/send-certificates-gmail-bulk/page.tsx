@@ -99,8 +99,9 @@ export default function SendCertificatesGmailBulkPage() {
             <div className="space-y-4 text-secondary leading-relaxed">
               <p>
                 When you click &quot;Connect Gmail,&quot; you authorize directly with Google — not with
-                MailMyCertificate. We receive a temporary access token stored in your browser session
-                (never on our servers).
+                MailMyCertificate. OAuth credentials are encrypted inside a signed Flask session
+                cookie held by your browser. The Flask API decrypts them when it calls Gmail; they
+                are not stored in a server-side session database.
               </p>
               <p>
                 Emails are sent through the Gmail API from your own account. Recipients see your name
@@ -109,8 +110,9 @@ export default function SendCertificatesGmailBulkPage() {
               <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-background">
                 <Shield size={20} className="text-accent mt-0.5 flex-shrink-0" />
                 <p className="text-sm">
-                  MailMyCertificate requests only the <code className="text-xs bg-muted px-1 py-0.5 rounded">gmail.send</code> scope
-                  — the minimum permission needed to send emails. No read access.
+                  MailMyCertificate requests <code className="text-xs bg-muted px-1 py-0.5 rounded">gmail.send</code>
+                  to send messages, plus OpenID and profile/email scopes to identify the connected
+                  account. It does not request Gmail inbox read access.
                 </p>
               </div>
             </div>
@@ -138,7 +140,7 @@ export default function SendCertificatesGmailBulkPage() {
                   <tr className="border-b border-border/50 bg-accent/5">
                     <th scope="row" className="p-4 font-semibold text-foreground text-left">MailMyCertificate + Gmail</th>
                     <td className="p-4"><Check size={16} className="inline text-green-700" aria-hidden="true" /> Your Gmail address</td>
-                    <td className="p-4">None — local browser</td>
+                    <td className="p-4">Local generation; recipient, message, and PDF pass through the API to Gmail</td>
                     <td className="p-4">Free</td>
                   </tr>
                   <tr className="border-b border-border/50">

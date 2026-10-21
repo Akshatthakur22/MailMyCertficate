@@ -27,7 +27,7 @@ MailMyCertificate uses a **GTM-first measurement stack**. Application code pushe
 1. **GTM is the single source of truth** for third-party tags.
 2. **No direct GA4 calls** in application code (`gtag`, `@next/third-parties/google` GA4, etc.).
 3. **All tracking uses dataLayer** via `trackEvent()`.
-4. **No PII** — never send emails, names, CSV contents, or recipient data.
+4. **Client event payloads avoid participant PII** — application event code should not send emails, names, CSV contents, or recipient data. Separately, the Flask analytics collector stores the connected Google account email and hashed account identifier with usage aggregates; do not describe the whole analytics system as anonymous.
 5. **SSR-safe** — tracking only runs in the browser; GTM loads `afterInteractive`.
 
 ### Product context (important)

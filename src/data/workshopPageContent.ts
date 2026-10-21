@@ -27,7 +27,7 @@ export const WORKSHOP_PAGE_FAQS = [
   {
     question: 'Does MailMyCertificate upload my workshop attendee data?',
     answer:
-      'No. All PDF generation runs in your browser using Web Workers. Attendee names and emails are stored in IndexedDB on your device only. Nothing is uploaded to a MailMyCertificate server.',
+      'CSV rows and generated PDFs are stored in your browser. Public Sheets imports pass through our backend, and Gmail delivery sends recipient details and attachments through our backend to Google.',
   },
 ] as const;
 

@@ -10,75 +10,71 @@ import { absoluteUrl } from '@/config/site';
  * our content. This matters because some AI bots check for explicit permission
  * before including a site in their training/retrieval pipeline.
  *
- * /tool is deliberately NOT disallowed. It carries noIndex:true in its own
- * layout metadata, and a crawler must fetch the page to discover that directive.
- * Blocking it in robots.txt instead produces "indexed, though blocked by robots"
-
-* coverage errors in Search Console.
- *
- * /email, /settings and /admin are private app surfaces with no public content.
+ * App pages that carry noindex metadata remain crawlable so search engines can
+ * see and honor the directive. robots.txt only blocks API endpoints; it is not
+ * an access-control mechanism.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      // Default: allow all crawlers, block private app surfaces
+      // Allow crawlers to see page-level noindex directives; block API routes.
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // OpenAI / ChatGPT
       {
         userAgent: 'GPTBot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // OpenAI image/browsing
       {
         userAgent: 'OAI-SearchBot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // Google Gemini / AI Overviews
       {
         userAgent: 'Google-Extended',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // Perplexity AI
       {
         userAgent: 'PerplexityBot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // Anthropic Claude
       {
         userAgent: 'anthropic-ai',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       {
         userAgent: 'ClaudeBot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // Common Crawl (used by many AI training datasets)
       {
         userAgent: 'CCBot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // Bing Copilot
       {
         userAgent: 'Bingbot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
       // Meta AI
       {
         userAgent: 'FacebookBot',
         allow: '/',
-        disallow: ['/api/', '/email', '/settings', '/admin'],
+        disallow: ['/api/'],
       },
     ],
     sitemap: absoluteUrl('/sitemap.xml'),

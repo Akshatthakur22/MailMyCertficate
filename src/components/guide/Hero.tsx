@@ -35,7 +35,7 @@ export function Hero() {
                             <Shield size={14} className="text-accent" />
                         </div>
                         <p className="text-secondary text-sm">
-                            Everything stays on your device. Your data never leaves your browser.
+                            Certificate generation runs in your browser. Public Sheets imports and Gmail delivery use our backend when you choose those features.
                         </p>
                     </div>
                 </div>

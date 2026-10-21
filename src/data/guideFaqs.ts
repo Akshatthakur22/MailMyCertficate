@@ -8,7 +8,7 @@ export const GUIDE_FAQS: GuideFaq[] = [
   {
     question: 'Is my data uploaded to your servers?',
     answer:
-      'No. Certificate generation happens locally in your browser. Participant lists and PDFs stay on your device unless you choose to send email through Gmail.',
+      'CSV-based generation runs locally and keeps participant rows and PDFs in your browser. Public Google Sheets imports are fetched through our backend. When you send email, recipient details, message content, and PDF attachments pass through our backend to Gmail.',
   },
   {
     question: 'Can I use Google Sheets instead of CSV?',

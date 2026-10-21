@@ -2,7 +2,7 @@ export const HACKATHON_PAGE_FAQS = [
   {
     question: 'Can I generate certificates for 500+ hackathon participants?',
     answer:
-      'Yes. MailMyCertificate runs entirely in your browser using Web Workers and pdf-lib. There is no artificial cap on the number of certificates you can generate in a single batch.',
+      'The current CSV and Sheets import limit is 400 rows per batch. PDF generation runs in your browser using Web Workers and pdf-lib; larger rosters need to be split into batches.',
   },
   {
     question: 'How do I get participant data from my hackathon registration form?',

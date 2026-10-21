@@ -34,8 +34,8 @@ export default function CertifyemComparisonPage() {
             <p className="text-lg md:text-xl text-secondary leading-relaxed mb-4">
               <strong>Answer:</strong> MailMyCertificate is a free, open-source, standalone alternative
               to Certify&apos;em. No Google Workspace Marketplace installation required, no certificate
-              export limits, and all PDF generation happens locally in your browser — participant data
-              never reaches a third-party server.
+              export limits, and PDF generation happens locally in your browser. Public Sheets imports
+              use our backend, and Gmail delivery sends each message and attachment through our API to Google.
             </p>
             <p className="text-secondary leading-relaxed mb-8">
               Built for organizers who use Google Forms but don&apos;t want to install a Workspace add-on,

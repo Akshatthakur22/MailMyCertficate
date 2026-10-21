@@ -6,7 +6,7 @@ const PATH = '/blog/how-to-send-certificates-to-participants';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'How to Send Certificates to Participants',
-  description: 'Bulk send personalized PDF certificates to participants via email using Gmail. No signup, no server uploads, runs entirely in your browser.',
+  description: 'Bulk send personalized PDF certificates through Gmail. Generate PDFs in your browser; recipient details and attachments pass through the API for delivery.',
   path: PATH,
   keywords: [
     'send certificates',

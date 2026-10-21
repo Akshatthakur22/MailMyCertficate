@@ -210,7 +210,7 @@ export default function LandingPage() {
                 <p className="text-lg text-landing-secondary/80 leading-relaxed">
                   MailMyCertificate was built by Akshat Thakur after doing exactly this —
                   then deciding no one should ever have to again. It&apos;s free. It&apos;s open source.
-                  And everything runs in your browser.
+                  Certificate generation runs in your browser; Google Sheets import and Gmail delivery use the backend.
                 </p>
               </RevealSection>
               <RevealSection>
@@ -293,15 +293,14 @@ export default function LandingPage() {
                   <span className="landing-label mb-4 block">Privacy</span>
                   <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-semibold leading-tight text-landing-ink mb-8">
                     Your participant list<br />
-                    <span className="font-serif italic font-normal text-landing-secondary">stays on your device.</span>
+                    <span className="font-serif italic font-normal text-landing-secondary">is processed in your browser.</span>
                   </h2>
                 </RevealSection>
                 <RevealSection>
                   <p className="text-lg text-landing-secondary leading-relaxed mb-8">
-                    PDF generation, field placement, data processing — everything happens inside
-                    your browser using a Web Worker. Your participant list and certificate files are
-                    not uploaded to our servers. If you choose email delivery, Gmail sends the PDFs
-                    using your own Google account.
+                    PDF generation and field placement happen in your browser using a Web Worker.
+                    Public Google Sheets data is fetched through our backend. If you choose email
+                    delivery, recipient details and PDF attachments pass through our backend to Gmail.
                   </p>
                 </RevealSection>
                 <RevealSection>
@@ -309,7 +308,7 @@ export default function LandingPage() {
                     {[
                       'PDF engine runs locally via Web Worker',
                       'Participant data stored in IndexedDB (your device)',
-                      'Zero external API calls for processing',
+                      'PDF generation runs locally; Sheets import and Gmail delivery contact their services',
                       'Gmail send uses your own OAuth account',
                     ].map((text) => (
                       <div key={text} className="flex items-start gap-3 text-sm">

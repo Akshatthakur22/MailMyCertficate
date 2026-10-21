@@ -265,11 +265,11 @@ Alternatively, with the [Vercel CLI](https://vercel.com/docs/cli): `vercel dev -
 ## 📧 How email works
 
 1. User clicks **Connect Gmail** → `/api/auth/login` → Google OAuth.
-2. Callback → `/api/auth/callback` stores tokens in an **encrypted Flask session cookie**.
+2. Callback → `/api/auth/callback` stores OAuth credentials in an **encrypted field inside Flask's signed session cookie**. The cookie is held by the browser; it is not a server-side session store.
 3. Frontend syncs **CSRF token** from redirect URL + `/api/auth/status`.
 4. Each send: `POST /api/send-email` with `credentials: 'include'`, `X-CSRF-Token`, and PDF attachment (multipart).
 
-Tokens stay on the server session; certificate bytes are read from IndexedDB and only sent when you hit Send.
+The API decrypts credentials when it needs to refresh a token or call Gmail. CSV-based generation and PDF rendering stay in the browser. Public Google Sheets data is fetched through the Flask API, and when you send email, each recipient, message, and PDF attachment is sent to the Flask API and then to Gmail.
 
 ---
 

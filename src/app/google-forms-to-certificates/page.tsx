@@ -192,9 +192,9 @@ export default function GoogleFormsToCertificatesPage() {
               Where does my Google Form data go?
             </h2>
             <p className="text-secondary leading-relaxed">
-              Form responses stay in your Google Sheet. MailMyCertificate reads the public sheet to
-              fill a local browser session, generates PDFs on your device, and only contacts Google
-              again when you choose Gmail delivery. See our{' '}
+              Form responses stay in your Google Sheet. MailMyCertificate fetches the public sheet
+              through its backend, then generates PDFs on your device. Gmail delivery sends each
+              recipient and attachment through the backend to Google. See our{' '}
               <Link href="/privacy-policy" className="text-accent hover:underline font-medium">privacy policy</Link>
               {' '}and the{' '}
               <Link href="/guide" className="text-accent hover:underline font-medium">full guide</Link>.

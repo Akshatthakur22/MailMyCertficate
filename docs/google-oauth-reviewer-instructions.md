@@ -15,7 +15,7 @@ MailMyCertificate is a free, open-source tool that lets event organizers:
 3. Generate personalized PDF certificates in the browser
 4. Send those certificates as email attachments via the user's own Gmail account
 
-The Gmail API (`gmail.send` scope) is used **only** to send outbound emails on behalf of the authenticated user. The app never reads, modifies, or deletes any existing emails.
+The Gmail API (`gmail.send` scope) is used only to send outbound emails on behalf of the authenticated user. OpenID and profile/email scopes identify the connected account. The app never reads, modifies, or deletes existing emails.
 
 ---
 
@@ -44,7 +44,7 @@ You will see the email sending interface with a "Connect Gmail" button.
 
 1. Click the **"Connect Gmail"** button.
 2. A Google OAuth popup/redirect will appear showing the consent screen.
-3. The consent screen will request permission to **"Send email on your behalf"** (`gmail.send`).
+3. The consent screen requests **"Send email on your behalf"** (`gmail.send`) and basic OpenID/profile/email information to identify the connected account.
 4. Click **"Allow"** to grant access.
 5. You will be redirected back to the email page with a success indicator showing your connected Gmail address.
 
@@ -101,8 +101,8 @@ After completing the flow, confirm:
 
 | Question | Answer |
 |----------|--------|
-| Does the app store OAuth tokens persistently? | No. Tokens live in server-side session cookies (max 1 hour, HttpOnly, Secure). No database storage. |
-| Does the app access the user's inbox? | No. Only `gmail.send` is used — no read/modify/delete access. |
+| Where are OAuth tokens stored? | Credential values are encrypted inside Flask's signed session cookie, held by the browser. The cookie is HttpOnly, Secure in production, and uses SameSite=Lax. It is not a server-side session store. |
+| Does the app access the user's inbox? | No. The Gmail permission is `gmail.send`; separate OpenID/profile/email scopes identify the connected account. There is no inbox read/modify/delete access. |
 | Does the app use any AI/ML with Gmail data? | No. No AI or ML processing is applied to any Google user data. |
 | Is the app open source? | Yes. https://github.com/akshatthakur22/MailMyCertficate |
 | Privacy Policy URL | https://mailmycertificate.tech/privacy-policy |
@@ -112,7 +112,7 @@ After completing the flow, confirm:
 
 ## Scope Justification (paste-ready for reviewer communication)
 
-> "MailMyCertificate uses `https://www.googleapis.com/auth/gmail.send` to send personalized certificate PDF emails on behalf of the user when they complete the certificate generation workflow and click 'Send,' so that event organizers can distribute certificates to participants directly from their own Gmail account. No broader scope is needed because the app only sends outbound emails and never reads, modifies, or manages the user's mailbox."
+> "MailMyCertificate uses `https://www.googleapis.com/auth/gmail.send` to send personalized certificate PDF emails on behalf of the user when they click Send. It also requests OpenID and profile/email scopes to identify the connected account and display its address. The app never reads, modifies, or manages the user's mailbox."
 
 ---
 

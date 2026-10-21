@@ -2,7 +2,7 @@ export const GOOGLE_SHEETS_PAGE_FAQS = [
   {
     question: 'Can MailMyCertificate read a private Google Sheet?',
     answer:
-      'You need a public Google Sheet URL (Anyone with the link can view). MailMyCertificate fetches the sheet as CSV — your spreadsheet is not stored on our servers. Certificate generation still runs locally in your browser.',
+      'You need a public Google Sheet URL (Anyone with the link can view). The Flask API fetches the sheet as CSV and returns its rows to your browser; the code does not store participant rows in a database. Certificate generation runs locally in your browser.',
   },
   {
     question: 'Does this work with Google Forms responses?',

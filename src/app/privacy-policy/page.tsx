@@ -127,15 +127,15 @@ export default function PrivacyPolicy() {
 
                             {/* Heading */}
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight mb-6 max-w-4xl">
-                                Your certificate data stays on your device.
+                                Certificate generation runs on your device.
                             </h1>
 
                             {/* Subtitle */}
                             <p className="text-lg md:text-xl text-secondary leading-relaxed max-w-3xl">
                                 MailMyCertificate was designed around a simple idea:
                                 organizers should not need to upload participant data
-                                to external servers just to generate and send
-                                certificates.
+                                just to generate certificates. Optional Sheets import
+                                and Gmail delivery send data through our backend.
                             </p>
 
                             {/* Small Human Note */}
@@ -174,11 +174,13 @@ export default function PrivacyPolicy() {
                                     className="text-accent mb-4"
                                 />
                                 <h3 className="font-semibold text-lg mb-2">
-                                    No Participant Uploads
+                                    Browser-side generation
                                 </h3>
                                 <p className="text-sm text-secondary leading-relaxed">
-                                    Your CSV files, participant names, and generated
-                                    certificates are not uploaded to our servers.
+                                    CSV files and generated PDFs stay in your browser for
+                                    generation and download. Public Sheets imports are fetched
+                                    through our backend; Gmail delivery sends recipient details
+                                    and PDF attachments through our backend to Google.
                                 </p>
                             </div>
 
@@ -306,7 +308,7 @@ export default function PrivacyPolicy() {
                                     <li>Browser type and version</li>
                                     <li>Device information</li>
                                     <li>Error logs and crash diagnostics</li>
-                                    <li>Basic anonymous usage analytics</li>
+                                    <li>Usage analytics, which may be associated with the Google account email used for Gmail delivery</li>
                                 </ul>
 
                                 <p>
@@ -375,10 +377,11 @@ export default function PrivacyPolicy() {
                                     </li>
                                     <li>
                                         <strong>No Inbox Access:</strong> This application requests
-                                        only the <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code> scope.
-                                        MailMyCertificate never reads, modifies, stores, or deletes
-                                        any existing emails in your Gmail inbox. It cannot access
-                                        your Gmail history or account data.
+                                        the <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code>{' '}
+                                        scope plus OpenID and profile/email scopes to identify the
+                                        connected account. It never reads, modifies, stores, or deletes
+                                        existing emails in your Gmail inbox and cannot access Gmail
+                                        history.
                                     </li>
                                     <li>
                                         <strong>After Send:</strong> Once the email is transmitted
@@ -568,9 +571,9 @@ export default function PrivacyPolicy() {
                                     </li>
                                     <li>
                                         <strong>OAuth tokens in transit:</strong> Google
-                                        OAuth tokens (access and refresh) are transmitted
-                                        exclusively over encrypted HTTPS connections and
-                                        are never exposed in URLs or client-side storage.
+                                        OAuth tokens are sent over HTTPS between your browser
+                                        and the Flask API. They are not included in URLs or
+                                        browser local storage.
                                     </li>
                                 </ul>
 
@@ -580,19 +583,19 @@ export default function PrivacyPolicy() {
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>HttpOnly session cookies:</strong> OAuth
-                                        credentials are stored in server-side sessions
-                                        accessed only via HttpOnly, Secure, SameSite
-                                        cookies — never accessible to client-side
-                                        JavaScript.
+                                        <strong>Encrypted session cookie:</strong> OAuth
+                                        credentials are encrypted before being placed in Flask&apos;s
+                                        signed session cookie. The cookie is held by your browser
+                                        and is HttpOnly, Secure in production, and SameSite=Lax;
+                                        it is not a server-side session store.
                                     </li>
                                     <li>
-                                        <strong>Session-scoped credentials:</strong> Google
-                                        OAuth tokens (access and refresh) are maintained only
-                                        for the duration of your authenticated session
-                                        (maximum 1 hour). Upon session expiration or logout,
-                                        credentials are deleted and are not written to any
-                                        permanent MailMyCertificate database or file system.
+                                        <strong>Session-scoped credentials:</strong> The encrypted
+                                        credential payload is carried by the session cookie and is
+                                        sent to the API with requests. Logout clears the cookie;
+                                        expiry follows the configured Flask session lifetime. The
+                                        API does not intentionally write OAuth tokens to its database
+                                        or file system.
                                     </li>
                                     <li>
                                         <strong>CSRF protection:</strong> All state-changing
@@ -612,17 +615,17 @@ export default function PrivacyPolicy() {
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        <strong>Minimal scope principle:</strong> We request
-                                        only <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code> — the
-                                        narrowest Gmail scope available. We cannot and do not
-                                        read, modify, delete, or retain any emails from your
-                                        mailbox.
+                                        <strong>Requested scopes:</strong> We request
+                                        <code className="text-sm bg-muted px-1.5 py-0.5 rounded">gmail.send</code>
+                                        for sending, along with OpenID and profile/email scopes
+                                        to identify the connected account. We do not request Gmail
+                                        inbox read access.
                                     </li>
                                     <li>
                                         <strong>Not intentionally persisted:</strong> OAuth
-                                        credentials are stored only in server-side session
-                                        state and are not intentionally written to permanent
-                                        storage.
+                                        credentials are not intentionally written to a database
+                                        or file system; encrypted credentials are carried in the
+                                        session cookie.
                                     </li>
                                     <li>
                                         <strong>Production hardening:</strong> Debug endpoints
@@ -746,10 +749,12 @@ export default function PrivacyPolicy() {
                                 </ul>
 
                                 <p className="mt-6">
-                                    <strong>Summary:</strong> Google user data obtained by
-                                    MailMyCertificate is used solely to send certificate
-                                    emails on your behalf. It is not transferred,
-                                    disclosed, or repurposed for any other objective.
+                                    <strong>Summary:</strong> Gmail permission is used to send
+                                    certificate emails on your behalf. OpenID/profile data identifies
+                                    the connected account; the account email and a hashed account
+                                    identifier are also stored with usage aggregates in the backend
+                                    analytics database. Email content and attachments are transmitted
+                                    to Google&apos;s Gmail API to complete each send.
                                 </p>
                             </Section>
 
@@ -757,8 +762,9 @@ export default function PrivacyPolicy() {
                             <Section title="5.5 Analytics & Google Tag Manager">
                                 <p>
                                     MailMyCertificate uses Google Tag Manager (GTM) and
-                                    Google Analytics (GA4) to track anonymous usage
-                                    metrics and improve the platform.
+                                    Google Analytics (GA4) for client-side usage measurement. The
+                                    backend also maintains usage aggregates associated with the
+                                    connected Google account email and a hashed account identifier.
                                 </p>
 
                                 <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
@@ -777,8 +783,7 @@ export default function PrivacyPolicy() {
 
                                 <ul className="space-y-3 pl-5 list-disc marker:text-accent text-foreground/80">
                                     <li>
-                                        Anonymous visitor ID (locally generated, never linked
-                                        to email or identity)
+                                        Locally generated visitor ID and page/navigation events
                                     </li>
                                     <li>
                                         Page path and navigation flow (no personal data)
@@ -796,10 +801,11 @@ export default function PrivacyPolicy() {
                                 </ul>
 
                                 <p className="mt-4">
-                                    Participant rosters, certificate content, email
-                                    addresses, and all data accessed from Workspace APIs are
-                                    processed locally in your browser and never transmitted to
-                                    analytics services.
+                                    The client analytics event code does not intentionally send
+                                    participant row data or certificate contents. The backend
+                                    analytics database does store the connected Google account
+                                    email and a hashed account identifier with usage aggregates;
+                                    its cleanup/retention schedule is not defined in this codebase.
                                 </p>
 
                                 <h3 className="font-semibold text-lg mt-6 mb-3 text-foreground">
@@ -807,10 +813,10 @@ export default function PrivacyPolicy() {
                                 </h3>
 
                                 <p>
-                                    Analytics events are retained for 90 days in Google Analytics
-                                    by default. After 90 days, events are automatically deleted.
-                                    You may request deletion of your analytics data at any time by
-                                    contacting us.
+                                    Google Analytics retention depends on the property configuration,
+                                    which is not available in this repository. The custom backend
+                                    analytics database has no retention cleanup schedule in the
+                                    inspected code. Contact us to ask about analytics data deletion.
                                 </p>
                             </Section>
 
@@ -846,9 +852,10 @@ export default function PrivacyPolicy() {
                                         </ul>
                                     </li>
                                     <li>
-                                        <strong>No participant storage on our servers:</strong> Your
-                                        participant lists are never uploaded to or stored on
-                                        MailMyCertificate infrastructure.
+                                    <strong>No persistent participant-row database:</strong> CSV-based
+                                        rows are stored in browser IndexedDB. Public Sheets data passes
+                                        through the backend during import, and Gmail send requests
+                                        temporarily include recipient details and PDF attachments.
                                     </li>
                                 </ul>
 
@@ -866,21 +873,24 @@ export default function PrivacyPolicy() {
                                     </li>
                                     <li>
                                         <strong>OAuth Credentials & Session Security:</strong> Google
-                                        OAuth access and refresh tokens are stored only in server-side
-                                        session cookies with the following protections:
+                                        OAuth access and refresh tokens are encrypted inside Flask&apos;s
+                                        signed session cookie, which is held by the browser. The cookie
+                                        has the following protections:
                                         <ul className="mt-2 ml-4 space-y-2 list-disc">
-                                            <li><strong>HttpOnly flag:</strong> Tokens cannot be accessed by JavaScript, preventing XSS attacks</li>
+                                            <li><strong>HttpOnly flag:</strong> The cookie is not readable through browser JavaScript</li>
                                             <li><strong>Secure flag:</strong> Tokens are only transmitted over HTTPS</li>
-                                            <li><strong>SameSite="Lax":</strong> Tokens are protected against CSRF attacks</li>
-                                            <li><strong>Session lifetime:</strong> Maximum 1 hour. After session expiration, the application's server-side session credentials are no longer available to the application</li>
-                                            <li><strong>No persistent storage:</strong> Tokens are never stored in databases, local storage, or files</li>
+                                            <li><strong>SameSite="Lax":</strong> Limits when browsers send the cookie on cross-site requests; state-changing API calls also validate a CSRF token in production</li>
+                                            <li><strong>Session lifetime:</strong> Cookie expiry follows the configured Flask permanent-session lifetime</li>
+                                            <li><strong>Storage:</strong> OAuth tokens are carried in the encrypted cookie and are not intentionally written to a database, local storage, or files</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        <strong>Analytics Events:</strong> Anonymous usage events
-                                        (feature clicks, certificate counts, errors) are recorded for
-                                        product improvement. Participant PII is never included. See
-                                        "Analytics & GTM" section below.
+                                        <strong>Analytics Events:</strong> Usage events and aggregates
+                                        are recorded for product improvement. The backend analytics
+                                        database associates records with the connected Google account
+                                        email and a hashed account identifier. Participant row data
+                                        and certificate contents are not intentionally included in
+                                        client event payloads. See &quot;Analytics &amp; GTM&quot; below.
                                     </li>
                                 </ul>
 

@@ -61,9 +61,10 @@ export default function TermsOfService() {
             includes optional Gmail integration for email delivery.
           </p>
           <p>
-            Certificate generation runs locally in your browser. No participant
-            data is uploaded to MailMyCertificate servers during the generation
-            process.
+            PDF generation runs locally in your browser. Public Google Sheets
+            imports are fetched through our backend. If you choose Gmail delivery,
+            recipient details, message content, and PDF attachments pass through
+            our backend to Google for sending.
           </p>
         </Section>
 
@@ -93,7 +94,8 @@ export default function TermsOfService() {
 
         <Section title="5. Data and Privacy">
           <p>
-            MailMyCertificate processes data locally in your browser. See our{' '}
+            MailMyCertificate processes generation data locally in your browser and
+            uses backend requests for public Sheets import and optional Gmail sending. See our{' '}
             <Link href="/privacy-policy" className="text-accent hover:underline font-medium">
               Privacy Policy
             </Link>{' '}

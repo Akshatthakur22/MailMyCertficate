@@ -41,7 +41,8 @@ export default function HackathonCertificateGeneratorPage() {
 
             <p className="text-secondary leading-relaxed mb-8">
               Built for organizers who run hackathons, coding competitions, and tech events
-              and need fast certificate delivery without uploading participant data to third-party services.
+              and need fast certificate delivery. PDF generation stays in your browser; optional Sheets
+              import and Gmail delivery use backend requests to Google.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -128,7 +129,7 @@ export default function HackathonCertificateGeneratorPage() {
                   <tr className="border-b border-border/50 bg-accent/5">
                     <th scope="row" className="p-4 font-semibold text-foreground text-left">MailMyCertificate</th>
                     <td className="p-4"><Check size={16} className="inline text-green-700" aria-hidden="true" /> Unlimited, local</td>
-                    <td className="p-4">Browser-only, no uploads</td>
+                    <td className="p-4">Local generation; Sheets import and Gmail delivery use backend requests</td>
                     <td className="p-4">Free (MIT)</td>
                   </tr>
                   <tr className="border-b border-border/50">

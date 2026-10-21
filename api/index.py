@@ -11,6 +11,7 @@ import hashlib
 import urllib.request
 import urllib.error
 from datetime import timedelta
+from cryptography.fernet import Fernet, InvalidToken
 import google.auth.transport.requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -123,23 +124,63 @@ def get_frontend_url():
 def reconstruct_credentials(session_data):
     if not session_data:
         return None
+
+    if isinstance(session_data, str) and session_data.startswith('enc:v1:'):
+        try:
+            token_data = _decrypt_session_credentials(session_data[7:])
+        except (InvalidToken, ValueError, TypeError):
+            # Do not return or log token material from a malformed cookie.
+            session.pop('credentials', None)
+            return None
+    elif isinstance(session_data, dict):
+        # Migrate credentials from a pre-encryption cookie on first use. The
+        # session key and cookie attributes remain unchanged for compatibility.
+        token_data = session_data
+        session['credentials'] = _encrypt_session_credentials(token_data)
+    else:
+        session.pop('credentials', None)
+        return None
+
     token_uri = CLIENT_SECRETS['web'].get('token_uri', 'https://oauth2.googleapis.com/token')
     return Credentials(
-        token=session_data.get('token'),
-        refresh_token=session_data.get('refresh_token'),
+        token=token_data.get('token'),
+        refresh_token=token_data.get('refresh_token'),
         token_uri=token_uri,
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
-        scopes=session_data.get('scopes')
+        scopes=token_data.get('scopes')
     )
 
 
+def _session_credentials_cipher():
+    """Build an authenticated-encryption key from the configured Flask key."""
+    secret_key = app.secret_key
+    if isinstance(secret_key, str):
+        secret_key = secret_key.encode('utf-8')
+    key_material = hashlib.sha256(b'mmc-oauth-session-v1:' + secret_key).digest()
+    return Fernet(base64.urlsafe_b64encode(key_material))
+
+
+def _encrypt_session_credentials(credentials_data):
+    serialized = json.dumps(credentials_data, separators=(',', ':')).encode('utf-8')
+    encrypted = _session_credentials_cipher().encrypt(serialized).decode('ascii')
+    return f'enc:v1:{encrypted}'
+
+
+def _decrypt_session_credentials(encrypted_data):
+    serialized = _session_credentials_cipher().decrypt(encrypted_data.encode('ascii'))
+    credentials_data = json.loads(serialized.decode('utf-8'))
+    if not isinstance(credentials_data, dict):
+        raise ValueError('Invalid credential payload')
+    return credentials_data
+
+
 def store_credentials_in_session(credentials):
-    session['credentials'] = {
+    session['credentials'] = _encrypt_session_credentials({
         'token': credentials.token,
         'refresh_token': credentials.refresh_token,
         'scopes': credentials.scopes,
-    }
+    })
     session.permanent = True
 
 
@@ -716,13 +757,15 @@ def send_email():
         return jsonify({"error": "Not authenticated"}), 401
 
     # Parse request body
-    if request.content_type and 'multipart/form-data' in request.content_type:
+    is_multipart = bool(request.content_type and 'multipart/form-data' in request.content_type)
+    if is_multipart:
         recipient = request.form.get('recipient')
         subject = request.form.get('subject')
         body = request.form.get('body')
         attachment = request.files.get('attachment')
         if not all([recipient, subject, body]):
             return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+
     else:
         try:
             data = request.get_json(force=True)
@@ -736,6 +779,18 @@ def send_email():
         attachment = None
         if not all([recipient, subject, body]):
             return jsonify({"error": "Missing required fields: recipient, subject, body"}), 400
+
+    if is_multipart and not attachment:
+        return jsonify({"error": "Certificate PDF attachment is required."}), 400
+
+    attachment_content = None
+    if attachment:
+        attachment_content = attachment.read()
+        if not attachment_content:
+            return jsonify({"error": "Certificate PDF attachment is empty."}), 400
+        if b'%PDF-' not in attachment_content[:1024]:
+            return jsonify({"error": "Attachment is not a valid PDF certificate."}), 400
+        attachment.stream.seek(0)
 
     recipient = normalize_recipient_email(recipient)
     if not is_valid_recipient_email(recipient):
@@ -772,14 +827,13 @@ def send_email():
         gmail_service = build('gmail', 'v1', credentials=credentials)
 
         if attachment:
-            attachment_content = attachment.read()
             attachment_filename = attachment.filename or 'certificate.pdf'
             msg = MIMEMultipart()
             msg['From'] = 'me'
             msg['To'] = recipient
             msg['Subject'] = subject
             msg.attach(MIMEText(body, 'plain'))
-            part = MIMEBase('application', 'octet-stream')
+            part = MIMEBase('application', 'pdf')
             part.set_payload(attachment_content)
             encoders.encode_base64(part)
             part.add_header('Content-Disposition', f'attachment; filename= {attachment_filename}')

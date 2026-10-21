@@ -188,18 +188,18 @@ export class EmailQueue {
         certificateData = await this.certificateResolver(sendingItem.sessionId, sendingItem.rowId);
       }
 
-      const result = certificateData
-        ? await emailService.sendEmailWithAttachment({
-            recipient: sendingItem.recipient,
-            subject: sendingItem.subject,
-            body: sendingItem.body,
-            certificate: certificateData,
-          })
-        : await emailService.sendEmail({
-            recipient: sendingItem.recipient,
-            subject: sendingItem.subject,
-            body: sendingItem.body,
-          });
+      if (!certificateData || certificateData.byteLength === 0) {
+        throw new Error(
+          'The generated certificate PDF is missing for this recipient. Regenerate the certificate, then retry this recipient.'
+        );
+      }
+
+      const result = await emailService.sendEmailWithAttachment({
+        recipient: sendingItem.recipient,
+        subject: sendingItem.subject,
+        body: sendingItem.body,
+        certificate: certificateData,
+      });
 
       if (result.success) {
         await this.persistItemStatus(sendingItem.id, 'sent', { sentAt: Date.now() });

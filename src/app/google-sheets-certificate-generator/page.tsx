@@ -36,8 +36,8 @@ export default function GoogleSheetsCertificateGeneratorPage() {
             <p className="text-lg md:text-xl text-secondary leading-relaxed mb-4">
               <strong>Answer:</strong> Use MailMyCertificate to import a public Google Sheets URL,
               map columns to certificate fields, generate personalized PDFs locally in your browser,
-              and optionally send them through your Gmail account — without uploading your participant
-              list to a third-party server.
+              and optionally send them through your Gmail account. The public Sheet is fetched through
+              our backend; Gmail delivery sends each recipient, message, and PDF through our backend to Google.
             </p>
 
             <p className="text-secondary leading-relaxed mb-8">
@@ -274,9 +274,9 @@ export default function GoogleSheetsCertificateGeneratorPage() {
               Is my Google Sheet data stored on your servers?
             </h2>
             <p className="text-secondary leading-relaxed mb-4">
-              <strong>No.</strong> MailMyCertificate fetches your public sheet to populate a local
-              session in your browser. Certificate PDFs are generated with Web Workers and stored in
-              IndexedDB on your device. We do not maintain a database of participant rows.
+              The import request fetches your public sheet through our backend and returns the rows
+              to your browser. Certificate PDFs are generated with Web Workers and stored in IndexedDB
+              on your device. The code does not maintain a database of participant rows.
             </p>
             <p className="text-secondary leading-relaxed">
               Read the full breakdown in our{' '}

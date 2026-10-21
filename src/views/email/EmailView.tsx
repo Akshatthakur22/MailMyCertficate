@@ -17,9 +17,8 @@ import { EmailSkeleton } from '@/components/email/redesign/EmailSkeleton';
 import { ManageLocalDataMenu } from '@/components/session/ManageLocalDataMenu';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 import { OpenSourceSupportCard } from '@/components/product/OpenSourceSupportCard';
-import { CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { CheckCircle, AlertCircle, FileText, Mail, Send, ShieldCheck, Users, Paperclip, X } from 'lucide-react';
 import {
   buildTemplateText,
   detectEmailColumn,
@@ -522,6 +521,7 @@ export default function EmailView() {
       : isComplete
         ? 'complete'
         : 'compose';
+  const lockComposeViewport = phase === 'compose' && !resumePromptVisible && !message?.details;
 
   return (
     <div className="min-h-screen bg-background">
@@ -545,8 +545,8 @@ export default function EmailView() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-        <div className="mb-5">
+      <div className={`mx-auto max-w-6xl px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8 ${phase === 'compose' ? 'pb-28' : 'pb-8'} ${lockComposeViewport ? 'lg:flex lg:h-[calc(100dvh-3.5rem)] lg:min-h-0 lg:flex-col lg:overflow-hidden' : ''}`}>
+        <div className="mb-4 shrink-0">
           <div className="flex items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">Send certificates by email</h1>
@@ -569,7 +569,7 @@ export default function EmailView() {
 
         {message && (
           <div
-            className={`mb-5 flex flex-col gap-2 rounded-xl border px-4 py-3 text-sm ${
+            className={`mb-3 flex flex-col gap-1.5 rounded-xl border px-3 py-2.5 text-sm ${
               message.type === 'success'
                 ? 'border-green-200 bg-green-50 text-green-800'
                 : 'border-rose-200 bg-rose-50 text-rose-800'
@@ -647,14 +647,15 @@ export default function EmailView() {
         )}
 
         {phase === 'compose' && (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:items-stretch">
-            <div className="min-w-0 lg:col-span-2 lg:col-start-1 lg:row-start-1">
-              <div className="grid gap-3 md:grid-cols-2">
-                <RefreshGuardBanner active={false} />
-                <TrustBoundaryNotice variant="email" />
-              </div>
+          <div className="grid items-start gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto_minmax(0,1fr)]">
+            <div className="flex min-w-0 items-center gap-2 rounded-xl border border-[#dadce0] bg-white px-4 py-3 text-sm text-[#5f6368] lg:col-span-2 lg:col-start-1 lg:row-start-1">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-[#188038]" />
+              <p className="min-w-0 leading-5">
+                <span className="font-medium text-[#202124]">You control every send.</span>{' '}
+                Each recipient gets a separate email from {authStatus.email}; progress is saved in this browser.
+              </p>
             </div>
-            <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+            <div className="min-w-0 lg:col-start-1 lg:row-start-2 lg:h-full lg:min-h-0">
               <GmailComposer
                 fromEmail={authStatus.email}
                 emailColumn={emailDetection.column}
@@ -678,7 +679,7 @@ export default function EmailView() {
                 previewEmail={currentPreviewEmail}
               />
             </div>
-            <div className="flex min-h-0 min-w-0 flex-col lg:col-start-2 lg:row-start-2 lg:sticky lg:top-[4.25rem] lg:self-stretch">
+            <div className="min-w-0 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-2 lg:max-h-full lg:self-start lg:overflow-y-auto">
               <SendReadinessPanel
                   email={authStatus.email}
                   validRecipients={validRecipients}
@@ -687,16 +688,116 @@ export default function EmailView() {
                   invalidExamples={recipientValidation.invalidExamples}
                   certificateCount={certificates.length}
                   sampleRecipients={sampleRecipients}
-                  canSend={canSend}
-                  estimatedMinutes={estimatedMinutes}
-                  confirming={confirming}
                   onLogout={handleLogout}
-                  onRequestSend={prepareSend}
-                  onConfirmSend={confirmAndStartSend}
-                  onCancelConfirm={() => setConfirming(false)}
                 />
             </div>
           </div>
+        )}
+
+        {phase === 'compose' && (
+          <>
+            <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#dadce0] bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(60,64,67,0.10)] backdrop-blur-md sm:px-6">
+              <div className="mx-auto flex max-w-6xl flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-5 lg:px-2">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e8f0fe] text-[#1a73e8]">
+                    <ShieldCheck className="h-[18px] w-[18px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[#202124]">
+                      {canSend ? 'Ready for your review' : 'Finish setting up delivery'}
+                    </p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#5f6368]">
+                      <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {validRecipients} {validRecipients === 1 ? 'recipient' : 'recipients'}</span>
+                      <span className="inline-flex items-center gap-1"><Paperclip className="h-3.5 w-3.5" /> {certificates.length} {certificates.length === 1 ? 'certificate' : 'certificates'}</span>
+                      <span className="hidden truncate md:inline">From {authStatus.email}</span>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={prepareSend}
+                  disabled={!canSend}
+                  className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#1a73e8] px-6 font-semibold text-white shadow-sm hover:bg-[#1765cc] focus-visible:ring-[#1a73e8] sm:w-auto sm:rounded-full"
+                >
+                  <Mail className="h-4 w-4" /> Review &amp; send <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{validRecipients}</span>
+                </Button>
+              </div>
+            </div>
+
+            {confirming && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-[#202124]/45 p-4 backdrop-blur-[2px]"
+                onMouseDown={(event) => {
+                  if (event.target === event.currentTarget) setConfirming(false);
+                }}
+              >
+                <section
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="send-confirm-title"
+                  className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+                >
+                  <div className="flex items-start justify-between border-b border-[#e8eaed] px-6 py-5">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-[#5f6368]">Final review</p>
+                      <h2 id="send-confirm-title" className="mt-1 text-xl font-semibold text-[#202124]">
+                        Send {validRecipients} {validRecipients === 1 ? 'email' : 'emails'}?
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setConfirming(false)}
+                      aria-label="Close send confirmation"
+                      className="rounded-full p-2 text-[#5f6368] hover:bg-[#f1f3f4]"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-4 px-6 py-5 text-sm">
+                    <p className="leading-6 text-[#5f6368]">
+                      Each person will receive a separate message with their certificate attached. Sending starts only after you confirm below.
+                    </p>
+                    <dl className="divide-y divide-[#e8eaed] rounded-xl border border-[#e8eaed] px-4">
+                      <div className="flex justify-between gap-4 py-3">
+                        <dt className="text-[#5f6368]">From</dt>
+                        <dd className="max-w-[70%] truncate text-right font-medium text-[#202124]">{authStatus.email}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 py-3">
+                        <dt className="text-[#5f6368]">Recipients</dt>
+                        <dd className="font-medium text-[#202124]">{validRecipients} valid</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 py-3">
+                        <dt className="text-[#5f6368]">Attachments</dt>
+                        <dd className="font-medium text-[#202124]">{certificates.length} PDF {certificates.length === 1 ? 'attachment' : 'attachments'}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 py-3">
+                        <dt className="text-[#5f6368]">Estimated time</dt>
+                        <dd className="font-medium text-[#202124]">About {estimatedMinutes} min</dd>
+                      </div>
+                    </dl>
+                    <p className="flex items-start gap-2 rounded-lg bg-[#f1f6fe] px-3 py-2.5 text-xs leading-5 text-[#3c4043]">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#1a73e8]" />
+                      Your connected Gmail account sends these messages. Keep this tab open until sending finishes.
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-2 border-t border-[#e8eaed] px-6 py-4">
+                    <Button variant="outline" size="sm" onClick={() => setConfirming(false)} className="rounded-full px-5">
+                      Go back
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={confirmAndStartSend}
+                      className="inline-flex items-center gap-2 rounded-full bg-[#1a73e8] px-5 text-white hover:bg-[#1765cc]"
+                    >
+                      <Send className="h-4 w-4" /> Send now
+                    </Button>
+                  </div>
+                </section>
+              </div>
+            )}
+          </>
         )}
 
         {phase === 'sending' && (

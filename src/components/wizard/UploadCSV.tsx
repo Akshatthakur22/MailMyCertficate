@@ -76,7 +76,7 @@ export function UploadCSV() {
             console.error(err);
             if (err instanceof Error) {
                 setError(err.message || 'Failed to parse CSV.');
-                trackBackendEvent('csv_import_failed', { error_code: 'parse_error', error_message: err.message });
+                trackBackendEvent('csv_import_failed', { error_code: 'parse_error' });
             } else {
                 setError('Failed to parse CSV.');
                 trackBackendEvent('csv_import_failed', { error_code: 'unknown_error' });
@@ -150,7 +150,7 @@ export function UploadCSV() {
             const errorMsg = err instanceof Error ? err.message : 'Failed to import data.';
             setError(errorMsg);
             if (!(err instanceof Error && err.message.includes('row limit'))) {
-                trackBackendEvent('csv_import_failed', { error_code: 'database_error', error_message: errorMsg });
+                trackBackendEvent('csv_import_failed', { error_code: 'database_error' });
             }
         }
     };
@@ -206,7 +206,7 @@ export function UploadCSV() {
             console.error(err);
             const errorMsg = err instanceof Error ? err.message : 'Failed to import from Google Sheets.';
             setError(errorMsg);
-            trackBackendEvent('csv_import_failed', { error_code: 'sheet_import_error', import_source: 'google_sheets', error_message: errorMsg });
+            trackBackendEvent('csv_import_failed', { error_code: 'sheet_import_error', import_source: 'google_sheets' });
         } finally {
             setIsImporting(false);
         }

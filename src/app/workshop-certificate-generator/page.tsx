@@ -35,7 +35,7 @@ export default function WorkshopCertificateGeneratorPage() {
             </p>
             <p className="text-secondary leading-relaxed mb-8">
               Built for workshop organizers who need to issue certificates to 10 or 1,000 attendees
-              quickly, without uploading participant data to a third-party service.
+              quickly, with local PDF generation and explicit backend requests for Sheets import and Gmail delivery.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <TrackToolCta href="/tool" entryPoint="workshop_page_hero"
@@ -89,7 +89,7 @@ export default function WorkshopCertificateGeneratorPage() {
                 { title: 'Offline training sessions', desc: 'Upload your sign-in sheet as CSV and generate participation certificates in bulk.' },
                 { title: 'Multi-day bootcamps', desc: 'Run separate batches per day or module using the same template with different data.' },
                 { title: 'College tech workshops', desc: 'Perfect for student clubs and CSE departments — free tool with no institutional purchase needed.' },
-                { title: 'NGO capacity-building', desc: 'Privacy-first: beneficiary data never leaves your browser, meeting data protection requirements.' },
+                { title: 'NGO capacity-building', desc: 'Generate certificates locally; public Sheets imports and optional Gmail delivery use backend requests to Google.' },
                 { title: 'Corporate training', desc: 'Generate completion certificates for internal training programmes from your HR spreadsheet.' },
               ].map(({ title, desc }) => (
                 <div key={title} className="rounded-xl border border-border/60 p-5">
@@ -108,17 +108,17 @@ export default function WorkshopCertificateGeneratorPage() {
               Where does my workshop attendee data go?
             </h2>
             <p className="text-secondary leading-relaxed mb-6" data-speakable>
-              Nowhere outside your browser. MailMyCertificate generates certificate PDFs using
-              pdf-lib inside a Web Worker on your device. Attendee names and emails are stored
-              in IndexedDB — browser storage that stays on your machine. Nothing is uploaded to
-              a MailMyCertificate server during the generation process.
+              PDF generation runs in a Web Worker on your device, and CSV attendee data is stored
+              in IndexedDB. Public Sheets imports are fetched through our backend. If you send
+              certificates by Gmail, recipient details and PDF attachments pass through our backend
+              to Google for delivery.
             </p>
             <div className="space-y-3">
               {[
                 'PDF generation runs locally via Web Worker (no server)',
                 'Attendee data stored in IndexedDB on your device',
-                'Zero external API calls during certificate creation',
-                'Gmail send uses your own OAuth account — we never see your credentials',
+                'PDF rendering itself makes no external API calls',
+                'Gmail delivery uses your Google account through our API; credentials are encrypted in the session cookie',
               ].map((item) => (
                 <div key={item} className="flex items-start gap-3 text-sm">
                   <Check size={16} className="text-green-600 mt-0.5 shrink-0" />

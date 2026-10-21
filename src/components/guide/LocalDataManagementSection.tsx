@@ -174,7 +174,7 @@ export function LocalDataManagementSection() {
                   <div className="font-semibold text-foreground text-sm">Never uploaded</div>
                 </div>
                 <div className="text-sm text-secondary">
-                  Your data stays on your device. We only touch Gmail API if you choose email delivery.
+                  Generation data stays in your browser. Public Sheets imports pass through our backend, and Gmail delivery sends recipient details and certificate PDFs through our backend to Google.
                 </div>
               </div>
             </div>

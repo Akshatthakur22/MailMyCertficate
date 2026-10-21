@@ -279,7 +279,7 @@ attach_pdf("john_certificate.pdf")`}
                   },
                   {
                     heading: 'The backend only touches email at send time',
-                    body: 'A small Flask API on Vercel handles the Gmail OAuth exchange and the send call. It requests only the gmail.send scope, so it cannot read your inbox or contacts. It receives a message and its attachment at the moment you send, and stores neither.',
+                    body: 'A small Flask API on Vercel handles the Gmail OAuth exchange and send call. It requests gmail.send plus OpenID and profile/email scopes to identify the connected account; it cannot read your inbox or contacts. It receives the message and attachment when you send, and the backend analytics database records the connected account email alongside usage aggregates.',
                   },
                   {
                     heading: 'Analytics deliberately exclude participant data',

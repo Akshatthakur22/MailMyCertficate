@@ -68,7 +68,8 @@ export interface DashboardViewedEvent extends AnalyticsBasePayload {
 
 export interface TemplateSelectedEvent extends AnalyticsBasePayload {
   event: 'template_selected';
-  template_name: string;
+  /** Omitted for user-uploaded templates to avoid collecting their filenames. */
+  template_name?: string;
   template_width: number;
   template_height: number;
   file_type: string;
