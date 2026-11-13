@@ -43,6 +43,7 @@ import { CanvasMiniMap } from '@/components/studio/CanvasMiniMap';
 import { BatchAlignmentBar } from '@/components/studio/BatchAlignmentBar';
 import { PreviewModal } from '@/components/wizard/PreviewModal';
 import type { FieldType, ShapeMask, QRErrorCorrectionLevel } from '@/types/field';
+import { getVerificationUrl } from '@/config/site';
 
 const PRESET_COLORS = ['#000000', '#1F4ED8', '#DC2626', '#16A34A', '#FFFFFF', '#D97706', '#9333EA'];
 
@@ -56,6 +57,8 @@ export function AdjustPreview() {
     const templateDimensions = useAppStore((state) => state.templateDimensions);
     const csvHeaders = useAppStore((state) => state.csvHeaders);
     const fields = useAppStore((state) => state.fields);
+    const verificationEnabled = useAppStore((state) => state.verificationEnabled);
+    const setVerificationEnabled = useAppStore((state) => state.setVerificationEnabled);
     const addField = useAppStore((state) => state.addField);
     const updateField = useAppStore((state) => state.updateField);
     const removeField = useAppStore((state) => state.removeField);
@@ -335,7 +338,7 @@ export function AdjustPreview() {
             color: '#000000',
             align: 'center' as const,
             type: 'qr' as FieldType,
-            pattern: 'https://verify.domain.com/cert/{{' + targetCol + '}}?hash={{HMAC}}',
+            pattern: `${getVerificationUrl()}/certificate/{{CERTIFICATE_ID}}`,
             errorCorrectionLevel: 'M' as QRErrorCorrectionLevel,
         };
         addField(qrField);
@@ -1297,6 +1300,22 @@ export function AdjustPreview() {
                                     {/* ================= QR CODE SETTINGS ================= */}
                                     {selectedField.type === 'qr' && (
                                         <div className="space-y-4 pt-2 border-t border-border/40">
+                                            <label className="flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-2.5 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={verificationEnabled}
+                                                    onChange={(e) => setVerificationEnabled(e.target.checked)}
+                                                    className="mt-0.5 accent-accent"
+                                                />
+                                                <span>
+                                                    <span className="block text-xs font-semibold text-foreground">
+                                                        Enable public certificate verification
+                                                    </span>
+                                                    <span className="block mt-0.5 text-[10px] leading-relaxed text-secondary">
+                                                        Adds a unique verification link to generated certificates. Only minimal certificate details are shared.
+                                                    </span>
+                                                </span>
+                                            </label>
                                             <div>
                                                 <label className="text-[11px] font-medium text-secondary block mb-1">
                                                     QR Size (pixels)

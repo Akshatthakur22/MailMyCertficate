@@ -70,6 +70,7 @@ Connect on [GitHub](https://github.com/akshatthakur22) • [LinkedIn](https://ww
 | **Single-certificate preview** | Preview modal before batch generation |
 | **Batch PDF generation** | Web Worker + chunked processing; resume after refresh |
 | **ZIP download** | All completed PDFs in one archive |
+| **Opt-in verification** | Publish minimal certificate metadata and add QR links to a public verification page |
 | **Session recovery** | Restore in-progress batches from IndexedDB |
 
 ### Email delivery (`/email`)
@@ -197,6 +198,7 @@ Copy `.env.example` → `.env.local` and fill in:
 ```bash
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 APP_URL=http://localhost:3000
+NEXT_PUBLIC_VERIFICATION_URL=http://localhost:3000
 FLASK_SECRET_KEY=<random-hex>
 GOOGLE_CREDENTIALS_JSON={"web":{...,"redirect_uris":["http://localhost:3000/api/auth/callback"]}}
 ```
@@ -208,6 +210,15 @@ In **Google Cloud Console** → OAuth client → add:
 
 For production, also add `https://mailmycertificate.tech` and  
 `https://mailmycertificate.tech/api/auth/callback`.
+
+### Public verification domain
+
+Verification is opt-in in the certificate editor. When enabled, generated QR codes
+point to `https://verify.mailmycertificate.tech/certificate/<id>`. Add
+`verify.mailmycertificate.tech` as a domain on the Vercel project, configure its
+DNS record as Vercel requests, and set `NEXT_PUBLIC_VERIFICATION_URL` to that
+domain. Verification records require the production `DATABASE_URL`; local
+development falls back to the existing SQLite database.
 
 ### 3. Run locally (two terminals)
 

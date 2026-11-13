@@ -17,6 +17,7 @@ import os
 import json
 import time
 import uuid
+import secrets
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
@@ -104,6 +105,22 @@ CREATE TABLE IF NOT EXISTS daily_stats (
     email_success       INTEGER DEFAULT 0,
     email_failed        INTEGER DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS verification_certificates (
+    certificate_id   TEXT PRIMARY KEY,
+    client_key       TEXT NOT NULL UNIQUE,
+    recipient_name   TEXT,
+    certificate_title TEXT NOT NULL,
+    issued_at        TEXT NOT NULL,
+    issuer           TEXT NOT NULL,
+    pdf_hash         TEXT,
+    status           TEXT NOT NULL DEFAULT 'valid',
+    created_at       INTEGER NOT NULL,
+    revoked_at       INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_status
+    ON verification_certificates(status);
 """
 
 _SCHEMA_POSTGRES = """
@@ -164,6 +181,22 @@ CREATE TABLE IF NOT EXISTS daily_stats (
     email_success       INTEGER DEFAULT 0,
     email_failed        INTEGER DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS verification_certificates (
+    certificate_id   TEXT PRIMARY KEY,
+    client_key       TEXT NOT NULL UNIQUE,
+    recipient_name   TEXT,
+    certificate_title TEXT NOT NULL,
+    issued_at        TEXT NOT NULL,
+    issuer           TEXT NOT NULL,
+    pdf_hash         TEXT,
+    status           TEXT NOT NULL DEFAULT 'valid',
+    created_at       BIGINT NOT NULL,
+    revoked_at       BIGINT
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_status
+    ON verification_certificates(status);
 """
 
 # ─────────────────────────────────────────────
@@ -296,6 +329,119 @@ def _safe_meta(meta: Optional[dict]) -> Optional[str]:
                 if k not in ("email", "password", "token", "refresh_token", "recipient")}
         return json.dumps(safe)
     except Exception:
+        return None
+
+
+def register_verification_certificates(certificates: list[dict]) -> Optional[list[dict]]:
+    """Create or return public verification records using stable client keys."""
+    if not certificates or len(certificates) > 400:
+        return None
+
+    now = _now_ts()
+    results: list[dict] = []
+    try:
+        with get_db() as (conn, cur, use_pg):
+            if conn is None:
+                return None
+            ph = _placeholder(use_pg)
+
+            for item in certificates:
+                client_key = str(item.get("client_key", "")).strip()
+                title = str(item.get("certificate_title", "")).strip()
+                issued_at = str(item.get("issued_at", "")).strip()
+                if not client_key or not title or not issued_at:
+                    return None
+
+                cur.execute(
+                    f"""SELECT certificate_id, recipient_name, certificate_title,
+                               issued_at, issuer, pdf_hash, status
+                        FROM verification_certificates
+                        WHERE client_key={ph}""",
+                    (client_key,),
+                )
+                existing = cur.fetchone()
+                if existing:
+                    row = (
+                        dict(existing)
+                        if not use_pg
+                        else dict(zip([column[0] for column in cur.description], existing))
+                    )
+                    results.append({
+                        "client_key": client_key,
+                        "certificate_id": row["certificate_id"],
+                        "recipient_name": row["recipient_name"],
+                        "certificate_title": row["certificate_title"],
+                        "issued_at": row["issued_at"],
+                        "issuer": row["issuer"],
+                        "pdf_hash": row["pdf_hash"],
+                        "status": row["status"],
+                    })
+                    continue
+
+                certificate_id = f"MMC-{secrets.token_hex(5).upper()}"
+                recipient_name = str(item.get("recipient_name", "")).strip() or None
+                pdf_hash = str(item.get("pdf_hash", "")).strip() or None
+                issuer = str(item.get("issuer", "MailMyCertificate")).strip()
+                cur.execute(
+                    f"""INSERT INTO verification_certificates
+                        (certificate_id, client_key, recipient_name,
+                         certificate_title, issued_at, issuer, pdf_hash,
+                         status, created_at)
+                        VALUES ({ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph},{ph})""",
+                    (
+                        certificate_id,
+                        client_key,
+                        recipient_name,
+                        title,
+                        issued_at,
+                        issuer,
+                        pdf_hash,
+                        "valid",
+                        now,
+                    ),
+                )
+                results.append({
+                    "client_key": client_key,
+                    "certificate_id": certificate_id,
+                    "recipient_name": recipient_name,
+                    "certificate_title": title,
+                    "issued_at": issued_at,
+                    "issuer": issuer,
+                    "pdf_hash": pdf_hash,
+                    "status": "valid",
+                })
+        return results
+    except Exception as e:
+        logger.error("register_verification_certificates failed: %s", e)
+        return None
+
+
+def get_verification_certificate(certificate_id: str) -> Optional[dict]:
+    """Return a public verification record by certificate ID."""
+    if not certificate_id:
+        return None
+    try:
+        with get_db() as (conn, cur, use_pg):
+            if conn is None:
+                return None
+            ph = _placeholder(use_pg)
+            cur.execute(
+                f"""SELECT certificate_id, recipient_name, certificate_title,
+                           issued_at, issuer, pdf_hash, status, revoked_at
+                    FROM verification_certificates
+                    WHERE certificate_id={ph}""",
+                (certificate_id.strip().upper(),),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return (
+                dict(row)
+                if not use_pg
+                else dict(zip([column[0] for column in cur.description], row))
+            )
+    except Exception as e:
+        logger.error("get_verification_certificate failed: %s", e)
         return None
 
 

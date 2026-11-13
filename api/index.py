@@ -60,6 +60,7 @@ try:
         init_db, record_event, record_unique_visitor, upsert_session,
         get_overview, get_daily_trend, get_recent_events,
         get_user_list, get_user_journey, get_health,
+        register_verification_certificates, get_verification_certificate,
     )
     _analytics_ready = init_db()
 except Exception as _ae:
@@ -77,6 +78,8 @@ except Exception as _ae:
     def get_user_list(*a, **kw): return []             # noqa: E302
     def get_user_journey(*a, **kw): return []          # noqa: E302
     def get_health(*a, **kw): return {"db_available": False}  # noqa: E302
+    def register_verification_certificates(*a, **kw): return None  # noqa: E302
+    def get_verification_certificate(*a, **kw): return None  # noqa: E302
 
 # ─── Flask app ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -532,6 +535,59 @@ def ingest_frontend_event():
         )
 
     return jsonify({"ok": True})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PUBLIC CERTIFICATE VERIFICATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/api/verification/register', methods=['POST'])
+def register_verification():
+    """Register opt-in certificate metadata before client-side PDF rendering."""
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    certificates = payload.get('certificates')
+    if not isinstance(certificates, list) or not certificates or len(certificates) > 400:
+        return jsonify({"error": "Provide between 1 and 400 certificates"}), 400
+
+    normalized = []
+    for certificate in certificates:
+        if not isinstance(certificate, dict):
+            return jsonify({"error": "Invalid certificate record"}), 400
+        client_key = str(certificate.get('client_key', '')).strip()
+        title = str(certificate.get('certificate_title', '')).strip()
+        issued_at = str(certificate.get('issued_at', '')).strip()
+        if not client_key or len(client_key) > 160 or not title or len(title) > 200 or not issued_at:
+            return jsonify({"error": "Certificate metadata is incomplete"}), 400
+        normalized.append({
+            'client_key': client_key,
+            'recipient_name': str(certificate.get('recipient_name', '')).strip()[:200],
+            'certificate_title': title,
+            'issued_at': issued_at[:40],
+            'issuer': 'MailMyCertificate',
+            'pdf_hash': str(certificate.get('pdf_hash', '')).strip()[:128],
+        })
+
+    records = register_verification_certificates(normalized)
+    if records is None:
+        return jsonify({"error": "Verification registry is unavailable"}), 503
+    return jsonify({"certificates": records})
+
+
+@app.route('/api/verification/certificates/<certificate_id>', methods=['GET'])
+def lookup_verification(certificate_id):
+    """Return the public status and metadata for a certificate."""
+    if not re.fullmatch(r'MMC-[A-F0-9]{10}', certificate_id or '', re.IGNORECASE):
+        return jsonify({"error": "Certificate not found"}), 404
+
+    record = get_verification_certificate(certificate_id)
+    if record is None:
+        return jsonify({"error": "Certificate not found"}), 404
+    return jsonify({"certificate": record})
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATUS + DEBUG

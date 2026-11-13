@@ -3,6 +3,7 @@
  * Set APP_URL or NEXT_PUBLIC_APP_URL in production (e.g. https://mailmycertificate.tech).
  */
 export const PRODUCTION_APP_URL = 'https://mailmycertificate.tech';
+export const PRODUCTION_VERIFICATION_URL = 'https://verify.mailmycertificate.tech';
 
 export function getAppUrl(): string {
   const fromEnv =
@@ -33,4 +34,11 @@ export function getAppUrl(): string {
 export function absoluteUrl(path: string = '/'): string {
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${getAppUrl()}${normalized}`;
+}
+
+export function getVerificationUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_VERIFICATION_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  if (process.env.NODE_ENV === 'development') return getAppUrl();
+  return PRODUCTION_VERIFICATION_URL;
 }

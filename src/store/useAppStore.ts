@@ -16,6 +16,8 @@ interface AppState {
     templateDimensions: TemplateDimensions | null;
     csvHeaders: string[];
     fields: Field[];
+    verificationEnabled: boolean;
+    verificationIds: Record<string, string>;
     currentStep: number;
 
     // --- Transient UI State (Do Not Persist) ---
@@ -32,6 +34,8 @@ interface AppActions {
     setCsvHeaders: (headers: string[]) => void;
     setCsvData: (data: CSVRow[]) => void;
     setFields: (fields: Field[]) => void;
+    setVerificationEnabled: (enabled: boolean) => void;
+    setVerificationIds: (ids: Record<string, string>) => void;
     updateField: (id: string, updates: Partial<Field>) => void;
     updateMultipleFields: (ids: string[], updates: Partial<Field> | ((f: Field) => Partial<Field>)) => void;
     addField: (field: Field) => void;
@@ -69,6 +73,8 @@ export const useAppStore = create<AppStore>()(
                 csvHeaders: [],
                 csvData: [],
                 fields: [],
+                verificationEnabled: false,
+                verificationIds: {},
                 currentStep: 1,
 
                 isGenerating: false,
@@ -85,6 +91,10 @@ export const useAppStore = create<AppStore>()(
                 setCsvData: (data) => set({ csvData: data }),
 
                 setFields: (fields) => set({ fields }),
+
+                setVerificationEnabled: (enabled) => set({ verificationEnabled: enabled }),
+
+                setVerificationIds: (ids) => set({ verificationIds: ids }),
 
                 updateField: (id, updates) => set((state) => ({
                     fields: state.fields.map((f) => (f.id === id ? { ...f, ...updates } : f)),
@@ -237,6 +247,8 @@ export const useAppStore = create<AppStore>()(
                     templateDimensions: state.templateDimensions,
                     csvHeaders: state.csvHeaders,
                     fields: state.fields,
+                    verificationEnabled: state.verificationEnabled,
+                    verificationIds: state.verificationIds,
                     currentStep: state.currentStep,
                 } as Partial<AppStore>),
             }

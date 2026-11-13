@@ -60,7 +60,9 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
 
                     if (fieldType === 'qr') {
                         const qrPayload = field.pattern
-                            ? field.pattern.replace(/\{\{([^}]+)\}\}/g, (_, key) => String(recipientData[key] ?? ''))
+                            ? field.pattern.replace(/\{\{([^}]+)\}\}/g, (_, key) =>
+                                String(recipientData[key] ?? (key === 'CERTIFICATE_ID' ? 'MMC-SAMPLE01' : ''))
+                            )
                             : String(recipientData[field.columnName] ?? 'SAMPLE');
                         const qrDataUrl = await generateQRDataUrl(qrPayload, {
                             errorCorrectionLevel: field.errorCorrectionLevel || 'M',

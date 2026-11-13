@@ -10,6 +10,7 @@ import { trackBackendEvent } from '@/services/analyticsService';
 import type { GenerationMethod } from '@/lib/analytics';
 import { CertificateWorkerPool } from '@/core/worker/workerPool';
 import { renderSingleCertificate } from '@/core/engine/pdfRenderer';
+import { registerCertificates } from '@/services/verificationService';
 
 export function useGenerator() {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -144,6 +145,37 @@ export function useGenerator() {
                 useAppStore.getState().setFields(fields);
             }
 
+            const storeState = useAppStore.getState();
+            let verificationIds = storeState.verificationIds;
+            if (storeState.verificationEnabled) {
+                const hasVerificationQr = fields.some(
+                    (field) => field.type === 'qr' && field.pattern?.includes('{{CERTIFICATE_ID}}'),
+                );
+                if (!hasVerificationQr) {
+                    throw new Error('Enable the default public verification URL on a QR field before generating.');
+                }
+                const nameKey =
+                    Object.keys(rows[0]?.data || {}).find((key) => /name|recipient|student|attendee|participant/i.test(key)) ||
+                    Object.keys(rows[0]?.data || {}).find((key) => key !== '__rowIndex');
+                const certificateTitle =
+                    fields.find((field) => field.type === 'text' && !Object.keys(rows[0]?.data || {}).includes(field.columnName))?.columnName ||
+                    'Certificate of Achievement';
+                const missingRegistrations = rows.filter((row) => !verificationIds[String(row.id)]);
+
+                if (missingRegistrations.length > 0) {
+                    const newIds = await registerCertificates(
+                        missingRegistrations.map((row) => ({
+                            clientKey: `${sessionId}:${row.id}`,
+                            recipientName: nameKey ? String(row.data[nameKey] ?? '') : undefined,
+                            certificateTitle,
+                            issuedAt: new Date().toISOString().slice(0, 10),
+                        })),
+                    );
+                    verificationIds = { ...verificationIds, ...newIds };
+                    storeState.setVerificationIds(verificationIds);
+                }
+            }
+
             // 4. Determine pending jobs (Resume Logic)
             let pendingRows = rows;
             if (resume) {
@@ -185,10 +217,16 @@ export function useGenerator() {
                     const r = pendingRows[i];
                     const rowId = Number(r.id) || (i + 1);
                     try {
+                        const renderData = storeState.verificationEnabled
+                            ? {
+                                ...r.data,
+                                CERTIFICATE_ID: verificationIds[String(r.id)] || '',
+                            }
+                            : r.data;
                         const pdfBytes = await renderSingleCertificate({
                             template: templateSource!,
                             fields,
-                            data: r.data,
+                            data: renderData,
                         });
 
                         await db.certificates.put({
