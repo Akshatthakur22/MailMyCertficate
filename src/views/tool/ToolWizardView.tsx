@@ -66,16 +66,16 @@ export default function ToolWizardView() {
 
             <main
                 className={cn(
-                    'container-width relative z-10 mx-auto w-full',
+                    'relative z-10 mx-auto w-full transition-all duration-200',
                     isEditorStep
-                        ? 'flex-1 min-h-0 flex flex-col py-4'
-                        : 'py-6 md:py-8',
+                        ? 'flex-1 min-h-0 flex flex-col p-2 sm:p-3 max-w-[1920px]'
+                        : 'container-width py-6 md:py-8',
                     !isEditorStep && contentMaxWidth,
                 )}
             >
                 {isEditorStep ? (
-                    <div className="flex-1 min-h-0 flex flex-col max-w-7xl mx-auto w-full py-2 gap-2">
-                        <div className="shrink-0 px-1">
+                    <div className="flex-1 min-h-0 flex flex-col w-full gap-2">
+                        <div className="shrink-0 px-2 py-1 bg-white/70 backdrop-blur-md rounded-xl border border-border/50 shadow-xs">
                             <StepIndicator
                                 currentStep={currentStep}
                                 steps={STEPS}
@@ -83,7 +83,7 @@ export default function ToolWizardView() {
                                 variant="inline"
                             />
                         </div>
-                        <div className="flex-1 min-h-0 rounded-xl border border-border/60 bg-white overflow-hidden shadow-sm">
+                        <div className="flex-1 min-h-0 rounded-xl border border-border/70 bg-white overflow-hidden shadow-md">
                             <DesktopOnlyGuard>
                                 <AdjustPreview />
                             </DesktopOnlyGuard>

@@ -29,10 +29,11 @@ self.onmessage = async (e: MessageEvent) => {
                 data: rowData
             });
 
-            (self as any).postMessage(
-                { rowId, pdfBytes, status: 'success' },
-                [pdfBytes.buffer]
-            );
+            (self as any).postMessage({
+                rowId,
+                pdfBytes,
+                status: 'success'
+            });
         } catch (error: any) {
             (self as any).postMessage({
                 rowId,

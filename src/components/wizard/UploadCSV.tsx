@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { parseCSV } from '@/services/csvService';
 import { importFromGoogleSheets, isValidSheetUrl, detectSyncChanges } from '@/services/googleSheetsService';
 import { Button } from '@/components/ui/Button';
-import { FileSpreadsheet, AlertCircle, AlertTriangle, ArrowRight, Trash2, Link2, Loader2, RefreshCw, CheckCircle } from 'lucide-react';
+import { FileSpreadsheet, AlertCircle, AlertTriangle, ArrowRight, Trash2, Link2, Loader2, RefreshCw, CheckCircle, Table, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { db, type CSVRowData } from '@/core/db/schema';
 import { touchActivity, updateSession } from '@/core/session/sessionManager';
@@ -14,6 +14,8 @@ import { trackEvent } from '@/lib/analytics';
 import { trackBackendEvent } from '@/services/analyticsService';
 import { TrustBoundaryNotice } from '@/components/product/TrustBoundaryNotice';
 import { detectEmailColumn, detectNameColumn } from '@/utils/recipientColumn';
+import { DataGridModal } from '@/components/studio/DataGridModal';
+import { PhotoMatchModal } from '@/components/studio/PhotoMatchModal';
 
 type ImportSource = 'csv' | 'sheets';
 type ImportMode = 'csv' | 'sheets';
@@ -51,6 +53,8 @@ export function UploadCSV() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<{ newRows: number; updatedRows: number } | null>(null);
     const [pendingImport, setPendingImport] = useState<{ data: CSVRow[]; headers: string[]; file?: File } | null>(null);
+    const [isDataGridOpen, setIsDataGridOpen] = useState(false);
+    const [isPhotoMatchOpen, setIsPhotoMatchOpen] = useState(false);
 
     // ————————————————————————
     // CSV Upload Handler
@@ -371,10 +375,26 @@ export function UploadCSV() {
                                     </button>
                                 )}
                                 <button
-                                    onClick={handleReset}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium text-red-600 hover:bg-red-50/50 transition-colors"
+                                    onClick={() => setIsDataGridOpen(true)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/80 bg-white hover:border-accent hover:bg-muted/30 transition-all shadow-2xs"
+                                    title="Open editable spreadsheet grid to modify cells or add formula columns"
                                 >
-                                    <Trash2 size={12} />
+                                    <Table size={13} className="text-accent" />
+                                    Edit Spreadsheet
+                                </button>
+                                <button
+                                    onClick={() => setIsPhotoMatchOpen(true)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/80 bg-white hover:border-accent hover:bg-muted/30 transition-all shadow-2xs"
+                                    title="Auto-match bulk student photos to spreadsheet names"
+                                >
+                                    <ImageIcon size={13} className="text-accent" />
+                                    Auto-Match Photos
+                                </button>
+                                <button
+                                    onClick={handleReset}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200/80 transition-colors"
+                                >
+                                    <Trash2 size={13} />
                                     Replace
                                 </button>
                             </div>
@@ -476,21 +496,31 @@ export function UploadCSV() {
                     )}
 
                     {/* Navigation */}
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-3 pt-3">
                         <button 
                             onClick={() => setCurrentStep(1)} 
-                            className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-border/80 text-xs font-semibold text-foreground hover:bg-muted/60 transition-colors"
                         >
-                            Back
+                            Back to Certificate
                         </button>
                         <button 
                             onClick={() => setCurrentStep(3)} 
-                            className="flex-1 px-4 py-3 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5"
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent/90 transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                         >
-                            Design
-                            <ArrowRight size={16} />
+                            Continue to Design Studio
+                            <ArrowRight size={14} />
                         </button>
                     </div>
+
+                    <DataGridModal
+                        isOpen={isDataGridOpen}
+                        onClose={() => setIsDataGridOpen(false)}
+                    />
+
+                    <PhotoMatchModal
+                        isOpen={isPhotoMatchOpen}
+                        onClose={() => setIsPhotoMatchOpen(false)}
+                    />
             </div>
         );
     }
@@ -586,6 +616,27 @@ export function UploadCSV() {
                             </div>
                             <p className="text-xs text-secondary/70">Headers supported · UTF-8 · max 400 rows</p>
                         </div>
+                    </div>
+
+                    {/* Quick Sample Action */}
+                    <div className="mt-3 flex items-center justify-center gap-2">
+                        <span className="text-xs text-secondary">Don&apos;t have a CSV ready?</span>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const sampleHeaders = ['Name', 'Email', 'Role', 'Certificate_ID', 'Issue_Date'];
+                                const sampleData = [
+                                    { Name: 'Alex Morgan', Email: 'alex.morgan@example.com', Role: 'Speaker', Certificate_ID: 'CERT-2026-0001', Issue_Date: '2026-10-24' },
+                                    { Name: 'Sophia Chen', Email: 'sophia.chen@example.com', Role: 'Participant', Certificate_ID: 'CERT-2026-0002', Issue_Date: '2026-10-24' },
+                                    { Name: 'Marcus Vance', Email: 'marcus.v@example.com', Role: 'Winner - 1st Place', Certificate_ID: 'CERT-2026-0003', Issue_Date: '2026-10-24' },
+                                    { Name: 'Elena Rostova', Email: 'elena.rostova@example.com', Role: 'Participant', Certificate_ID: 'CERT-2026-0004', Issue_Date: '2026-10-24' },
+                                ];
+                                await finalizeImport(sampleData, sampleHeaders);
+                            }}
+                            className="text-xs font-semibold text-accent hover:underline flex items-center gap-1"
+                        >
+                            Try sample participants →
+                        </button>
                     </div>
 
                     <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">

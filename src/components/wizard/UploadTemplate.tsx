@@ -113,52 +113,85 @@ export function UploadTemplate() {
         if (file) handleFile(file);
     };
 
+    const handleLoadSampleTemplate = async () => {
+        try {
+            setError(null);
+            const res = await fetch('/sample-certificate-template.png');
+            if (!res.ok) throw new Error('Could not load sample template');
+            const blob = await res.blob();
+            const file = new File([blob], 'sample-certificate-template.png', { type: 'image/png' });
+            await handleFile(file);
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load sample template.');
+        }
+    };
+
     return (
         <div className="text-center">
             {/* Success state — show after upload */}
             {template && templateDimensions ? (
-                <div className="space-y-4">
-                    {/* Success summary */}
-                    <div className="flex items-center justify-center gap-2 text-sm">
-                        <CheckCircle size={20} className="text-green-600 shrink-0" />
-                        <span className="font-semibold text-foreground">Certificate ready</span>
-                        <span className="text-secondary/50">•</span>
-                        <span className="text-xs text-secondary">{templateDimensions.width}×{templateDimensions.height}px</span>
-                        <span className="text-secondary/50">•</span>
-                        <span className="text-xs text-secondary">{fileSize || '...'}</span>
+                <div className="space-y-5 animate-in fade-in duration-300">
+                    {/* Visual Preview Card */}
+                    <div className="relative mx-auto max-w-md rounded-2xl overflow-hidden border border-border/80 shadow-lg bg-muted/20 group ring-1 ring-black/5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={template}
+                            alt="Uploaded certificate"
+                            className="w-full h-auto object-cover max-h-56"
+                        />
+                        <div className="absolute top-2.5 left-2.5 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-full text-[10px] text-white font-medium flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            {templateDimensions.width > templateDimensions.height ? 'Landscape' : 'Portrait'}
+                        </div>
+                        <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-full text-[10px] text-white font-mono">
+                            {templateDimensions.width} × {templateDimensions.height} px
+                        </div>
+                    </div>
+
+                    {/* Success summary badge */}
+                    <div className="flex items-center justify-center gap-2 text-sm bg-emerald-50/80 border border-emerald-200/60 rounded-xl px-4 py-2.5 max-w-md mx-auto">
+                        <CheckCircle size={18} className="text-emerald-600 shrink-0" />
+                        <span className="font-semibold text-emerald-950">Certificate Template Loaded</span>
+                        {fileSize && (
+                            <>
+                                <span className="text-emerald-400">•</span>
+                                <span className="text-xs text-emerald-800 font-medium">{fileSize}</span>
+                            </>
+                        )}
                     </div>
 
                     {/* Trust indicator */}
-                    <div className="text-xs text-green-700 bg-green-50 border border-green-100/60 rounded-lg px-3 py-2.5">
-                        🛡 Saved locally • Never uploaded
+                    <div className="text-[11px] text-secondary/80 bg-muted/40 border border-border/50 rounded-lg px-3 py-1.5 max-w-md mx-auto">
+                        🛡 Stored locally in your browser (IndexedDB) • Zero cloud tracking
                     </div>
 
                     {/* Navigation buttons */}
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-3 pt-2 max-w-md mx-auto">
                         <button
                             onClick={() => {
                                 setTemplate(null, null);
                                 setFileSize(null);
                                 setError(null);
                             }}
-                            className="flex-1 px-4 py-3 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-border/80 text-xs font-semibold text-foreground hover:bg-muted/60 transition-colors"
                         >
-                            Change
+                            Change Template
                         </button>
                         <button
                             onClick={() => setCurrentStep(2)}
-                            className="flex-1 px-4 py-3 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5"
+                            className="flex-1 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent/90 transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                         >
-                            Continue
-                            <ArrowRight size={16} />
+                            Continue to Participants
+                            <ArrowRight size={14} />
                         </button>
                     </div>
                 </div>
             ) : (
                 <>
                     {/* Upload form — initial state */}
-                    <p className="text-secondary text-sm mb-5 max-w-sm mx-auto">
-                        Your design will be personalized with each recipient&apos;s data.
+                    <p className="text-secondary text-sm mb-4 max-w-sm mx-auto leading-relaxed">
+                        Upload your base certificate design. Your layout will be personalized with each recipient&apos;s data.
                     </p>
 
                     <div className="mb-4 text-left">
@@ -171,9 +204,11 @@ export function UploadTemplate() {
                         onDrop={onDrop}
                         onClick={() => inputRef.current?.click()}
                         className={cn(
-                            'border-2 border-dashed rounded-xl p-10 transition-colors cursor-pointer group',
-                            dragging ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/40 hover:bg-muted/20',
-                            error && 'border-red-300 bg-red-50/50',
+                            'border-2 border-dashed rounded-2xl p-10 transition-all cursor-pointer group relative overflow-hidden',
+                            dragging
+                                ? 'border-accent bg-accent/5 ring-4 ring-accent/10 scale-[1.01]'
+                                : 'border-border/80 hover:border-accent hover:bg-accent/2 hover:shadow-md bg-white/50',
+                            error && 'border-red-300 bg-red-50/50'
                         )}
                     >
                         <input
@@ -187,19 +222,33 @@ export function UploadTemplate() {
                         <div className="flex flex-col items-center gap-3">
                             <div
                                 className={cn(
-                                    'w-12 h-12 rounded-lg flex items-center justify-center transition-colors',
-                                    dragging ? 'bg-accent text-white' : 'bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white',
+                                    'w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-2xs',
+                                    dragging
+                                        ? 'bg-accent text-white scale-110 shadow-md'
+                                        : 'bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white group-hover:scale-105'
                                 )}
                             >
-                                <UploadCloud size={24} strokeWidth={1.5} />
+                                <UploadCloud size={30} strokeWidth={1.75} />
                             </div>
                             <div>
-                                <p className="font-medium text-foreground text-sm">
-                                    {dragging ? 'Drop to upload' : 'Drop certificate here'}
+                                <p className="font-semibold text-foreground text-sm">
+                                    {dragging ? 'Release to upload' : 'Drop your certificate template here'}
                                 </p>
-                                <p className="text-xs text-secondary">PNG/JPG · max 5 MB</p>
+                                <p className="text-xs text-secondary mt-0.5">PNG or JPG · Up to 5 MB</p>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Quick Sample Action Pill */}
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                        <button
+                            type="button"
+                            onClick={handleLoadSampleTemplate}
+                            className="px-3 py-1.5 rounded-full bg-accent/5 hover:bg-accent/10 border border-accent/20 text-xs font-semibold text-accent transition-all inline-flex items-center gap-1.5 shadow-2xs hover:shadow-xs group"
+                        >
+                            <span>Don&apos;t have a file ready?</span>
+                            <span className="underline group-hover:no-underline">Try sample template →</span>
+                        </button>
                     </div>
 
                     {error && (

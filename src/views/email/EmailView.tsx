@@ -180,8 +180,9 @@ export default function EmailView() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const rows = await db.rows.where({ sessionId }).toArray();
-      const certs = await db.certificates.where({ sessionId, status: 'completed' }).toArray();
+      const rows = await db.rows.where('sessionId').equals(sessionId).toArray();
+      const allCerts = await db.certificates.where('sessionId').equals(sessionId).toArray();
+      const certs = allCerts.filter((c) => c.status === 'completed');
       setCsvRows(rows);
       setCertificates(certs);
       await touchActivity(sessionId);

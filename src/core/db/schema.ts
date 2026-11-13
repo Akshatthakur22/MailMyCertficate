@@ -103,6 +103,14 @@ export class MailMyDB extends Dexie {
                 session.emailStatus = session.emailStatus ?? 'none';
             });
         });
+        this.version(4).stores({
+            sessions: 'id, createdAt, lastActivity, workflowStage',
+            files: 'id, sessionId, type',
+            rows: '++id, sessionId',
+            certificates: '[sessionId+rowId], sessionId, status, [sessionId+status]',
+            queueItems: 'id, sessionId, status, [sessionId+status]',
+            savedSessions: 'id, email, [email+sessionId]'
+        });
     }
 
     async cleanupOldSessions() {

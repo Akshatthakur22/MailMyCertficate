@@ -14,29 +14,54 @@ export function StepIndicator({ currentStep, steps, onStepClick, variant = 'defa
 
     if (variant === 'inline') {
         return (
-            <div className="flex items-center gap-3 select-none" aria-label="Progress">
-                <p className="text-sm font-medium text-foreground shrink-0">
-                    Step {currentStep} · {currentLabel}
-                </p>
-                <div className="flex items-center gap-1 flex-1 min-w-0 max-w-xs">
+            <div className="flex items-center justify-between gap-3 select-none w-full py-0.5" aria-label="Progress">
+                {/* Clickable Step Breadcrumbs */}
+                <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar">
                     {steps.map((label, index) => {
                         const stepNumber = index + 1;
                         const isCompleted = stepNumber < currentStep;
                         const isActive = stepNumber === currentStep;
+                        const isClickable = stepNumber < currentStep;
 
                         return (
-                            <div key={label} className="flex items-center flex-1 last:flex-none">
-                                <div
+                            <div key={label} className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => isClickable && onStepClick?.(stepNumber)}
+                                    disabled={!isClickable}
                                     className={cn(
-                                        'h-1.5 flex-1 rounded-full min-w-[0.5rem]',
-                                        isCompleted || isActive ? 'bg-accent' : 'bg-border',
-                                        isActive && 'opacity-100',
-                                        !isActive && !isCompleted && 'opacity-60',
+                                        'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all',
+                                        isActive && 'bg-accent/10 text-accent ring-1 ring-accent/30 font-semibold shadow-xs',
+                                        isCompleted && 'text-foreground/80 hover:bg-muted/80 cursor-pointer',
+                                        !isActive && !isCompleted && 'text-secondary/50 cursor-not-allowed',
                                     )}
-                                />
+                                >
+                                    <span
+                                        className={cn(
+                                            'w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0',
+                                            isActive && 'bg-accent text-white',
+                                            isCompleted && 'bg-emerald-600 text-white',
+                                            !isActive && !isCompleted && 'bg-muted-foreground/20 text-secondary/60',
+                                        )}
+                                    >
+                                        {isCompleted ? <Check size={10} strokeWidth={3} /> : stepNumber}
+                                    </span>
+                                    <span>{label}</span>
+                                </button>
+                                {index < steps.length - 1 && (
+                                    <span className="text-secondary/40 text-[11px] font-mono">/</span>
+                                )}
                             </div>
                         );
                     })}
+                </div>
+
+                {/* Status indicator pill */}
+                <div className="hidden sm:flex items-center gap-2 shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-[11px] font-medium text-emerald-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Studio Ready · Auto-Saved
+                    </span>
                 </div>
             </div>
         );
@@ -46,23 +71,26 @@ export function StepIndicator({ currentStep, steps, onStepClick, variant = 'defa
         <div className="w-full select-none" aria-label="Progress">
             <div className="flex items-center justify-between gap-4 mb-5">
                 <div className="min-w-0">
-                    <p className="text-xs font-medium text-secondary">
-                        Step {currentStep} of {steps.length}
-                    </p>
-                    <h1 className="text-xl font-semibold text-foreground tracking-tight truncate">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[11px] font-semibold tracking-wide uppercase">
+                            Step {currentStep} of {steps.length}
+                        </span>
+                        <span className="text-xs text-secondary/70">· In-browser workflow</span>
+                    </div>
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight truncate">
                         {currentLabel}
                     </h1>
                     {/* Context subtitle based on step */}
-                    <p className="text-sm text-secondary/70 mt-1">
-                        {currentStep === 1 && "Upload your certificate design"}
-                        {currentStep === 2 && "Upload your participant list"}
-                        {currentStep === 3 && "Position fields on your certificate"}
-                        {currentStep === 4 && "Generate your certificates"}
+                    <p className="text-xs sm:text-sm text-secondary mt-1">
+                        {currentStep === 1 && "Upload your certificate design (PNG or JPEG, up to 5 MB)"}
+                        {currentStep === 2 && "Upload your participant list or connect to Google Sheets"}
+                        {currentStep === 3 && "Drag and configure dynamic names, QR codes, signatures, and photos"}
+                        {currentStep === 4 && "Batch generate and download print-ready PDFs with verification"}
                     </p>
                 </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 bg-muted/40 p-1.5 rounded-xl border border-border/40">
                 {steps.map((label, index) => {
                     const stepNumber = index + 1;
                     const isActive = stepNumber === currentStep;
@@ -79,19 +107,29 @@ export function StepIndicator({ currentStep, steps, onStepClick, variant = 'defa
                                 disabled={!isClickable}
                                 title={label}
                                 className={cn(
-                                    'shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all',
-                                    isActive && 'bg-accent text-white ring-4 ring-accent/10',
-                                    isCompleted && 'bg-accent text-white cursor-pointer hover:opacity-90',
-                                    !isActive && !isCompleted && 'bg-muted text-secondary/50',
+                                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all w-full justify-start',
+                                    isActive && 'bg-white text-accent font-semibold shadow-xs ring-1 ring-border/60',
+                                    isCompleted && 'text-foreground hover:bg-white/60 cursor-pointer',
+                                    !isActive && !isCompleted && 'text-secondary/50',
                                 )}
                             >
-                                {isCompleted ? <Check size={12} strokeWidth={2.5} /> : stepNumber}
+                                <span
+                                    className={cn(
+                                        'shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all',
+                                        isActive && 'bg-accent text-white ring-2 ring-accent/20',
+                                        isCompleted && 'bg-emerald-600 text-white',
+                                        !isActive && !isCompleted && 'bg-muted-foreground/20 text-secondary/60',
+                                    )}
+                                >
+                                    {isCompleted ? <Check size={11} strokeWidth={2.5} /> : stepNumber}
+                                </span>
+                                <span className="hidden md:inline truncate">{label}</span>
                             </button>
                             {index < steps.length - 1 && (
                                 <div
                                     className={cn(
-                                        'h-0.5 flex-1 mx-1 rounded-full',
-                                        stepNumber < currentStep ? 'bg-accent' : 'bg-border',
+                                        'h-0.5 w-2 sm:w-3 shrink-0 mx-0.5 rounded-full',
+                                        stepNumber < currentStep ? 'bg-emerald-500' : 'bg-border/60',
                                     )}
                                 />
                             )}

@@ -65,16 +65,25 @@ function _scheduleFlush() {
   _flushTimer = setTimeout(_flush, 200);
 }
 
+let _backendOffline = false;
+let _lastOfflineCheck = 0;
+const OFFLINE_RETRY_INTERVAL_MS = 60000;
+
 async function _flush() {
   _flushTimer = null;
   if (_queue.length === 0) return;
+
+  if (_backendOffline && Date.now() - _lastOfflineCheck < OFFLINE_RETRY_INTERVAL_MS) {
+    _queue = [];
+    return;
+  }
 
   const batch = _queue.splice(0);
   const visitorId = getVisitorId();
 
   for (const item of batch) {
     try {
-      await fetch('/api/analytics/event', {
+      const res = await fetch('/api/analytics/event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -85,8 +94,15 @@ async function _flush() {
           meta: item.meta ?? {},
         }),
       });
+      if (res.ok) {
+        _backendOffline = false;
+      } else {
+        _backendOffline = true;
+        _lastOfflineCheck = Date.now();
+      }
     } catch {
-      // Silently swallow — analytics never breaks the app
+      _backendOffline = true;
+      _lastOfflineCheck = Date.now();
     }
   }
 }
